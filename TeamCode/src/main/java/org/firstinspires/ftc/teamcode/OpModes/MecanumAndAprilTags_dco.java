@@ -26,15 +26,20 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.AprilTags_dco;
+
+import org.firstinspires.ftc.teamcode.BuildConfig;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 /*
  * This OpMode illustrates how to program your robot to drive field relative.  This means
@@ -50,8 +55,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  *
  */
-@TeleOp(name = "Elijah: Field Relative Mecanum Drive", group = "Robot")
-public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
+@TeleOp(name = "Mecanum and AprilTags by DCO")
+public class MecanumAndAprilTags_dco extends OpMode {
+
     // This declares the four motors needed
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
@@ -60,6 +66,12 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
 
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
+
+    AprilTags_dco localAprilTags;
+    double turn, strafe;
+    double turnPower = 0;
+    double yawError = 0;
+    String setupSide = "Blue";
 
     @Override
     public void init() {
@@ -92,42 +104,90 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         RevHubOrientationOnRobot orientationOnRobot = new
                 RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
+
+        localAprilTags = new AprilTags_dco(telemetry, hardwareMap);
+    }
+
+    @Override
+    public void init_loop() {
+        if (gamepad1.left_trigger>0) {
+            setupSide = "Blue";
+        } else if (gamepad1.right_trigger>0) {
+            setupSide = "Red";
+        }
+
+        telemetry.addData("Compiled on:", BuildConfig.COMPILATION_DATE);
+        telemetry.addLine();
+        telemetry.addData("D1:LT:","Blue Side");
+        telemetry.addData("D1:RT:","Red Side");
+        telemetry.addData("Side:",setupSide);
+        telemetry.update();
     }
 
     @Override
     public void loop() {
-        telemetry.addLine("Press A to reset Yaw");
-        telemetry.addLine("Hold left bumper to drive in robot relative");
-        telemetry.addLine("The left joystick sets the robot direction");
-        telemetry.addLine("Moving the right joystick left and right turns the robot");
+        double drive = -gamepad1.left_stick_y; // forward/back
+        double strafe = gamepad1.left_stick_x; // left/right
+        double turn = gamepad1.right_stick_x;  // rotation
+//        double forwardPower = 0, strafePower = 0, turnPower = 0;
+
+        //       telemetry.addLine("Press A to reset Yaw");
+//        telemetry.addLine("Hold left bumper to drive in robot relative");
+//        telemetry.addLine("The left joystick sets the robot direction");
+//        telemetry.addLine("Moving the right joystick left and right turns the robot");
 
         // If you press the A button, then you reset the Yaw to be zero from the way
         // the robot is currently pointing
         if (gamepad1.a) {
-            setMotorPower( 0,0,0.5,0);
+            imu.resetYaw();
         }
 
-        else if (gamepad1.b) {
-            setMotorPower( 0,0,0,0.5);
-        }
-
-        else if (gamepad1.x) {
-            setMotorPower( 0.5,0,0,0);
-        }
-
-        else if (gamepad1.y) {
-            setMotorPower( 0,0.5,0,0);
-        }
-
-//        if (gamepad1.a) {
-//            imu.resetYaw();
-//        }
         // If you press the left bumper, you get a drive from the point of view of the robot
         // (much like driving an RC vehicle)
-        if (gamepad1.left_bumper) {
-            drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-        } else {
-            driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+//        if (gamepad1.left_bumper) {
+            drive(drive, strafe, turn);
+//        } else {
+//            driveFieldRelative(drive, strafe, turn);
+//        }
+
+        localAprilTags.telemetryAprilTag();
+        telemetry.addData("Target", localAprilTags.target.metadata.name);
+
+        if (gamepad1.x) {
+            if (!localAprilTags.currentDetections.isEmpty()) {
+                AprilTagDetection tag = localAprilTags.currentDetections.get(0);
+                double yawError = localAprilTags.target.ftcPose.yaw; // Heading (degrees)
+
+                telemetry.addData("Tag ID", tag.id);
+                telemetry.addData("Yaw (Heading)", "%.2f", yawError);
+
+//                double targetYaw = 0.0;
+                double kP = 0.02; // Tune this!
+//                double error = tag.ftcPose.yaw - targetYaw;
+
+                turnPower = Range.clip(yawError * kP, -0.3, 0.3);
+                // Basic proportional control
+//                forwardPower = -x * 0.05;
+//                strafePower = -y * 0.05;
+//                turnPower = -yaw * 0.02;
+//
+//                // Apply thresholds (dead zones)
+//                if (Math.abs(x) < 1.0) forwardPower = 0;
+//                if (Math.abs(y) < 1.0) strafePower = 0;
+//                if (Math.abs(yaw) < 2.0) turnPower = 0;
+                telemetry.addData("Turn", "%.2f", turnPower);
+            } else {
+                telemetry.addLine("No tags visible");
+            }
+
+            telemetry.update();
+
+            if (Math.abs(yawError) > 2.0) {
+                frontLeftDrive.setPower(turnPower);
+                frontRightDrive.setPower(-turnPower);
+                backLeftDrive.setPower(turnPower);
+                backRightDrive.setPower(-turnPower);
+            }
         }
     }
 
@@ -176,12 +236,5 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         frontRightDrive.setPower(maxSpeed * (frontRightPower / maxPower));
         backLeftDrive.setPower(maxSpeed * (backLeftPower / maxPower));
         backRightDrive.setPower(maxSpeed * (backRightPower / maxPower));
-    }
-
-    private void setMotorPower(double fL, double fR, double bL, double bR){
-        frontLeftDrive.setPower(fL);
-        frontRightDrive.setPower(fR);
-        backLeftDrive.setPower(bL);
-        backRightDrive.setPower(bR);
     }
 }
