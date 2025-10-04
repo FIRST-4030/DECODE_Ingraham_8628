@@ -36,6 +36,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.AprilTag_E;
@@ -61,8 +62,9 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
-
+    Servo directionServo;
     AprilTag_E aprilTag;
+    int side;
 
     private DigitalChannel redLED;
     private DigitalChannel greenLED;
@@ -77,8 +79,9 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         backLeftDrive = hardwareMap.get(DcMotor.class, "leftBack");
         backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
 
+        directionServo = hardwareMap.get(Servo.class, "direction");
+
         aprilTag = new AprilTag_E();
-        aprilTag.initAprilTag(20,hardwareMap);
 
         redLED = hardwareMap.get(DigitalChannel.class, "red");
         greenLED = hardwareMap.get(DigitalChannel.class, "green");
@@ -110,6 +113,21 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
     }
 
+    public void init_loop(){
+        if(gamepad1.x){
+            side = 20;
+        }
+        else if(gamepad1.b){
+            side = 24;
+        }
+        telemetry.addData("side:",side);
+        telemetry.update();
+    }
+
+    public void start(){
+        aprilTag.initAprilTag(side,hardwareMap);
+    }
+
     @Override
     public void loop() {
         aprilTag.runInLoop(telemetry);
@@ -117,21 +135,25 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         if(abs(aprilTag.bearing) > 15.0){
             redLED.setState(false);
             greenLED.setState(false);
+            directionServo.setPosition(0);
         }
         else{
             redLED.setState(false);
             greenLED.setState(true);
+            directionServo.setPosition(0.5);
         }
         // If you press the A button, then you reset the Yaw to be zero from the way
         // the robot is currently pointing
         if (gamepad1.a) {
             greenLED.setState(true);
             redLED.setState(false);
+            directionServo.setPosition(0.5);
         }
 
         else if (gamepad1.b) {
             greenLED.setState(false);
             redLED.setState(true);
+            directionServo.setPosition(0);
         }
 
         // If you press the left bumper, you get a drive from the point of view of the robot
