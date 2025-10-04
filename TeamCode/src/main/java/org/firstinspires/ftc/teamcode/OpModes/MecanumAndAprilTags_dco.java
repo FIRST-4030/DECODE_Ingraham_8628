@@ -32,7 +32,9 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -64,6 +66,10 @@ public class MecanumAndAprilTags_dco extends OpMode {
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
 
+    private DigitalChannel redLED;
+    private DigitalChannel greenLED;
+
+
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
 
@@ -75,6 +81,9 @@ public class MecanumAndAprilTags_dco extends OpMode {
 
     @Override
     public void init() {
+        redLED = hardwareMap.get(DigitalChannel.class, "red");
+        greenLED = hardwareMap.get(DigitalChannel.class, "green");
+
         frontLeftDrive = hardwareMap.get(DcMotor.class, "leftFront");
         frontRightDrive = hardwareMap.get(DcMotor.class, "rightFront");
         backLeftDrive = hardwareMap.get(DcMotor.class, "leftBack");
@@ -106,14 +115,22 @@ public class MecanumAndAprilTags_dco extends OpMode {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
         localAprilTags = new AprilTags_dco(telemetry, hardwareMap);
-    }
+
+        greenLED.setState(false);
+        redLED.setState(false);    }
 
     @Override
     public void init_loop() {
-        if (gamepad1.left_trigger>0) {
+        redLED.setMode(DigitalChannel.Mode.OUTPUT);
+        greenLED.setMode(DigitalChannel.Mode.OUTPUT);
+        if (gamepad1.left_trigger>0.5) {
             setupSide = "Blue";
-        } else if (gamepad1.right_trigger>0) {
+            greenLED.setState(false);
+            redLED.setState(true);
+        } else if (gamepad1.right_trigger>0.5) {
             setupSide = "Red";
+            redLED.setState(false);
+            greenLED.setState(true);
         }
 
         telemetry.addData("Compiled on:", BuildConfig.COMPILATION_DATE);
@@ -121,11 +138,14 @@ public class MecanumAndAprilTags_dco extends OpMode {
         telemetry.addData("D1:LT:","Blue Side");
         telemetry.addData("D1:RT:","Red Side");
         telemetry.addData("Side:",setupSide);
+        telemetry.addData("LT:",gamepad1.left_trigger);
+        telemetry.addData("RT:",gamepad1.right_trigger);
         telemetry.update();
     }
 
     @Override
     public void loop() {
+
         double drive = -gamepad1.left_stick_y; // forward/back
         double strafe = gamepad1.left_stick_x; // left/right
         double turn = gamepad1.right_stick_x;  // rotation
@@ -236,5 +256,10 @@ public class MecanumAndAprilTags_dco extends OpMode {
         frontRightDrive.setPower(maxSpeed * (frontRightPower / maxPower));
         backLeftDrive.setPower(maxSpeed * (backLeftPower / maxPower));
         backRightDrive.setPower(maxSpeed * (backRightPower / maxPower));
+    }
+
+    @Override
+    public void stop(){
+        localAprilTags.closeAprilTag();
     }
 }

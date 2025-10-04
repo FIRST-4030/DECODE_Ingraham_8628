@@ -217,4 +217,8 @@ public class AprilTags_dco {
         telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
         telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
     }
+
+    public void closeAprilTag(){
+        visionPortal.close();
+    }
 }
