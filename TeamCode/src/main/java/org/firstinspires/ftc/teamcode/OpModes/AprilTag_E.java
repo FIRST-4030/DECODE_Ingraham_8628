@@ -85,6 +85,8 @@ public class AprilTag_E {
 
     private int goalTagId;
 
+    public double distanceToGoal;
+
     public void runInLoop(Telemetry telemetry) {
 
         // Wait for the DS start button to be touched.
@@ -189,6 +191,7 @@ public class AprilTag_E {
         for (AprilTagDetection detection : currentDetections) {
             if (detection.id == goalTagId) {
                 if (detection.metadata != null) {
+                    distanceToGoal = detection.ftcPose.y;
                     telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
                     telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
                     telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
