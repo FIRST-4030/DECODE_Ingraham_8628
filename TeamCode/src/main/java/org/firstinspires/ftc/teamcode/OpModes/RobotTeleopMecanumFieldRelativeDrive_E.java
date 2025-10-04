@@ -28,10 +28,13 @@
  */
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import static java.lang.Math.abs;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -61,6 +64,9 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
 
     AprilTag_E aprilTag;
 
+    private DigitalChannel redLED;
+    private DigitalChannel greenLED;
+
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
 
@@ -72,7 +78,12 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
 
         aprilTag = new AprilTag_E();
-        aprilTag.initAprilTag(586,hardwareMap);
+        aprilTag.initAprilTag(20,hardwareMap);
+
+        redLED = hardwareMap.get(DigitalChannel.class, "red");
+        greenLED = hardwareMap.get(DigitalChannel.class, "green");
+        redLED.setMode(DigitalChannel.Mode.OUTPUT);
+        greenLED.setMode(DigitalChannel.Mode.OUTPUT);
         // We set the left motors in reverse which is needed for drive trains where the left
         // motors are opposite to the right ones.
         backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -103,57 +114,29 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
     public void loop() {
         aprilTag.runInLoop(telemetry);
 
-        telemetry.addLine("Press A to reset Yaw");
-        telemetry.addLine("Hold left bumper to drive in robot relative");
-        telemetry.addLine("The left joystick sets the robot direction");
-        telemetry.addLine("Moving the right joystick left and right turns the robot");
-
+        if(abs(aprilTag.bearing) > 15.0){
+            redLED.setState(false);
+            greenLED.setState(false);
+        }
+        else{
+            redLED.setState(false);
+            greenLED.setState(true);
+        }
         // If you press the A button, then you reset the Yaw to be zero from the way
         // the robot is currently pointing
         if (gamepad1.a) {
-            setMotorPower( 0,0,0.5,0);
+            greenLED.setState(true);
+            redLED.setState(false);
         }
 
         else if (gamepad1.b) {
-            setMotorPower( 0,0,0,0.5);
+            greenLED.setState(false);
+            redLED.setState(true);
         }
 
-        else if (gamepad1.x) {
-            setMotorPower( 0.5,0,0,0);
-        }
-
-        else if (gamepad1.y) {
-            setMotorPower( 0,0.5,0,0);
-        }
-
-//        if (gamepad1.a) {
-//            imu.resetYaw();
-//        }
         // If you press the left bumper, you get a drive from the point of view of the robot
         // (much like driving an RC vehicle)
-        if (gamepad1.left_bumper) {
             drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-        } else {
-            driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-        }
-    }
-
-    // This routine drives the robot field relative
-    private void driveFieldRelative(double forward, double right, double rotate) {
-        // First, convert direction being asked to drive to polar coordinates
-        double theta = Math.atan2(forward, right);
-        double r = Math.hypot(right, forward);
-
-        // Second, rotate angle by the angle the robot is pointing
-        theta = AngleUnit.normalizeRadians(theta -
-                imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
-
-        // Third, convert back to cartesian
-        double newForward = r * Math.sin(theta);
-        double newRight = r * Math.cos(theta);
-
-        // Finally, call the drive method with robot relative forward and right amounts
-        drive(newForward, newRight, rotate);
     }
 
     // Thanks to FTC16072 for sharing this code!!
@@ -171,10 +154,10 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         // This is needed to make sure we don't pass > 1.0 to any wheel
         // It allows us to keep all of the motors in proportion to what they should
         // be and not get clipped
-        maxPower = Math.max(maxPower, Math.abs(frontLeftPower));
-        maxPower = Math.max(maxPower, Math.abs(frontRightPower));
-        maxPower = Math.max(maxPower, Math.abs(backRightPower));
-        maxPower = Math.max(maxPower, Math.abs(backLeftPower));
+        maxPower = Math.max(maxPower, abs(frontLeftPower));
+        maxPower = Math.max(maxPower, abs(frontRightPower));
+        maxPower = Math.max(maxPower, abs(backRightPower));
+        maxPower = Math.max(maxPower, abs(backLeftPower));
 
         // We multiply by maxSpeed so that it can be set lower for outreaches
         // When a young child is driving the robot, we may not want to allow full
@@ -195,5 +178,7 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
     @Override
     public void stop(){
         aprilTag.closeAprilTag();
+        redLED.setState(false);
+        greenLED.setState(false);
     }
 }
