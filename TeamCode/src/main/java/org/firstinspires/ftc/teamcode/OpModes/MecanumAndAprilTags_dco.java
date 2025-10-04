@@ -28,6 +28,8 @@
  */
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import static android.widget.RelativeLayout.TRUE;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -77,7 +79,7 @@ public class MecanumAndAprilTags_dco extends OpMode {
     double turn, strafe;
     double turnPower = 0;
     double yawError = 0;
-    String setupSide = "Blue";
+    String setupSide = "";
 
     @Override
     public void init() {
@@ -115,31 +117,17 @@ public class MecanumAndAprilTags_dco extends OpMode {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
         localAprilTags = new AprilTags_dco(telemetry, hardwareMap);
+        redLED.setMode(DigitalChannel.Mode.OUTPUT);
+        greenLED.setMode(DigitalChannel.Mode.OUTPUT);
 
         greenLED.setState(false);
-        redLED.setState(false);    }
+        redLED.setState(false);
+    }
 
     @Override
     public void init_loop() {
-        redLED.setMode(DigitalChannel.Mode.OUTPUT);
-        greenLED.setMode(DigitalChannel.Mode.OUTPUT);
-        if (gamepad1.left_trigger>0.5) {
-            setupSide = "Blue";
-            greenLED.setState(false);
-            redLED.setState(true);
-        } else if (gamepad1.right_trigger>0.5) {
-            setupSide = "Red";
-            redLED.setState(false);
-            greenLED.setState(true);
-        }
 
         telemetry.addData("Compiled on:", BuildConfig.COMPILATION_DATE);
-        telemetry.addLine();
-        telemetry.addData("D1:LT:","Blue Side");
-        telemetry.addData("D1:RT:","Red Side");
-        telemetry.addData("Side:",setupSide);
-        telemetry.addData("LT:",gamepad1.left_trigger);
-        telemetry.addData("RT:",gamepad1.right_trigger);
         telemetry.update();
     }
 
@@ -151,7 +139,7 @@ public class MecanumAndAprilTags_dco extends OpMode {
         double turn = gamepad1.right_stick_x;  // rotation
 //        double forwardPower = 0, strafePower = 0, turnPower = 0;
 
-        //       telemetry.addLine("Press A to reset Yaw");
+//       telemetry.addLine("Press A to reset Yaw");
 //        telemetry.addLine("Hold left bumper to drive in robot relative");
 //        telemetry.addLine("The left joystick sets the robot direction");
 //        telemetry.addLine("Moving the right joystick left and right turns the robot");
@@ -171,7 +159,21 @@ public class MecanumAndAprilTags_dco extends OpMode {
 //        }
 
         localAprilTags.telemetryAprilTag();
-        telemetry.addData("Target", localAprilTags.target.metadata.name);
+//        telemetry.addData("Target", localAprilTags.target.metadata.name);
+
+        if (gamepad1.left_trigger>0.5) {
+            setupSide = "Blue";
+            greenLED.setState(false);
+            redLED.setState(true);
+        } else if (gamepad1.right_trigger>0.5) {
+            setupSide = "Red";
+            redLED.setState(false);
+            greenLED.setState(true);
+        } else {
+            redLED.setState(false);
+            greenLED.setState(false);
+        }
+        telemetry.addData("Side:",setupSide);
 
         if (gamepad1.x) {
             if (!localAprilTags.currentDetections.isEmpty()) {
