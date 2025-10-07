@@ -28,7 +28,7 @@
  */
 package org.firstinspires.ftc.teamcode.OpModes;
 
-import static android.widget.RelativeLayout.TRUE;
+import static java.lang.Math.abs;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -36,14 +36,13 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.LED;
-import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.AprilTags_dco;
 
 import org.firstinspires.ftc.teamcode.BuildConfig;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.teamcode.Datalogger;
 
 /*
  * This OpMode illustrates how to program your robot to drive field relative.  This means
@@ -59,8 +58,11 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  *
  */
-@TeleOp(name = "Mecanum and AprilTags by DCO")
+@TeleOp(name = "DCO: Mecanum and AprilTags")
 public class MecanumAndAprilTags_dco extends OpMode {
+
+//    public static int numBearings = 5;
+    public static boolean logData = true;
 
     // This declares the four motors needed
     DcMotor frontLeftDrive;
@@ -70,16 +72,21 @@ public class MecanumAndAprilTags_dco extends OpMode {
 
     private DigitalChannel redLED;
     private DigitalChannel greenLED;
+    private int i = 0; // loop counter
 
+    Servo directionServo;
 
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
 
-    AprilTags_dco localAprilTags;
+    AprilTags_dco aprilTags;
     double turn, strafe;
     double turnPower = 0;
     double yawError = 0;
-    String setupSide = "";
+    int side;
+    String ledColor;
+    Datalog datalog;
+    ElapsedTime runtime = new ElapsedTime();
 
     @Override
     public void init() {
@@ -90,6 +97,8 @@ public class MecanumAndAprilTags_dco extends OpMode {
         frontRightDrive = hardwareMap.get(DcMotor.class, "rightFront");
         backLeftDrive = hardwareMap.get(DcMotor.class, "leftBack");
         backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
+
+        directionServo = hardwareMap.get(Servo.class, "direction");
 
         // We set the left motors in reverse which is needed for drive trains where the left
         // motors are opposite to the right ones.
@@ -116,19 +125,37 @@ public class MecanumAndAprilTags_dco extends OpMode {
                 RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
-        localAprilTags = new AprilTags_dco(telemetry, hardwareMap);
+        aprilTags = new AprilTags_dco();
+        aprilTags.initAprilTag(hardwareMap);
+
+        // Initialize the datalog
+        if (logData)  {datalog = new Datalog("AprilTagLog"); }
+
         redLED.setMode(DigitalChannel.Mode.OUTPUT);
         greenLED.setMode(DigitalChannel.Mode.OUTPUT);
-
-        greenLED.setState(false);
-        redLED.setState(false);
     }
 
     @Override
     public void init_loop() {
-
         telemetry.addData("Compiled on:", BuildConfig.COMPILATION_DATE);
+
+        if(gamepad1.x){
+            side = 20;
+        }
+        else if(gamepad1.b){
+            side = 24;
+        }
+
+        telemetry.addData("side:", side);
         telemetry.update();
+    }
+
+    @Override
+    public void start() {
+        aprilTags.setSide(side);
+        runtime.reset(); // reset the clock
+
+//        aprilTags.visionPortal.resumeStreaming();
     }
 
     @Override
@@ -137,101 +164,82 @@ public class MecanumAndAprilTags_dco extends OpMode {
         double drive = -gamepad1.left_stick_y; // forward/back
         double strafe = gamepad1.left_stick_x; // left/right
         double turn = gamepad1.right_stick_x;  // rotation
-//        double forwardPower = 0, strafePower = 0, turnPower = 0;
 
-//       telemetry.addLine("Press A to reset Yaw");
-//        telemetry.addLine("Hold left bumper to drive in robot relative");
-//        telemetry.addLine("The left joystick sets the robot direction");
-//        telemetry.addLine("Moving the right joystick left and right turns the robot");
+        aprilTags.runInLoop(telemetry);
 
-        // If you press the A button, then you reset the Yaw to be zero from the way
-        // the robot is currently pointing
+        telemetry.addData("Bearing:", "%4.2f", aprilTags.getBearing());
+        telemetry.update();
+
+        if (abs(aprilTags.getBearing()) > 15.0) {
+            redLED.setState(true);
+            greenLED.setState(false);
+            directionServo.setPosition(0);
+            ledColor = "red";
+        } else {
+            redLED.setState(false);
+            greenLED.setState(true);
+            directionServo.setPosition(0.5);
+            ledColor = "green";
+        }
+
         if (gamepad1.a) {
             imu.resetYaw();
         }
 
-        // If you press the left bumper, you get a drive from the point of view of the robot
-        // (much like driving an RC vehicle)
-//        if (gamepad1.left_bumper) {
-            drive(drive, strafe, turn);
-//        } else {
-//            driveFieldRelative(drive, strafe, turn);
+        drive(drive, strafe, turn);
+//
+//        if (gamepad1.x) {
+//            if (!aprilTags.currentDetections.isEmpty()) {
+//                AprilTagDetection tag = aprilTags.currentDetections.get(0);
+//                double yawError = aprilTags.target.ftcPose.yaw; // Heading (degrees)
+//
+//                telemetry.addData("Tag ID", tag.id);
+//                telemetry.addData("Yaw (Heading)", "%.2f", yawError);
+//
+////                double targetYaw = 0.0;
+//                double kP = 0.02; // Tune this!
+////                double error = tag.ftcPose.yaw - targetYaw;
+//
+//                turnPower = Range.clip(yawError * kP, -0.3, 0.3);
+//                // Basic proportional control
+////                forwardPower = -x * 0.05;
+////                strafePower = -y * 0.05;
+////                turnPower = -yaw * 0.02;
+////
+////                // Apply thresholds (dead zones)
+////                if (Math.abs(x) < 1.0) forwardPower = 0;
+////                if (Math.abs(y) < 1.0) strafePower = 0;
+////                if (Math.abs(yaw) < 2.0) turnPower = 0;
+//                telemetry.addData("Turn", "%.2f", turnPower);
+//            } else {
+//                telemetry.addLine("No tags visible");
+//            }
+//
+//            telemetry.update();
+//
+//            if (Math.abs(yawError) > 2.0) {
+//                frontLeftDrive.setPower(turnPower);
+//                frontRightDrive.setPower(-turnPower);
+//                backLeftDrive.setPower(turnPower);
+//                backRightDrive.setPower(-turnPower);
+//            }
 //        }
 
-        localAprilTags.telemetryAprilTag();
-//        telemetry.addData("Target", localAprilTags.target.metadata.name);
-
-        if (gamepad1.left_trigger>0.5) {
-            setupSide = "Blue";
-            greenLED.setState(false);
-            redLED.setState(true);
-        } else if (gamepad1.right_trigger>0.5) {
-            setupSide = "Red";
-            redLED.setState(false);
-            greenLED.setState(true);
-        } else {
-            redLED.setState(false);
-            greenLED.setState(false);
+        /* Data log
+         * Note: The order in which we set datalog fields does *not* matter!
+         *       Order is configured inside the Datalog class constructor.
+         */
+        if ((logData) && ((i % 10) == 0)) {  // slow down how many records are logged
+            datalog.loopCounter.set(i);
+            datalog.runTime.set(runtime.seconds());
+            datalog.ledColor.set(ledColor);
+            datalog.bearing.set(aprilTags.getBearing());
+            datalog.range.set(aprilTags.getRange());
+            datalog.writeLine();
         }
-        telemetry.addData("Side:",setupSide);
-
-        if (gamepad1.x) {
-            if (!localAprilTags.currentDetections.isEmpty()) {
-                AprilTagDetection tag = localAprilTags.currentDetections.get(0);
-                double yawError = localAprilTags.target.ftcPose.yaw; // Heading (degrees)
-
-                telemetry.addData("Tag ID", tag.id);
-                telemetry.addData("Yaw (Heading)", "%.2f", yawError);
-
-//                double targetYaw = 0.0;
-                double kP = 0.02; // Tune this!
-//                double error = tag.ftcPose.yaw - targetYaw;
-
-                turnPower = Range.clip(yawError * kP, -0.3, 0.3);
-                // Basic proportional control
-//                forwardPower = -x * 0.05;
-//                strafePower = -y * 0.05;
-//                turnPower = -yaw * 0.02;
-//
-//                // Apply thresholds (dead zones)
-//                if (Math.abs(x) < 1.0) forwardPower = 0;
-//                if (Math.abs(y) < 1.0) strafePower = 0;
-//                if (Math.abs(yaw) < 2.0) turnPower = 0;
-                telemetry.addData("Turn", "%.2f", turnPower);
-            } else {
-                telemetry.addLine("No tags visible");
-            }
-
-            telemetry.update();
-
-            if (Math.abs(yawError) > 2.0) {
-                frontLeftDrive.setPower(turnPower);
-                frontRightDrive.setPower(-turnPower);
-                backLeftDrive.setPower(turnPower);
-                backRightDrive.setPower(-turnPower);
-            }
-        }
+        i++;
     }
 
-    // This routine drives the robot field relative
-    private void driveFieldRelative(double forward, double right, double rotate) {
-        // First, convert direction being asked to drive to polar coordinates
-        double theta = Math.atan2(forward, right);
-        double r = Math.hypot(right, forward);
-
-        // Second, rotate angle by the angle the robot is pointing
-        theta = AngleUnit.normalizeRadians(theta -
-                imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
-
-        // Third, convert back to cartesian
-        double newForward = r * Math.sin(theta);
-        double newRight = r * Math.cos(theta);
-
-        // Finally, call the drive method with robot relative forward and right amounts
-        drive(newForward, newRight, rotate);
-    }
-
-    // Thanks to FTC16072 for sharing this code!!
     public void drive(double forward, double right, double rotate) {
         // This calculates the power needed for each wheel based on the amount of forward,
         // strafe right, and rotate
@@ -241,15 +249,15 @@ public class MecanumAndAprilTags_dco extends OpMode {
         double backLeftPower = forward - right + rotate;
 
         double maxPower = 1.0;
-        double maxSpeed = 1.0;  // make this slower for outreaches
+        double maxSpeed = 0.5;  // make this slower for outreaches
 
         // This is needed to make sure we don't pass > 1.0 to any wheel
         // It allows us to keep all of the motors in proportion to what they should
         // be and not get clipped
-        maxPower = Math.max(maxPower, Math.abs(frontLeftPower));
-        maxPower = Math.max(maxPower, Math.abs(frontRightPower));
-        maxPower = Math.max(maxPower, Math.abs(backRightPower));
-        maxPower = Math.max(maxPower, Math.abs(backLeftPower));
+        maxPower = Math.max(maxPower, abs(frontLeftPower));
+        maxPower = Math.max(maxPower, abs(frontRightPower));
+        maxPower = Math.max(maxPower, abs(backRightPower));
+        maxPower = Math.max(maxPower, abs(backLeftPower));
 
         // We multiply by maxSpeed so that it can be set lower for outreaches
         // When a young child is driving the robot, we may not want to allow full
@@ -261,7 +269,57 @@ public class MecanumAndAprilTags_dco extends OpMode {
     }
 
     @Override
-    public void stop(){
-        localAprilTags.closeAprilTag();
+    public void stop() {
+        aprilTags.closeAprilTag();
+        redLED.setState(false);
+        greenLED.setState(false);
+    }
+
+    /**
+     * Datalog class encapsulates all the fields that will go into the datalog.
+     */
+    public static class Datalog {
+        /*
+         * The underlying datalogger object - it cares only about an array of loggable fields
+         */
+        private final Datalogger datalogger;
+
+        /*
+         * These are all of the fields that we want in the datalog.
+         * Note: Order here is NOT important. The order is important
+         *       in the setFields() call below
+         */
+        public Datalogger.GenericField loopCounter = new Datalogger.GenericField("LoopCounter");
+        public Datalogger.GenericField runTime = new Datalogger.GenericField("RunTime");
+        public Datalogger.GenericField deltaTime = new Datalogger.GenericField("deltaTime");
+        public Datalogger.GenericField ledColor = new Datalogger.GenericField("ledColor");
+        public Datalogger.GenericField bearing = new Datalogger.GenericField("bearing");
+        public Datalogger.GenericField range = new Datalogger.GenericField("range");
+
+        public Datalog(String name) {
+            datalogger = new Datalogger.Builder()
+                                .setFilename(name)
+                                .setAutoTimestamp(Datalogger.AutoTimestamp.DECIMAL_SECONDS)
+            /*
+             * Tell it about the fields we care to log.
+             * Note: Order *IS* important here! The order in which we list the
+             *       fields is the order in which they will appear in the log.
+             */
+            .setFields(
+                    loopCounter,
+                    runTime,
+                    deltaTime,
+                    ledColor,
+                    bearing,
+                    range
+            )
+            .build();
+        }
+
+        // Tell the datalogger to gather the values of the fields
+        // and write a new line in the log.
+        public void writeLine() {
+            datalogger.writeLine();
+        }
     }
 }

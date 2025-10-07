@@ -78,47 +78,19 @@ public class AprilTags_dco {
             3.0, 0, 15.0, 0);
     private final YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,
             0, -90, 0, 0);
+    private int tagId;
 
-    /**
-     * The variable to store our instance of the AprilTag processor.
-     */
     public AprilTagProcessor aprilTag;
 
-    /**
-     * The variable to store our instance of the vision portal.
-     */
     public VisionPortal visionPortal;
     public List<AprilTagDetection> currentDetections;
-    public AprilTagDetection target;
-
-    private final Telemetry telemetry;
-    private final HardwareMap hardwareMap;
-
-    public AprilTags_dco(Telemetry _telemetry, HardwareMap _hardwareMap) {
-
-        this.telemetry = _telemetry;
-        this.hardwareMap = _hardwareMap;
-
-        initAprilTag();
-    }
-
-//    public void runIt() {
-//
-//        while (opModeIsActive()) {
-//
-//        }
-//
-//        // Save more CPU resources when camera is no longer needed.
-//        visionPortal.close();
-//
-//    }   // end method runOpMode()
+    private double bearing, range;
 
     /**
      * Initialize the AprilTag processor.
      */
-    public void initAprilTag() {
-
-        // Create the AprilTag processor.
+    public void initAprilTag(HardwareMap hardwareMap) {
+        // Create the AprilTag processor
         aprilTag = new AprilTagProcessor.Builder()
 
                 // The following default settings are available to un-comment and edit as needed.
@@ -150,7 +122,6 @@ public class AprilTags_dco {
         // Create the vision portal by using a builder.
         VisionPortal.Builder builder = new VisionPortal.Builder();
 
-        // Set the camera (webcam vs. built-in RC phone camera).
         if (USE_WEBCAM) {
             builder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
         } else {
@@ -161,7 +132,7 @@ public class AprilTags_dco {
         //builder.setCameraResolution(new Size(640, 480));
 
         // Enable the RC preview (LiveView).  Set "false" to omit camera monitoring.
-        builder.enableLiveView(true);
+         builder.enableLiveView(true);
 
         // Set the stream format; MJPEG uses less bandwidth than default YUY2.
         //builder.setStreamFormat(VisionPortal.StreamFormat.YUY2);
@@ -178,7 +149,7 @@ public class AprilTags_dco {
         visionPortal = builder.build();
 
         // Disable or re-enable the aprilTag processor at any time.
-        //visionPortal.setProcessorEnabled(aprilTag, true);
+        // visionPortal.setProcessorEnabled(aprilTag, true);
 
     }   // end method initAprilTag()
 
@@ -186,39 +157,46 @@ public class AprilTags_dco {
      * Add telemetry about AprilTag detections.
      */
     @SuppressLint("DefaultLocale")
-    public void telemetryAprilTag() {
+    public void runInLoop(Telemetry telemetry) {
 
         currentDetections = aprilTag.getDetections();
         telemetry.addData("# AprilTags Detected", currentDetections.size());
 
-        // Step through the list of detections and display info for each one.
-        for (AprilTagDetection detection : currentDetections) {
-            if (detection.metadata != null) {
-                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-                // Only use tags that don't have Obelisk in them
-                if (!detection.metadata.name.contains("Obelisk")) {
-                    target = detection;
-                    telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
-                            detection.robotPose.getPosition().x,
-                            detection.robotPose.getPosition().y,
-                            detection.robotPose.getPosition().z));
-                    telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)",
-                            detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES),
-                            detection.robotPose.getOrientation().getRoll(AngleUnit.DEGREES),
-                            detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)));
-                }
-            } else {
-                telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
-            }
-        }   // end for() loop
+        if (!currentDetections.isEmpty()) {
+            for (AprilTagDetection detection : currentDetections) {
+                if (detection.metadata!=null) {
+                    if (detection.id == tagId) {
+                        telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                        telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+                        telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+                        telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+                        bearing = detection.ftcPose.bearing;
+                        range = detection.ftcPose.y;
+                    } else {
+                        telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
+                        telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+                        bearing = 99.;
+                        range = 999.;
+                    }
+                } // end of "metadata" test
+                telemetry.addLine(String.format("Bearing: %6.3f", bearing));
+                telemetry.update();
+            }   // end for() loop
+        }
 
         // Add "key" information to telemetry
         telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
         telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
+        telemetry.update();
     }
 
-    public void closeAprilTag(){
-        visionPortal.close();
+    public void setSide(int tag) {
+        tagId = tag;
     }
+
+    public double getBearing() { return bearing; }
+
+    public double getRange() { return range; }
+
+    public void closeAprilTag() { visionPortal.close(); }
 }
