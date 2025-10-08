@@ -30,15 +30,16 @@ package org.firstinspires.ftc.teamcode.OpModes;
 
 import static java.lang.Math.abs;
 
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.AprilTags_dco;
 
 import org.firstinspires.ftc.teamcode.BuildConfig;
@@ -63,6 +64,7 @@ public class MecanumAndAprilTags_dco extends OpMode {
 
 //    public static int numBearings = 5;
     public static boolean logData = true;
+    boolean slowTurn = true;
 
     // This declares the four motors needed
     DcMotor frontLeftDrive;
@@ -80,13 +82,13 @@ public class MecanumAndAprilTags_dco extends OpMode {
     IMU imu;
 
     AprilTags_dco aprilTags;
-    double turn, strafe;
-    double turnPower = 0;
-    double yawError = 0;
     int side;
     String ledColor;
     Datalog datalog;
     ElapsedTime runtime = new ElapsedTime();
+    YawPitchRollAngles orientation;
+    double yawImu;
+    double drive, strafe, turn;
 
     @Override
     public void init() {
@@ -154,16 +156,18 @@ public class MecanumAndAprilTags_dco extends OpMode {
     public void start() {
         aprilTags.setSide(side);
         runtime.reset(); // reset the clock
-
-//        aprilTags.visionPortal.resumeStreaming();
     }
 
     @Override
     public void loop() {
 
-        double drive = -gamepad1.left_stick_y; // forward/back
-        double strafe = gamepad1.left_stick_x; // left/right
-        double turn = gamepad1.right_stick_x;  // rotation
+        drive = -gamepad1.left_stick_y; // forward/back
+        strafe = gamepad1.left_stick_x; // left/right
+        if (slowTurn) {
+            turn = 0.1 * gamepad1.right_stick_x;  // rotation
+        } else {
+            turn = gamepad1.right_stick_x;  // rotation
+        }
 
         aprilTags.runInLoop(telemetry);
 
@@ -186,55 +190,24 @@ public class MecanumAndAprilTags_dco extends OpMode {
             imu.resetYaw();
         }
 
+        orientation = imu.getRobotYawPitchRollAngles();
+        yawImu = orientation.getYaw();
+
         drive(drive, strafe, turn);
-//
-//        if (gamepad1.x) {
-//            if (!aprilTags.currentDetections.isEmpty()) {
-//                AprilTagDetection tag = aprilTags.currentDetections.get(0);
-//                double yawError = aprilTags.target.ftcPose.yaw; // Heading (degrees)
-//
-//                telemetry.addData("Tag ID", tag.id);
-//                telemetry.addData("Yaw (Heading)", "%.2f", yawError);
-//
-////                double targetYaw = 0.0;
-//                double kP = 0.02; // Tune this!
-////                double error = tag.ftcPose.yaw - targetYaw;
-//
-//                turnPower = Range.clip(yawError * kP, -0.3, 0.3);
-//                // Basic proportional control
-////                forwardPower = -x * 0.05;
-////                strafePower = -y * 0.05;
-////                turnPower = -yaw * 0.02;
-////
-////                // Apply thresholds (dead zones)
-////                if (Math.abs(x) < 1.0) forwardPower = 0;
-////                if (Math.abs(y) < 1.0) strafePower = 0;
-////                if (Math.abs(yaw) < 2.0) turnPower = 0;
-//                telemetry.addData("Turn", "%.2f", turnPower);
-//            } else {
-//                telemetry.addLine("No tags visible");
-//            }
-//
-//            telemetry.update();
-//
-//            if (Math.abs(yawError) > 2.0) {
-//                frontLeftDrive.setPower(turnPower);
-//                frontRightDrive.setPower(-turnPower);
-//                backLeftDrive.setPower(turnPower);
-//                backRightDrive.setPower(-turnPower);
-//            }
-//        }
 
         /* Data log
          * Note: The order in which we set datalog fields does *not* matter!
          *       Order is configured inside the Datalog class constructor.
          */
-        if ((logData) && ((i % 10) == 0)) {  // slow down how many records are logged
+        if (logData) {
             datalog.loopCounter.set(i);
             datalog.runTime.set(runtime.seconds());
             datalog.ledColor.set(ledColor);
+            datalog.yawApril.set(aprilTags.getYaw());
+            datalog.yawImu.set(yawImu);
             datalog.bearing.set(aprilTags.getBearing());
             datalog.range.set(aprilTags.getRange());
+            datalog.turn.set(turn);
             datalog.writeLine();
         }
         i++;
@@ -283,7 +256,6 @@ public class MecanumAndAprilTags_dco extends OpMode {
          * The underlying datalogger object - it cares only about an array of loggable fields
          */
         private final Datalogger datalogger;
-
         /*
          * These are all of the fields that we want in the datalog.
          * Note: Order here is NOT important. The order is important
@@ -291,10 +263,12 @@ public class MecanumAndAprilTags_dco extends OpMode {
          */
         public Datalogger.GenericField loopCounter = new Datalogger.GenericField("LoopCounter");
         public Datalogger.GenericField runTime = new Datalogger.GenericField("RunTime");
-        public Datalogger.GenericField deltaTime = new Datalogger.GenericField("deltaTime");
         public Datalogger.GenericField ledColor = new Datalogger.GenericField("ledColor");
+        public Datalogger.GenericField yawApril = new Datalogger.GenericField("yawApril");
+        public Datalogger.GenericField yawImu = new Datalogger.GenericField("yawIMU");
         public Datalogger.GenericField bearing = new Datalogger.GenericField("bearing");
         public Datalogger.GenericField range = new Datalogger.GenericField("range");
+        public Datalogger.GenericField turn = new Datalogger.GenericField("turn");
 
         public Datalog(String name) {
             datalogger = new Datalogger.Builder()
@@ -308,10 +282,12 @@ public class MecanumAndAprilTags_dco extends OpMode {
             .setFields(
                     loopCounter,
                     runTime,
-                    deltaTime,
                     ledColor,
                     bearing,
-                    range
+                    yawApril,
+                    yawImu,
+                    range,
+                    turn
             )
             .build();
         }

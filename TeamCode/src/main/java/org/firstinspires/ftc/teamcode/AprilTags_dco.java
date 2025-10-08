@@ -84,7 +84,7 @@ public class AprilTags_dco {
 
     public VisionPortal visionPortal;
     public List<AprilTagDetection> currentDetections;
-    private double bearing, range;
+    private double bearing, range, yaw;
 
     /**
      * Initialize the AprilTag processor.
@@ -171,12 +171,14 @@ public class AprilTags_dco {
                         telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
                         telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
                         bearing = detection.ftcPose.bearing;
-                        range = detection.ftcPose.y;
+                        range = detection.ftcPose.range;
+                        yaw = detection.ftcPose.yaw;
                     } else {
                         telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
                         telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
                         bearing = 99.;
                         range = 999.;
+                        yaw = 99.;
                     }
                 } // end of "metadata" test
                 telemetry.addLine(String.format("Bearing: %6.3f", bearing));
@@ -195,6 +197,8 @@ public class AprilTags_dco {
     }
 
     public double getBearing() { return bearing; }
+
+    public double getYaw() { return yaw; }
 
     public double getRange() { return range; }
 
