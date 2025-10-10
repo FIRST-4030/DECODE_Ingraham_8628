@@ -128,9 +128,15 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         aprilTag.initAprilTag(side,hardwareMap);
     }
 
+    double stickPower = 1;
+
     @Override
     public void loop() {
         aprilTag.runInLoop(telemetry);
+
+        double driveSpd = stickPower * (-gamepad1.left_stick_y);
+        double strafe = (gamepad1.left_stick_x);
+        double turn = (gamepad1.right_stick_x);
 
         if(abs(aprilTag.bearing) > 15.0){
             redLED.setState(false);
@@ -156,9 +162,17 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
             directionServo.setPosition(0);
         }
 
+        if (gamepad1.left_bumper) {
+            stickPower = 0.5;
+        }
+
+        else {
+            stickPower = 1;
+        }
+
         // If you press the left bumper, you get a drive from the point of view of the robot
         // (much like driving an RC vehicle)
-            drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+            drive(driveSpd, strafe, turn);
     }
 
     // Thanks to FTC16072 for sharing this code!!
