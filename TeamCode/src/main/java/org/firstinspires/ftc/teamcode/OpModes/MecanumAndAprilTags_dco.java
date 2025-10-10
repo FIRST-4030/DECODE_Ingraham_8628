@@ -30,6 +30,8 @@ package org.firstinspires.ftc.teamcode.OpModes;
 
 import static java.lang.Math.abs;
 
+import android.annotation.SuppressLint;
+
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -62,8 +64,10 @@ import org.firstinspires.ftc.teamcode.Datalogger;
 @TeleOp(name = "DCO: Mecanum and AprilTags")
 public class MecanumAndAprilTags_dco extends OpMode {
 
-//    public static int numBearings = 5;
     public static boolean logData = true;
+    public static int decimation = 6;
+    public static double power = 0.7;
+
     boolean slowTurn = true;
 
     // This declares the four motors needed
@@ -83,15 +87,16 @@ public class MecanumAndAprilTags_dco extends OpMode {
 
     AprilTags_dco aprilTags;
     int side;
-    String ledColor;
     Datalog datalog;
     ElapsedTime runtime = new ElapsedTime();
     YawPitchRollAngles orientation;
     double yawImu;
     double drive, strafe, turn;
 
+    @SuppressLint("DefaultLocale")
     @Override
     public void init() {
+
         redLED = hardwareMap.get(DigitalChannel.class, "red");
         greenLED = hardwareMap.get(DigitalChannel.class, "green");
 
@@ -128,10 +133,10 @@ public class MecanumAndAprilTags_dco extends OpMode {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
         aprilTags = new AprilTags_dco();
-        aprilTags.initAprilTag(hardwareMap);
+        aprilTags.initAprilTag(hardwareMap,decimation);
 
         // Initialize the datalog
-        if (logData)  {datalog = new Datalog("AprilTagLog"); }
+        if (logData)  {datalog = new Datalog(String.format("AprilTagLog_%d_%4.2f",decimation,power)); }
 
         redLED.setMode(DigitalChannel.Mode.OUTPUT);
         greenLED.setMode(DigitalChannel.Mode.OUTPUT);
@@ -149,6 +154,8 @@ public class MecanumAndAprilTags_dco extends OpMode {
         }
 
         telemetry.addData("side:", side);
+        telemetry.addLine(String.format("AprilTagLog_%d_%4.2f",decimation,power));
+
         telemetry.update();
     }
 
@@ -161,7 +168,7 @@ public class MecanumAndAprilTags_dco extends OpMode {
     @Override
     public void loop() {
 
-        drive = -gamepad1.left_stick_y; // forward/back
+        drive = -power*gamepad1.left_stick_y; // forward/back
         strafe = gamepad1.left_stick_x; // left/right
         if (slowTurn) {
             turn = 0.1 * gamepad1.right_stick_x;  // rotation
@@ -171,19 +178,15 @@ public class MecanumAndAprilTags_dco extends OpMode {
 
         aprilTags.runInLoop(telemetry);
 
-        telemetry.addData("Bearing:", "%4.2f", aprilTags.getBearing());
-        telemetry.update();
-
-        if (abs(aprilTags.getBearing()) > 15.0) {
-            redLED.setState(true);
-            greenLED.setState(false);
-            directionServo.setPosition(0);
-            ledColor = "red";
-        } else {
+        String ledColor = aprilTags.getLedColor();
+        if (ledColor.equals("green")) {
             redLED.setState(false);
             greenLED.setState(true);
-            directionServo.setPosition(0.5);
-            ledColor = "green";
+            directionServo.setPosition(0.4);
+        } else {
+            redLED.setState(true);
+            greenLED.setState(false);
+            directionServo.setPosition(0.75);
         }
 
         if (gamepad1.a) {
@@ -280,12 +283,12 @@ public class MecanumAndAprilTags_dco extends OpMode {
              *       fields is the order in which they will appear in the log.
              */
             .setFields(
+                    yawApril,
+                    yawImu,
                     loopCounter,
                     runTime,
                     ledColor,
                     bearing,
-                    yawApril,
-                    yawImu,
                     range,
                     turn
             )

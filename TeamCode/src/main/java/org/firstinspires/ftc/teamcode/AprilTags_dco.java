@@ -79,6 +79,7 @@ public class AprilTags_dco {
     private final YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,
             0, -90, 0, 0);
     private int tagId;
+    private String ledColor = "";
 
     public AprilTagProcessor aprilTag;
 
@@ -89,7 +90,7 @@ public class AprilTags_dco {
     /**
      * Initialize the AprilTag processor.
      */
-    public void initAprilTag(HardwareMap hardwareMap) {
+    public void initAprilTag(HardwareMap hardwareMap, int decimation) {
         // Create the AprilTag processor
         aprilTag = new AprilTagProcessor.Builder()
 
@@ -117,7 +118,7 @@ public class AprilTags_dco {
         // Decimation = 3 ..  Detect 2" Tag from 4  feet away at 30 Frames Per Second (default)
         // Decimation = 3 ..  Detect 5" Tag from 10 feet away at 30 Frames Per Second (default)
         // Note: Decimation can be changed on-the-fly to adapt during a match.
-        //aprilTag.setDecimation(3);
+        aprilTag.setDecimation(decimation);
 
         // Create the vision portal by using a builder.
         VisionPortal.Builder builder = new VisionPortal.Builder();
@@ -163,8 +164,9 @@ public class AprilTags_dco {
         telemetry.addData("# AprilTags Detected", currentDetections.size());
 
         if (!currentDetections.isEmpty()) {
+            double lastBearing = 0;
             for (AprilTagDetection detection : currentDetections) {
-                if (detection.metadata!=null) {
+                if (detection.metadata != null) {
                     if (detection.id == tagId) {
                         telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
                         telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
@@ -173,22 +175,25 @@ public class AprilTags_dco {
                         bearing = detection.ftcPose.bearing;
                         range = detection.ftcPose.range;
                         yaw = detection.ftcPose.yaw;
-                    } else {
                         telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
+                        telemetry.addLine(String.format("Bearing: %6.3f", bearing));
                         telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
-                        bearing = 99.;
-                        range = 999.;
-                        yaw = 99.;
+                        ledColor = "green";
                     }
                 } // end of "metadata" test
-                telemetry.addLine(String.format("Bearing: %6.3f", bearing));
                 telemetry.update();
             }   // end for() loop
+        } else {
+            bearing = 99.;
+            range = 999.;
+            yaw = 99.;
+            ledColor = "red";
         }
 
         // Add "key" information to telemetry
         telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
         telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
+        telemetry.addData("LED: ", ledColor);
         telemetry.update();
     }
 
@@ -201,6 +206,8 @@ public class AprilTags_dco {
     public double getYaw() { return yaw; }
 
     public double getRange() { return range; }
+
+    public String getLedColor() { return ledColor; }
 
     public void closeAprilTag() { visionPortal.close(); }
 }
