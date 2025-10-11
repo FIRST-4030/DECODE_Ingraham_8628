@@ -164,7 +164,6 @@ public class AprilTags_dco {
         telemetry.addData("# AprilTags Detected", currentDetections.size());
 
         if (!currentDetections.isEmpty()) {
-            double lastBearing = 0;
             for (AprilTagDetection detection : currentDetections) {
                 if (detection.metadata != null) {
                     if (detection.id == tagId) {
@@ -201,13 +200,15 @@ public class AprilTags_dco {
         tagId = tag;
     }
 
+    public void closeAprilTag() { visionPortal.close(); }
+
     public double getBearing() { return bearing; }
-
-    public double getYaw() { return yaw; }
-
-    public double getRange() { return range; }
 
     public String getLedColor() { return ledColor; }
 
-    public void closeAprilTag() { visionPortal.close(); }
+    public int getTagId() { return tagId; }
+
+    public double getRange() { return range; }
+
+    public double getYaw() { return yaw; }
 }

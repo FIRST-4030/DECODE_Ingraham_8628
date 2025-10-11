@@ -28,6 +28,7 @@
  */
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import static android.os.SystemClock.sleep;
 import static java.lang.Math.abs;
 
 import android.annotation.SuppressLint;
@@ -40,6 +41,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.AprilTags_dco;
@@ -65,10 +67,10 @@ import org.firstinspires.ftc.teamcode.Datalogger;
 public class MecanumAndAprilTags_dco extends OpMode {
 
     public static boolean logData = true;
-    public static int decimation = 6;
+    public static int decimation = 3;
     public static double power = 0.7;
 
-    boolean slowTurn = true;
+    boolean slowTurn = false;
 
     // This declares the four motors needed
     DcMotor frontLeftDrive;
@@ -92,6 +94,7 @@ public class MecanumAndAprilTags_dco extends OpMode {
     YawPitchRollAngles orientation;
     double yawImu;
     double drive, strafe, turn;
+    boolean reportCurrentAprilTagLoop;
 
     @SuppressLint("DefaultLocale")
     @Override
@@ -133,28 +136,31 @@ public class MecanumAndAprilTags_dco extends OpMode {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
         aprilTags = new AprilTags_dco();
-        aprilTags.initAprilTag(hardwareMap,decimation);
+        aprilTags.initAprilTag(hardwareMap, decimation);
 
         // Initialize the datalog
-        if (logData)  {datalog = new Datalog(String.format("AprilTagLog_%d_%4.2f",decimation,power)); }
+        if (logData) {
+            datalog = new Datalog(String.format("AprilTagLog_%d_%4.2f", decimation, power));
+        }
 
         redLED.setMode(DigitalChannel.Mode.OUTPUT);
         greenLED.setMode(DigitalChannel.Mode.OUTPUT);
+        reportCurrentAprilTagLoop = true;
     }
 
+    @SuppressLint("DefaultLocale")
     @Override
     public void init_loop() {
         telemetry.addData("Compiled on:", BuildConfig.COMPILATION_DATE);
 
-        if(gamepad1.x){
+        if (gamepad1.x) {
             side = 20;
-        }
-        else if(gamepad1.b){
+        } else if (gamepad1.b) {
             side = 24;
         }
 
         telemetry.addData("side:", side);
-        telemetry.addLine(String.format("AprilTagLog_%d_%4.2f",decimation,power));
+        telemetry.addLine(String.format("AprilTagLog_%d_%4.2f", decimation, power));
 
         telemetry.update();
     }
@@ -167,14 +173,6 @@ public class MecanumAndAprilTags_dco extends OpMode {
 
     @Override
     public void loop() {
-
-        drive = -power*gamepad1.left_stick_y; // forward/back
-        strafe = gamepad1.left_stick_x; // left/right
-        if (slowTurn) {
-            turn = 0.1 * gamepad1.right_stick_x;  // rotation
-        } else {
-            turn = gamepad1.right_stick_x;  // rotation
-        }
 
         aprilTags.runInLoop(telemetry);
 
@@ -193,8 +191,21 @@ public class MecanumAndAprilTags_dco extends OpMode {
             imu.resetYaw();
         }
 
+        if (gamepad1.x) {
+            reportCurrentAprilTagLoop = false;
+            zeroRobot();
+        }
+
         orientation = imu.getRobotYawPitchRollAngles();
         yawImu = orientation.getYaw();
+
+        drive = -power * gamepad1.left_stick_y; // forward/back
+        strafe = gamepad1.left_stick_x; // left/right
+        if (slowTurn) {
+            turn = 0.1 * gamepad1.right_stick_x;  // rotation
+        } else {
+            turn = gamepad1.right_stick_x;  // rotation
+        }
 
         drive(drive, strafe, turn);
 
@@ -251,6 +262,36 @@ public class MecanumAndAprilTags_dco extends OpMode {
         greenLED.setState(false);
     }
 
+    private void zeroRobot() {
+        double currentBearing = aprilTags.getBearing();
+        double kP = 0.02;
+
+        while (Math.abs(currentBearing) > 2) {
+            double turnPower = Range.clip(kP * currentBearing, -0.4, 0.4);
+
+            // Rotate robot (positive = turn right)
+            frontLeftDrive.setPower(turnPower);
+            backLeftDrive.setPower(turnPower);
+            frontRightDrive.setPower(-turnPower);
+            backRightDrive.setPower(-turnPower);
+
+            telemetry.addData("Tag ID", aprilTags.getTagId());
+            telemetry.addData("Bearing (deg)", "%.2f", currentBearing);
+            telemetry.addData("Turn Power", "%.2f", turnPower);
+            telemetry.update();
+            currentBearing = aprilTags.getBearing();
+        }
+
+        frontLeftDrive.setPower(0);
+        backLeftDrive.setPower(0);
+        frontRightDrive.setPower(0);
+        backRightDrive.setPower(0);
+        sleep(100);
+        telemetry.addLine("Aligned with AprilTag");
+        reportCurrentAprilTagLoop = true;
+        telemetry.update();
+    }
+
     /**
      * Datalog class encapsulates all the fields that will go into the datalog.
      */
@@ -275,24 +316,24 @@ public class MecanumAndAprilTags_dco extends OpMode {
 
         public Datalog(String name) {
             datalogger = new Datalogger.Builder()
-                                .setFilename(name)
-                                .setAutoTimestamp(Datalogger.AutoTimestamp.DECIMAL_SECONDS)
-            /*
-             * Tell it about the fields we care to log.
-             * Note: Order *IS* important here! The order in which we list the
-             *       fields is the order in which they will appear in the log.
-             */
-            .setFields(
-                    yawApril,
-                    yawImu,
-                    loopCounter,
-                    runTime,
-                    ledColor,
-                    bearing,
-                    range,
-                    turn
-            )
-            .build();
+                    .setFilename(name)
+                    .setAutoTimestamp(Datalogger.AutoTimestamp.DECIMAL_SECONDS)
+                    /*
+                     * Tell it about the fields we care to log.
+                     * Note: Order *IS* important here! The order in which we list the
+                     *       fields is the order in which they will appear in the log.
+                     */
+                    .setFields(
+                            yawApril,
+                            yawImu,
+                            loopCounter,
+                            runTime,
+                            ledColor,
+                            bearing,
+                            range,
+                            turn
+                    )
+                    .build();
         }
 
         // Tell the datalogger to gather the values of the fields
