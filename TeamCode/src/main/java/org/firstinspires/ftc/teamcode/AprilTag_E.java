@@ -90,6 +90,8 @@ public class AprilTag_E {
 
     public double bearing;
 
+    private String ledColor;
+
     public void runInLoop(Telemetry telemetry) {
 
         // Wait for the DS start button to be touched.
@@ -195,6 +197,7 @@ public class AprilTag_E {
         if(!currentDetections.isEmpty()) {
             for (AprilTagDetection detection : currentDetections) {
                 if (detection.id == goalTagId) {
+                    ledColor = "green";
                     if (detection.metadata != null) {
                         distanceToGoal = detection.ftcPose.y;
                         telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
@@ -205,11 +208,15 @@ public class AprilTag_E {
                     } else {
                         telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
                         telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
-                        bearing = 999;
                     }
                 }
             }
-        }// end for() loop
+        }
+
+        else{
+            bearing = 999;
+            ledColor = "red";
+        }
 
         // Add "key" information to telemetry
         telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
@@ -218,4 +225,8 @@ public class AprilTag_E {
 
     }   // end method telemetryAprilTag()
 
-}   // end class
+    public String getColor(){
+        return ledColor;
+    }
+
+}

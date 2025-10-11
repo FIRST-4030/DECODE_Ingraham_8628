@@ -134,32 +134,19 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
     public void loop() {
         aprilTag.runInLoop(telemetry);
 
-        double driveSpd = stickPower * (-gamepad1.left_stick_y);
+        double driveSpd = (-gamepad1.left_stick_y);
         double strafe = (gamepad1.left_stick_x);
         double turn = (gamepad1.right_stick_x);
 
-        if(abs(aprilTag.bearing) > 15.0){
+        if(aprilTag.getColor().equals("red")){
             redLED.setState(false);
             greenLED.setState(false);
-            directionServo.setPosition(0);
+            directionServo.setPosition(0.75);
         }
         else{
             redLED.setState(false);
             greenLED.setState(true);
-            directionServo.setPosition(0.5);
-        }
-        // If you press the A button, then you reset the Yaw to be zero from the way
-        // the robot is currently pointing
-        if (gamepad1.a) {
-            greenLED.setState(true);
-            redLED.setState(false);
-            directionServo.setPosition(0.5);
-        }
-
-        else if (gamepad1.b) {
-            greenLED.setState(false);
-            redLED.setState(true);
-            directionServo.setPosition(0);
+            directionServo.setPosition(0.4);
         }
 
         if (gamepad1.left_bumper) {
@@ -172,20 +159,21 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
 
         // If you press the left bumper, you get a drive from the point of view of the robot
         // (much like driving an RC vehicle)
-            drive(driveSpd, strafe, turn);
+            drive(driveSpd, strafe, turn, stickPower);
     }
 
     // Thanks to FTC16072 for sharing this code!!
-    public void drive(double forward, double right, double rotate) {
+    public void drive(double forward, double right, double rotate, double maxSpeed) {
         // This calculates the power needed for each wheel based on the amount of forward,
         // strafe right, and rotate
+
         double frontLeftPower = forward + right + rotate;
         double frontRightPower = forward - right - rotate;
         double backRightPower = forward + right - rotate;
         double backLeftPower = forward - right + rotate;
 
         double maxPower = 1.0;
-        double maxSpeed = 1.0;  // make this slower for outreaches
+        //double maxSpeed = wheelSpeed;  // make this slower for outreaches
 
         // This is needed to make sure we don't pass > 1.0 to any wheel
         // It allows us to keep all of the motors in proportion to what they should
@@ -204,12 +192,12 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         backRightDrive.setPower(maxSpeed * (backRightPower / maxPower));
     }
 
-    private void setMotorPower(double fL, double fR, double bL, double bR){
-        frontLeftDrive.setPower(fL);
-        frontRightDrive.setPower(fR);
-        backLeftDrive.setPower(bL);
-        backRightDrive.setPower(bR);
-    }
+//    private void setMotorPower(double fL, double fR, double bL, double bR){
+//        frontLeftDrive.setPower(fL);
+//        frontRightDrive.setPower(fR);
+//        backLeftDrive.setPower(bL);
+//        backRightDrive.setPower(bR);
+//    }
 
     @Override
     public void stop(){
