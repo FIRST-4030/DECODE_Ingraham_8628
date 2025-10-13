@@ -58,7 +58,7 @@ public class RobotTeleopMecanumFieldRelativeDrive_Nf extends OpMode {
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
-
+    HelperAprilTag_Nf helperAprilTag;
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
 
@@ -68,7 +68,8 @@ public class RobotTeleopMecanumFieldRelativeDrive_Nf extends OpMode {
         frontRightDrive = hardwareMap.get(DcMotor.class, "rightFront");
         backLeftDrive = hardwareMap.get(DcMotor.class, "leftBack");
         backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
-
+        helperAprilTag = new HelperAprilTag_Nf();
+        helperAprilTag.initAprilTag(hardwareMap);
         // We set the left motors in reverse which is needed for drive trains where the left
         // motors are opposite to the right ones.
         frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -101,6 +102,8 @@ public class RobotTeleopMecanumFieldRelativeDrive_Nf extends OpMode {
         telemetry.addLine("Hold left bumper to drive in robot relative");
         telemetry.addLine("The left joystick sets the robot direction");
         telemetry.addLine("Moving the right joystick left and right turns the robot");
+
+        helperAprilTag.telemetryAprilTag(telemetry);
 
         // If you press the A button, then you reset the Yaw to be zero from the way
         // the robot is currently pointing
