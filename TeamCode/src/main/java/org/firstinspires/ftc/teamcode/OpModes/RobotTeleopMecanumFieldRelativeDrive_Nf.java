@@ -70,6 +70,7 @@ public class RobotTeleopMecanumFieldRelativeDrive_Nf extends OpMode {
         backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
         helperAprilTag = new HelperAprilTag_Nf();
         helperAprilTag.initAprilTag(hardwareMap);
+
         // We set the left motors in reverse which is needed for drive trains where the left
         // motors are opposite to the right ones.
         frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -79,10 +80,10 @@ public class RobotTeleopMecanumFieldRelativeDrive_Nf extends OpMode {
 
         // This uses RUN_USING_ENCODER to be more accurate.   If you don't have the encoder
         // wires, you should remove these
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         imu = hardwareMap.get(IMU.class, "imu");
         // This needs to be changed to match the orientation on your robot
@@ -107,21 +108,11 @@ public class RobotTeleopMecanumFieldRelativeDrive_Nf extends OpMode {
 
         // If you press the A button, then you reset the Yaw to be zero from the way
         // the robot is currently pointing
-        if (gamepad1.x) {
-            frontLeftDrive.setPower(0.5);
+
+
+        if (gamepad1.start) {
+            imu.resetYaw();
         }
-        if (gamepad1.y) {
-            frontRightDrive.setPower(0.5);
-        }
-        if (gamepad1.a) {
-            backLeftDrive.setPower(0.5);
-        }
-        if (gamepad1.b) {
-            backRightDrive.setPower(0.5);
-        }
-//        if (gamepad1.a) {
-//            imu.resetYaw();
-//        }
         // If you press the left bumper, you get a drive from the point of view of the robot
         // (much like driving an RC vehicle)
         if (gamepad1.left_bumper) {
