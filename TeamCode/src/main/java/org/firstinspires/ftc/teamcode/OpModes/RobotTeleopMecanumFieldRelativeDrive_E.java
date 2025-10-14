@@ -30,6 +30,8 @@ package org.firstinspires.ftc.teamcode.OpModes;
 
 import static java.lang.Math.abs;
 
+import android.annotation.SuppressLint;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -37,9 +39,11 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.AprilTag_E;
+import org.firstinspires.ftc.teamcode.Datalogger;
 
 /*
  * This OpMode illustrates how to program your robot to drive field relative.  This means
@@ -69,9 +73,19 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
     private DigitalChannel redLED;
     private DigitalChannel greenLED;
 
+    Datalog datalog;
+    ElapsedTime runtime = new ElapsedTime();
+    public static int decimation = 3;
+    public static double power = 0.7;
+    double yawImu;
+    YawPitchRollAngles orientation;
+
+    AprilTag_E aprilTags;
+
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
 
+    @SuppressLint("DefaultLocale")
     @Override
     public void init() {
         frontLeftDrive = hardwareMap.get(DcMotor.class, "leftFront");
@@ -111,6 +125,9 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         RevHubOrientationOnRobot orientationOnRobot = new
                 RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
+
+        aprilTags = new AprilTag_E();
+        datalog = new RobotTeleopMecanumFieldRelativeDrive_E.Datalog(String.format("AprilTagLog_%d_%4.2f", decimation, power));
     }
 
     public void init_loop(){
@@ -138,7 +155,8 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         double strafe = (gamepad1.left_stick_x);
         double turn = (gamepad1.right_stick_x);
 
-        if(aprilTag.getColor().equals("red")){
+        String ledColor = aprilTag.getColor();
+        if(ledColor.equals("red")){
             redLED.setState(false);
             greenLED.setState(false);
             directionServo.setPosition(0.75);
@@ -152,14 +170,25 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         if (gamepad1.left_bumper) {
             stickPower = 0.5;
         }
-
         else {
             stickPower = 1;
         }
 
+        orientation = imu.getRobotYawPitchRollAngles();
+        yawImu = orientation.getYaw();
+
         // If you press the left bumper, you get a drive from the point of view of the robot
         // (much like driving an RC vehicle)
             drive(driveSpd, strafe, turn, stickPower);
+
+        datalog.runTime.set(runtime.seconds());
+        datalog.ledColor.set(ledColor);
+        datalog.yawApril.set(aprilTags.getYaw());
+        datalog.yawImu.set(yawImu);
+        datalog.bearing.set(aprilTags.getBearing());
+        datalog.range.set(aprilTags.getRange());
+        datalog.turn.set(turn);
+        datalog.writeLine();
     }
 
     // Thanks to FTC16072 for sharing this code!!
@@ -173,7 +202,8 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         double backLeftPower = forward - right + rotate;
 
         double maxPower = 1.0;
-        //double maxSpeed = wheelSpeed;  // make this slower for outreaches
+        //double maxSpeed = 1.0;  // make this slower for outreaches
+        //removed, replaced with argument
 
         // This is needed to make sure we don't pass > 1.0 to any wheel
         // It allows us to keep all of the motors in proportion to what they should
@@ -204,5 +234,51 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         aprilTag.closeAprilTag();
         redLED.setState(false);
         greenLED.setState(false);
+    }
+
+    public static class Datalog {
+        /*
+         * The underlying datalogger object - it cares only about an array of loggable fields
+         */
+        private final Datalogger datalogger;
+        /*
+         * These are all of the fields that we want in the datalog.
+         * Note: Order here is NOT important. The order is important
+         *       in the setFields() call below
+         */
+        public Datalogger.GenericField runTime = new Datalogger.GenericField("RunTime");
+        public Datalogger.GenericField ledColor = new Datalogger.GenericField("ledColor");
+        public Datalogger.GenericField yawApril = new Datalogger.GenericField("yawApril");
+        public Datalogger.GenericField yawImu = new Datalogger.GenericField("yawIMU");
+        public Datalogger.GenericField bearing = new Datalogger.GenericField("bearing");
+        public Datalogger.GenericField range = new Datalogger.GenericField("range");
+        public Datalogger.GenericField turn = new Datalogger.GenericField("turn");
+
+        public Datalog(String name) {
+            datalogger = new Datalogger.Builder()
+                    .setFilename(name)
+                    .setAutoTimestamp(Datalogger.AutoTimestamp.DECIMAL_SECONDS)
+                    /*
+                     * Tell it about the fields we care to log.
+                     * Note: Order *IS* important here! The order in which we list the
+                     *       fields is the order in which they will appear in the log.
+                     */
+                    .setFields(
+                            yawApril,
+                            yawImu,
+                            runTime,
+                            ledColor,
+                            bearing,
+                            range,
+                            turn
+                    )
+                    .build();
+        }
+
+        // Tell the datalogger to gather the values of the fields
+        // and write a new line in the log.
+        public void writeLine() {
+            datalogger.writeLine();
+        }
     }
 }
