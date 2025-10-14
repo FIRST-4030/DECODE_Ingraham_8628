@@ -32,7 +32,6 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -52,13 +51,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  *
  */
 @TeleOp(name = "Robot: Field Relative Mecanum Drive-Nf", group = "Robot")
-public class RobotTeleopMecanumFieldRelativeDrive_Nf extends OpMode {
+public class Naila7462M extends OpMode {
     // This declares the four motors needed
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
-    HelperAprilTag_Nf helperAprilTag;
+//    HelperAprilTag_Nf helperAprilTag;
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
 
@@ -75,8 +74,8 @@ public class RobotTeleopMecanumFieldRelativeDrive_Nf extends OpMode {
         backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
 
-        helperAprilTag = new HelperAprilTag_Nf();
-        helperAprilTag.initAprilTag(hardwareMap);
+//        helperAprilTag = new HelperAprilTag_Nf();
+//        helperAprilTag.initAprilTag(hardwareMap);
 
         // We set the left motors in reverse which is needed for drive trains where the left
         // motors are opposite to the right ones.
@@ -111,7 +110,7 @@ public class RobotTeleopMecanumFieldRelativeDrive_Nf extends OpMode {
         telemetry.addLine("The left joystick sets the robot direction");
         telemetry.addLine("Moving the right joystick left and right turns the robot");
 
-        helperAprilTag.telemetryAprilTag(telemetry);
+//        helperAprilTag.telemetryAprilTag(telemetry);
 
         // If you press the A button, then you reset the Yaw to be zero from the way
         // the robot is currently pointing
