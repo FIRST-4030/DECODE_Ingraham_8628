@@ -29,6 +29,8 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import static android.os.SystemClock.sleep;
+
 import android.annotation.SuppressLint;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -46,6 +48,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 
+@SuppressLint("DefaultLocale")
 public class AprilTags_dco {
 
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
@@ -81,35 +84,44 @@ public class AprilTags_dco {
     private int tagId;
     private String ledColor = "";
 
-    public AprilTagProcessor aprilTag;
+    public boolean GPP = false; // id 21
+    public boolean PGP = false; // id 22
+    public boolean PPG = false; // id 23
+    private double goalRangeBlue, goalRangeRed; // inches
+    private double goalBearingBlue, goalBearingRed; // radians
+    private double BotXBlue, BotYBlue, BotXRed, BotYRed;
+
+    public AprilTagProcessor tags;
 
     public VisionPortal visionPortal;
-    public List<AprilTagDetection> currentDetections;
+//    public List<AprilTagDetection> currentDetections;
     private double bearing, range, yaw;
 
+    Telemetry telemetry;
     /**
      * Initialize the AprilTag processor.
      */
-    public void initAprilTag(HardwareMap hardwareMap, int decimation) {
+    public void initAprilTag(HardwareMap hardwareMap, Telemetry tele, int decimation) {
+        this.telemetry = tele;
         // Create the AprilTag processor
-        aprilTag = new AprilTagProcessor.Builder()
+        tags = new AprilTagProcessor.Builder()
 
-                // The following default settings are available to un-comment and edit as needed.
-                //.setDrawAxes(false)
-                //.setDrawCubeProjection(false)
-                //.setDrawTagOutline(true)
-                //.setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
-                //.setTagLibrary(AprilTagGameDatabase.getCenterStageTagLibrary())
-                //.setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
-                .setCameraPose(cameraPosition, cameraOrientation)
+        // The following default settings are available to un-comment and edit as needed.
+        //.setDrawAxes(false)
+        .setDrawCubeProjection(true)
+        //.setDrawTagOutline(true)
+        //.setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
+        //.setTagLibrary(AprilTagGameDatabase.getCenterStageTagLibrary())
+        .setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
+        .setCameraPose(cameraPosition, cameraOrientation)
 
-                // == CAMERA CALIBRATION ==
-                // If you do not manually specify calibration parameters, the SDK will attempt
-                // to load a predefined calibration for your camera.
-                //.setLensIntrinsics(578.272, 578.272, 402.145, 221.506)
-                // ... these parameters are fx, fy, cx, cy.
+        // == CAMERA CALIBRATION ==
+        // If you do not manually specify calibration parameters, the SDK will attempt
+        // to load a predefined calibration for your camera.
+        //.setLensIntrinsics(578.272, 578.272, 402.145, 221.506)
+        // ... these parameters are fx, fy, cx, cy.
 
-                .build();
+        .build();
 
         // Adjust Image Decimation to trade-off detection-range for detection-rate.
         // eg: Some typical detection data using a Logitech C920 WebCam
@@ -118,7 +130,7 @@ public class AprilTags_dco {
         // Decimation = 3 ..  Detect 2" Tag from 4  feet away at 30 Frames Per Second (default)
         // Decimation = 3 ..  Detect 5" Tag from 10 feet away at 30 Frames Per Second (default)
         // Note: Decimation can be changed on-the-fly to adapt during a match.
-        aprilTag.setDecimation(decimation);
+//        tags.setDecimation(decimation);
 
         // Create the vision portal by using a builder.
         VisionPortal.Builder builder = new VisionPortal.Builder();
@@ -133,7 +145,7 @@ public class AprilTags_dco {
         //builder.setCameraResolution(new Size(640, 480));
 
         // Enable the RC preview (LiveView).  Set "false" to omit camera monitoring.
-         builder.enableLiveView(true);
+        // builder.enableLiveView(true);
 
         // Set the stream format; MJPEG uses less bandwidth than default YUY2.
         //builder.setStreamFormat(VisionPortal.StreamFormat.YUY2);
@@ -144,23 +156,22 @@ public class AprilTags_dco {
         //builder.setAutoStopLiveView(false);
 
         // Set and enable the processor.
-        builder.addProcessor(aprilTag);
+        builder.addProcessor(tags);
 
         // Build the Vision Portal, using the above settings.
         visionPortal = builder.build();
 
-        // Disable or re-enable the aprilTag processor at any time.
-        // visionPortal.setProcessorEnabled(aprilTag, true);
+        // Disable or re-enable the tags processor at any time.
+        // visionPortal.setProcessorEnabled(tags, true);
+
 
     }   // end method initAprilTag()
-
     /**
      * Add telemetry about AprilTag detections.
      */
-    @SuppressLint("DefaultLocale")
     public void runInLoop(Telemetry telemetry) {
 
-        currentDetections = aprilTag.getDetections();
+        List<AprilTagDetection> currentDetections = tags.getDetections();
         telemetry.addData("# AprilTags Detected", currentDetections.size());
 
         if (!currentDetections.isEmpty()) {
@@ -195,10 +206,68 @@ public class AprilTags_dco {
         telemetry.addData("LED: ", ledColor);
         telemetry.update();
     }
+    /*
+     * Iteratively look for a change to the obelisk while continually tracking the
+     * bearing to the target
+     */
+    public void scanObelisk() {
 
-    public void setSide(int tag) {
-        tagId = tag;
+        List<AprilTagDetection> initDetections = tags.getDetections();
+
+        boolean blueFound = false, redFound = false;
+        if (!initDetections.isEmpty()) {
+            for (AprilTagDetection detection : initDetections) {
+                if (detection.metadata != null) {
+                    if (detection.id == 20) {
+                        goalRangeBlue = detection.ftcPose.range;
+                        goalBearingBlue = detection.ftcPose.bearing;
+                        BotXBlue = detection.robotPose.getPosition().x;
+                        BotYBlue = detection.robotPose.getPosition().y;
+                        blueFound = true;
+                    }
+
+                    if (detection.id == 24) {
+                        goalRangeRed = detection.ftcPose.range;
+                        goalBearingRed = detection.ftcPose.bearing;
+                        BotXRed = detection.robotPose.getPosition().x;
+                        BotYRed = detection.robotPose.getPosition().y;
+                        redFound = true;
+                    }
+
+                    if (detection.id == 21) {
+                        GPP = true;
+                        PGP = false;
+                        PPG = false;
+                    } else if (detection.id == 22) {
+                        GPP = false;
+                        PGP = true;
+                        PPG = false;
+                    } else if (detection.id == 23) {
+                        GPP = false;
+                        PGP = false;
+                        PPG = true;
+                    }
+                }
+            }
+
+            telemetry.addLine(String.format("# AprilTags Detected: %d\n", initDetections.size()));
+            telemetry.addLine(String.format("GPP=%b, PGP=%b, PPG=%b\n", GPP, PGP, PPG));
+            if (blueFound) {
+                telemetry.addLine(String.format("Blue  Goal:\n  Range=%6.2f, Bearing=%6.2f, X=%6.2f, Y=%6.2f",
+                        goalRangeBlue, goalBearingBlue, BotXBlue, BotYBlue));
+            }
+            if (redFound) {
+                telemetry.addLine(String.format("Red  Goal:\n  Range=%6.2f, Bearing=%6.2f, X=%6.2f, Y=%6.2f",
+                        goalRangeRed, goalBearingRed, BotXRed, BotYRed));
+           }
+
+        } else {
+            telemetry.addLine("No tags");
+        }
+        telemetry.update();
     }
+
+    public void setSide(int tag) { tagId = tag; }
 
     public void closeAprilTag() { visionPortal.close(); }
 

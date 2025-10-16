@@ -119,10 +119,10 @@ public class MecanumAndAprilTags_dco extends OpMode {
 
         // This uses RUN_USING_ENCODER to be more accurate.   If you don't have the encoder
         // wires, you should remove these
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         imu = hardwareMap.get(IMU.class, "imu");
         // This needs to be changed to match the orientation on your robot
@@ -136,7 +136,7 @@ public class MecanumAndAprilTags_dco extends OpMode {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
         aprilTags = new AprilTags_dco();
-        aprilTags.initAprilTag(hardwareMap, decimation);
+        aprilTags.initAprilTag(hardwareMap, telemetry, decimation);
 
         // Initialize the datalog
         if (logData) {
