@@ -57,6 +57,8 @@ public class Naila7462M extends OpMode {
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
+    DcMotor collector;
+    DcMotor shooter;
 //    HelperAprilTag_Nf helperAprilTag;
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
@@ -91,6 +93,11 @@ public class Naila7462M extends OpMode {
         backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        collector = hardwareMap.get(DcMotor.class, "collector");
+        shooter = hardwareMap.get(DcMotor.class, "shooter");
+        collector.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         imu = hardwareMap.get(IMU.class, "imu");
         // This needs to be changed to match the orientation on your robot
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection =
@@ -119,6 +126,20 @@ public class Naila7462M extends OpMode {
         if (gamepad1.start) {
             imu.resetYaw();
         }
+
+        if (gamepad1.aWasPressed()) {
+            shooter.setPower(1.0);
+        }
+        if (gamepad1.aWasReleased()) {
+            shooter.setPower(0.0);
+        }
+        if (gamepad1.bWasPressed()) {
+            collector.setPower(1.0);
+        }
+        if (gamepad1.bWasReleased()) {
+            collector.setPower(0.0);
+        }
+
         // If you press the left bumper, you get a drive from the point of view of the robot
         // (much like driving an RC vehicle)
         if (gamepad1.left_bumper) {
