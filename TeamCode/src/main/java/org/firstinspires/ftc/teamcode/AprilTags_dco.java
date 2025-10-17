@@ -29,8 +29,6 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import static android.os.SystemClock.sleep;
-
 import android.annotation.SuppressLint;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -94,8 +92,8 @@ public class AprilTags_dco {
     public AprilTagProcessor tags;
 
     public VisionPortal visionPortal;
-//    public List<AprilTagDetection> currentDetections;
-    private double bearing, range, yaw;
+
+    private double bearing, range, yaw, posX, posY;
 
     Telemetry telemetry;
     /**
@@ -210,7 +208,7 @@ public class AprilTags_dco {
      * Iteratively look for a change to the obelisk while continually tracking the
      * bearing to the target
      */
-    public void scanObelisk() {
+    public void scanForObelisk() {
 
         List<AprilTagDetection> initDetections = tags.getDetections();
 
@@ -224,6 +222,7 @@ public class AprilTags_dco {
                         BotXBlue = detection.robotPose.getPosition().x;
                         BotYBlue = detection.robotPose.getPosition().y;
                         blueFound = true;
+                        tagId = detection.id;
                     }
 
                     if (detection.id == 24) {
@@ -232,6 +231,7 @@ public class AprilTags_dco {
                         BotXRed = detection.robotPose.getPosition().x;
                         BotYRed = detection.robotPose.getPosition().y;
                         redFound = true;
+                        tagId = detection.id;
                     }
 
                     if (detection.id == 21) {
@@ -253,10 +253,12 @@ public class AprilTags_dco {
             telemetry.addLine(String.format("# AprilTags Detected: %d\n", initDetections.size()));
             telemetry.addLine(String.format("GPP=%b, PGP=%b, PPG=%b\n", GPP, PGP, PPG));
             if (blueFound) {
+                bearing = goalBearingBlue;
                 telemetry.addLine(String.format("Blue  Goal:\n  Range=%6.2f, Bearing=%6.2f, X=%6.2f, Y=%6.2f",
                         goalRangeBlue, goalBearingBlue, BotXBlue, BotYBlue));
             }
             if (redFound) {
+                bearing = goalBearingRed;
                 telemetry.addLine(String.format("Red  Goal:\n  Range=%6.2f, Bearing=%6.2f, X=%6.2f, Y=%6.2f",
                         goalRangeRed, goalBearingRed, BotXRed, BotYRed));
            }
@@ -267,7 +269,23 @@ public class AprilTags_dco {
         telemetry.update();
     }
 
-    public void setSide(int tag) { tagId = tag; }
+    public void getCurrentPosition(int tagId) {
+
+        List<AprilTagDetection> currentDetections = tags.getDetections();
+
+        if (!currentDetections.isEmpty()) {
+            for (AprilTagDetection detection : currentDetections) {
+                if (detection.metadata != null) {
+                    if (detection.id == tagId) {
+                        range = detection.ftcPose.range;
+                        bearing = detection.ftcPose.bearing;
+                        posX = detection.robotPose.getPosition().x;
+                        posY = detection.robotPose.getPosition().y;
+                    }
+                }
+            }
+        }
+    }
 
     public void closeAprilTag() { visionPortal.close(); }
 
@@ -275,9 +293,9 @@ public class AprilTags_dco {
 
     public String getLedColor() { return ledColor; }
 
-    public int getTagId() { return tagId; }
-
     public double getRange() { return range; }
+
+    public int getTagId() { return tagId; }
 
     public double getYaw() { return yaw; }
 }
