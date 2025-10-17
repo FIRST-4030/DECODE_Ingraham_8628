@@ -109,10 +109,10 @@ public class MecanumAuto_E extends LinearOpMode {
 
         // This uses RUN_USING_ENCODER to be more accurate.   If you don't have the encoder
         // wires, you should remove these
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         imu = hardwareMap.get(IMU.class, "imu");
         // This needs to be changed to match the orientation on your robot
@@ -129,26 +129,32 @@ public class MecanumAuto_E extends LinearOpMode {
         datalog = new RobotTeleopMecanumFieldRelativeDrive_E.Datalog(String.format("AprilTagLog_%d_%4.2f", decimation, power));
 
         // Wait for the game to start (driver presses START)
-        boolean inputComplete = false;
-        while(!inputComplete){
+//        boolean inputComplete = false;
+//        while(!inputComplete){
+//
+//            if(gamepad1.x){
+//                side = 20;
+//            }
+//
+//            if(gamepad1.b){
+//                side = 24;
+//            }
+//
+//            if(gamepad1.y){
+//                inputComplete = true;
+//            }
+//
+//            telemetry.addData("Side; ",side);
+//            telemetry.update();
+//        }
 
-            if(gamepad1.x){
-                side = 20;
-            }
+        aprilTags = new AprilTag_E();
+        aprilTags.initAprilTag(hardwareMap);
 
-            if(gamepad1.b){
-                side = 24;
-            }
+        do {
+            aprilTags.scanField(telemetry);
+        } while (opModeInInit());
 
-            if(gamepad1.y){
-                inputComplete = true;
-            }
-
-            telemetry.addData("Side; ",side);
-            telemetry.update();
-        }
-
-        waitForStart();
         runtime.reset();
 
         // run until the end of the match (driver presses STOP)

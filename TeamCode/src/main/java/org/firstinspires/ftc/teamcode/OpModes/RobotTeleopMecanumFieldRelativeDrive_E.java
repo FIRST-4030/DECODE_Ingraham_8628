@@ -141,9 +141,9 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         telemetry.update();
     }
 
-    public void start(){
-        aprilTag.initAprilTag(side,hardwareMap);
-    }
+//    public void start(){
+//        aprilTag.initAprilTag(side,hardwareMap);
+//    }
 
     double stickPower = 1;
 

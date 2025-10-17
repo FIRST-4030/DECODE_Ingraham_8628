@@ -132,14 +132,92 @@ public class MecanumAuto_dco extends LinearOpMode {
         aprilTags.initAprilTag(hardwareMap, telemetry, decimation);
 
         do  {
-            aprilTags.scanObelisk();
+            aprilTags.scanForObelisk();
         } while(opModeInInit());
 
         //waitForStart();
         if (isStopRequested()) return;
 
 //        DriveForwardDistance(0.75, distance);
-        DriveForwardForTime(0.75, 1.0);    }
+//        DriveForwardForTime(0.75, 1.0);
+//
+        rotateRobot();
+    }
+
+    @SuppressLint("DefaultLocale")
+    public void rotateRobot() {
+        double Kp                = 0.03;   // start small, increase until responsive
+        double minPower          = 0.12;    // overcome stiction
+        double maxPower          = 0.6;     // safety cap
+        double tolerance         = 1.0;     // degrees
+        double target            = 0.;
+        double bearing;
+        int i = 0;
+        double rotationDirection = 0;       // CW = 1, CCW = -1
+
+        int tagId = aprilTags.getTagId();
+
+        aprilTags.getCurrentPosition(tagId);
+        bearing = aprilTags.getBearing();
+
+        telemetry.addLine(String.format("Bearing: %6.2f", bearing));
+        telemetry.addLine(String.format("ID: %d", tagId));
+        telemetry.update();
+
+        while (true) {
+
+            aprilTags.getCurrentPosition(tagId);
+            bearing = aprilTags.getBearing();
+            double error = target - bearing;
+
+            if (Math.abs(error) <= tolerance) break;
+
+            double power = Kp * error;
+
+            telemetry.addLine(String.format("Counter: %d", i++));
+            telemetry.addLine(String.format("Bearing: %6.2f", bearing));
+            telemetry.addLine(String.format("Power: %6.2f", power));
+            telemetry.addLine(String.format("Error: %6.2f", error));
+            telemetry.update();
+
+//            if (tagId==20) {             // blue
+//                rotationDirection = -1.;
+//            } else if (tagId==24) {      // red
+//                rotationDirection = 1.;
+//            }
+
+            // enforce min power so robot actually moves
+            if (Math.abs(power) < minPower) power = Math.signum(power) * minPower;
+//            if (Math.abs(power) < minPower) power = rotationDirection * minPower;
+            // clamp to max
+            power = Math.max(-maxPower, Math.min(maxPower, power));
+
+            frontLeftDrive.setPower(power);
+            frontRightDrive.setPower(-power);
+            backLeftDrive.setPower(power);
+            backRightDrive.setPower(-power);
+//            sleep(50);
+
+//            if (aprilTags.getBearing() > 2. || aprilTags.getBearing() < -2.) {
+//                frontLeftDrive.setPower(rotationDirection * power);
+//                frontRightDrive.setPower(rotationDirection * power);
+//                backLeftDrive.setPower(rotationDirection * power);
+//                backRightDrive.setPower(rotationDirection * power);
+//
+//                telemetry.addLine(String.format("Bearing: %6.2f", aprilTags.getBearing()));
+//                telemetry.update();
+//            } else {
+//                break;
+//            }
+        }
+        /*
+         * Stop all motors
+         */
+        frontLeftDrive.setPower(0);
+        frontRightDrive.setPower(0);
+        backLeftDrive.setPower(0);
+        backRightDrive.setPower(0);
+    }
 
     public void DriveForwardDistance(double power, int distance) {
         frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
