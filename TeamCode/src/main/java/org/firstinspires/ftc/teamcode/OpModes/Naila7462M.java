@@ -28,11 +28,16 @@
  */
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import static android.os.SystemClock.sleep;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
@@ -50,16 +55,17 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  *
  */
-@TeleOp(name = "Teleop 7462M", group = "Robot")
+@TeleOp(name = "Teleop-NF 7462M", group = "Robot")
 public class Naila7462M extends OpMode {
     // This declares the four motors needed
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
-    DcMotor collector;
-    DcMotor shooter;
-//    HelperAprilTag_Nf helperAprilTag;
+    DcMotorEx collector;
+    DcMotorEx shooter;
+    Servo shooterHinge;
+    //    HelperAprilTag_Nf helperAprilTag;
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
 
@@ -81,10 +87,10 @@ public class Naila7462M extends OpMode {
 
         // We set the left motors in reverse which is needed for drive trains where the left
         // motors are opposite to the right ones.
-        frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
-        frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
-        backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
-        backRightDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
+        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
 
         // This uses RUN_USING_ENCODER to be more accurate.   If you don't have the encoder
         // wires, you should remove these
@@ -93,10 +99,17 @@ public class Naila7462M extends OpMode {
         backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        collector = hardwareMap.get(DcMotor.class, "collector");
-        shooter = hardwareMap.get(DcMotor.class, "shooter");
-        collector.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        collector = hardwareMap.get(DcMotorEx.class, "collector");
+        shooter = hardwareMap.get(DcMotorEx.class, "shooter");
+        collector.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        collector.setDirection(DcMotor.Direction.REVERSE);
+        shooter.setDirection(DcMotor.Direction.FORWARD);
+
+        shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
+        shooterHinge.setPosition(0.5);
+
 
         imu = hardwareMap.get(IMU.class, "imu");
         // This needs to be changed to match the orientation on your robot
@@ -112,16 +125,13 @@ public class Naila7462M extends OpMode {
 
     @Override
     public void loop() {
-        telemetry.addLine("Press A to reset Yaw");
-        telemetry.addLine("Hold left bumper to drive in robot relative");
-        telemetry.addLine("The left joystick sets the robot direction");
-        telemetry.addLine("Moving the right joystick left and right turns the robot");
+        telemetry.addData("collector:", collector.getVelocity());
+        telemetry.addData("shooter:", shooter.getVelocity());
 
 //        helperAprilTag.telemetryAprilTag(telemetry);
 
         // If you press the A button, then you reset the Yaw to be zero from the way
         // the robot is currently pointing
-
 
         if (gamepad1.start) {
             imu.resetYaw();
@@ -139,14 +149,22 @@ public class Naila7462M extends OpMode {
         if (gamepad1.bWasReleased()) {
             collector.setPower(0.0);
         }
+        if (gamepad1.right_bumper) {
+            shooterHinge.setPosition(0.0);
+            sleep(500);
+            shooterHinge.setPosition(0.5);
+        }
+//        if (gamepad1.xWasReleased()) {
+//            shooterHinge.setPosition(0.6);
+//        }
 
         // If you press the left bumper, you get a drive from the point of view of the robot
         // (much like driving an RC vehicle)
-        if (gamepad1.left_bumper) {
+        //if (gamepad1.left_bumper) {
             drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-        } else {
-            driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-        }
+        //} else {
+        //    driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+        //}
     }
 
     // This routine drives the robot field relative

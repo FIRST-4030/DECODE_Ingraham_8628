@@ -59,7 +59,7 @@ import org.firstinspires.ftc.teamcode.Datalogger;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  *
  */
-@TeleOp(name = "Elijah: Field Relative Mecanum Drive", group = "Robot")
+@TeleOp(name = "Elijah: Robot-Centric Mecanum Drive", group = "Robot")
 public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
     // This declares the four motors needed
     DcMotor frontLeftDrive;
@@ -141,9 +141,9 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         telemetry.update();
     }
 
-//    public void start(){
-//        aprilTag.initAprilTag(side,hardwareMap);
-//    }
+    public void start(){
+        aprilTag.initAprilTag(hardwareMap);
+    }
 
     double stickPower = 1;
 
@@ -151,7 +151,8 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
     public void loop() {
         aprilTag.runInLoop(telemetry);
 
-        double driveSpd = (-gamepad1.left_stick_y);
+
+        double driveSpd = stickPower * (-gamepad1.left_stick_y);
         double strafe = (gamepad1.left_stick_x);
         double turn = (gamepad1.right_stick_x);
 
@@ -167,12 +168,20 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
             directionServo.setPosition(0.4);
         }
 
-        if (gamepad1.left_bumper) {
-            stickPower = 0.5;
+        if (gamepad1.bWasPressed()) {
+            stickPower = 0.25;
         }
-        else {
-            stickPower = 1;
+        if(gamepad1.bWasReleased()) {
+            stickPower = 1.0;
+
         }
+
+//        if (gamepad1.right_bumper && stickPower == 1) {
+//            stickPower = 0.5;
+//        }
+//        else if (gamepad1.right_bumper){
+//            stickPower = 1;
+//        }
 
         orientation = imu.getRobotYawPitchRollAngles();
         yawImu = orientation.getYaw();
@@ -182,7 +191,7 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
             drive(driveSpd, strafe, turn, stickPower);
 
         datalog.runTime.set(runtime.seconds());
-        datalog.ledColor.set(ledColor);
+        //datalog.ledColor.set(ledColor);
         datalog.yawApril.set(aprilTags.getYaw());
         datalog.yawImu.set(yawImu);
         datalog.bearing.set(aprilTags.getBearing());
@@ -208,18 +217,22 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         // This is needed to make sure we don't pass > 1.0 to any wheel
         // It allows us to keep all of the motors in proportion to what they should
         // be and not get clipped
-        maxPower = Math.max(maxPower, abs(frontLeftPower));
-        maxPower = Math.max(maxPower, abs(frontRightPower));
-        maxPower = Math.max(maxPower, abs(backRightPower));
-        maxPower = Math.max(maxPower, abs(backLeftPower));
+        maxPower = Math.max(maxSpeed, abs(frontLeftPower));
+        maxPower = Math.max(maxSpeed, abs(frontRightPower));
+        maxPower = Math.max(maxSpeed, abs(backRightPower));
+        maxPower = Math.max(maxSpeed, abs(backLeftPower));
+        //originally each;   (maxPower, abs(frontLeftPower))
 
         // We multiply by maxSpeed so that it can be set lower for outreaches
         // When a young child is driving the robot, we may not want to allow full
         // speed.
-        frontLeftDrive.setPower(maxSpeed * (frontLeftPower / maxPower));
-        frontRightDrive.setPower(maxSpeed * (frontRightPower / maxPower));
-        backLeftDrive.setPower(maxSpeed * (backLeftPower / maxPower));
-        backRightDrive.setPower(maxSpeed * (backRightPower / maxPower));
+        frontLeftDrive.setPower((frontLeftPower / maxPower));
+        frontRightDrive.setPower((frontRightPower / maxPower));
+        backLeftDrive.setPower((backLeftPower / maxPower));
+        backRightDrive.setPower((backRightPower / maxPower));
+        //originally each;   (maxPower * (frontLeftDrive / maxPower))
+
+        telemetry.addLine("maxSpeed: "+maxSpeed);
     }
 
 //    private void setMotorPower(double fL, double fR, double bL, double bR){
@@ -247,7 +260,7 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
          *       in the setFields() call below
          */
         public Datalogger.GenericField runTime = new Datalogger.GenericField("RunTime");
-        public Datalogger.GenericField ledColor = new Datalogger.GenericField("ledColor");
+        //public Datalogger.GenericField ledColor = new Datalogger.GenericField("ledColor");
         public Datalogger.GenericField yawApril = new Datalogger.GenericField("yawApril");
         public Datalogger.GenericField yawImu = new Datalogger.GenericField("yawIMU");
         public Datalogger.GenericField bearing = new Datalogger.GenericField("bearing");
@@ -267,7 +280,7 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
                             yawApril,
                             yawImu,
                             runTime,
-                            ledColor,
+                            //ledColor,
                             bearing,
                             range,
                             turn
