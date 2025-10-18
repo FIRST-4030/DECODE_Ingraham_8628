@@ -94,6 +94,7 @@ public class AprilTags_dco {
     public VisionPortal visionPortal;
 
     private double bearing, range, yaw, posX, posY;
+    private int currentPosCounter = 0, runInLoopCounter = 0;
 
     Telemetry telemetry;
     /**
@@ -169,6 +170,7 @@ public class AprilTags_dco {
      */
     public void runInLoop(Telemetry telemetry) {
 
+        runInLoopCounter++;
         List<AprilTagDetection> currentDetections = tags.getDetections();
         telemetry.addData("# AprilTags Detected", currentDetections.size());
 
@@ -281,6 +283,7 @@ public class AprilTags_dco {
                         bearing = detection.ftcPose.bearing;
                         posX = detection.robotPose.getPosition().x;
                         posY = detection.robotPose.getPosition().y;
+                        currentPosCounter++;
                     }
                 }
             }
@@ -294,6 +297,10 @@ public class AprilTags_dco {
     public String getLedColor() { return ledColor; }
 
     public double getRange() { return range; }
+
+    public int getCurrentPositionCounter() { return currentPosCounter; }
+
+    public int getRunInLoopCounter() { return runInLoopCounter; }
 
     public int getTagId() { return tagId; }
 

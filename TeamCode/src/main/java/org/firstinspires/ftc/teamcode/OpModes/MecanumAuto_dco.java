@@ -37,10 +37,12 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.AprilTags_dco;
+import org.firstinspires.ftc.teamcode.Datalogger;
 
 @Autonomous(name="DCO: Mecanum Auto")
 public class MecanumAuto_dco extends LinearOpMode {
 
+    public static boolean logData = true;
     private final int NEVERREST_TICKS_PER_REV = 1120;
     private final double DIAMETER_GREY = 3.5;
     private final double DIAMETER_GOBILDA = 100./10/2.54;
@@ -57,6 +59,7 @@ public class MecanumAuto_dco extends LinearOpMode {
 
     DcMotor frontLeftDrive,  backLeftDrive, frontRightDrive, backRightDrive;
     AprilTags_dco aprilTags;
+    Datalog datalog;
 
     @SuppressLint("DefaultLocale")
     @Override
@@ -126,6 +129,12 @@ public class MecanumAuto_dco extends LinearOpMode {
          *       - Initialize April tags
          *       - Initialize any time parameters
          */
+
+        // Initialize the datalog
+        if (logData) {
+            datalog = new Datalog(String.format("AprilTagLog"));
+        }
+
         runtime.reset();
 
         aprilTags = new AprilTags_dco();
@@ -174,6 +183,22 @@ public class MecanumAuto_dco extends LinearOpMode {
 
             double power = Kp * error;
 
+            /* Data log
+             * Note: The order in which we set datalog fields does *not* matter!
+             *       Order is configured inside the Datalog class constructor.
+             */
+            if (logData) {
+                datalog.loopCounter.set(i);
+                datalog.tagCounter.set(aprilTags.getCurrentPositionCounter());
+                datalog.inLoopCounter.set(aprilTags.getRunInLoopCounter());
+                datalog.runTime.set(runtime.seconds());
+                datalog.bearing.set(bearing);
+                datalog.power.set(power);
+                datalog.error.set(error);
+                datalog.writeLine();
+            }
+            i++;
+
             telemetry.addLine(String.format("Counter: %d", i++));
             telemetry.addLine(String.format("Bearing: %6.2f", bearing));
             telemetry.addLine(String.format("Power: %6.2f", power));
@@ -196,7 +221,7 @@ public class MecanumAuto_dco extends LinearOpMode {
             frontRightDrive.setPower(-power);
             backLeftDrive.setPower(power);
             backRightDrive.setPower(-power);
-//            sleep(50);
+            sleep(50);
 
 //            if (aprilTags.getBearing() > 2. || aprilTags.getBearing() < -2.) {
 //                frontLeftDrive.setPower(rotationDirection * power);
@@ -210,13 +235,7 @@ public class MecanumAuto_dco extends LinearOpMode {
 //                break;
 //            }
         }
-        /*
-         * Stop all motors
-         */
-        frontLeftDrive.setPower(0);
-        frontRightDrive.setPower(0);
-        backLeftDrive.setPower(0);
-        backRightDrive.setPower(0);
+        StopDriving();
     }
 
     public void DriveForwardDistance(double power, int distance) {
@@ -289,5 +308,54 @@ public class MecanumAuto_dco extends LinearOpMode {
         int ticks = (int) (rotations * NEVERREST_TICKS_PER_REV);
         eee = ticks;
         return ticks;
+    }
+
+    /**
+     * Datalog class encapsulates all the fields that will go into the datalog.
+     */
+    public static class Datalog {
+        /*
+         * The underlying datalogger object - it cares only about an array of loggable fields
+         */
+        private final Datalogger datalogger;
+        /*
+         * These are all of the fields that we want in the datalog.
+         * Note: Order here is NOT important. The order is important
+         *       in the setFields() call below
+         */
+        public Datalogger.GenericField loopCounter = new Datalogger.GenericField("LoopCounter");
+        public Datalogger.GenericField runTime = new Datalogger.GenericField("RunTime");
+        public Datalogger.GenericField power = new Datalogger.GenericField("Power");
+        public Datalogger.GenericField bearing = new Datalogger.GenericField("Bearing");
+        public Datalogger.GenericField error = new Datalogger.GenericField("Error");
+        public Datalogger.GenericField tagCounter = new Datalogger.GenericField("Tag Cnt");
+        public Datalogger.GenericField inLoopCounter = new Datalogger.GenericField("Run In Loop");
+
+        public Datalog(String name) {
+            datalogger = new Datalogger.Builder()
+                    .setFilename(name)
+                    .setAutoTimestamp(Datalogger.AutoTimestamp.DECIMAL_SECONDS)
+                    /*
+                     * Tell it about the fields we care to log.
+                     * Note: Order *IS* important here! The order in which we list the
+                     *       fields is the order in which they will appear in the log.
+                     */
+                    .setFields(
+                            bearing,
+                            power,
+                            loopCounter,
+                            inLoopCounter,
+                            tagCounter,
+                            runTime,
+                            error
+                    )
+                    .build();
+        }
+
+        // Tell the datalogger to gather the values of the fields
+        // and write a new line in the log.
+        public void writeLine() {
+            datalogger.writeLine();
+        }
     }
 }
