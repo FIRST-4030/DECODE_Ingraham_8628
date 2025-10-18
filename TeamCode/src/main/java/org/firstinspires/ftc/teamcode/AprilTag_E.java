@@ -101,15 +101,17 @@ public class AprilTag_E {
     private boolean redSide;
     private boolean PPG,PGP,GPP;
 
+    List<AprilTagDetection> currentDetections;
+
     public void scanField(Telemetry telemetry){
 
-        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-        telemetry.addData("# AprilTags Detected", currentDetections.size());
+        currentDetections = aprilTag.getDetections();
+        //telemetry.addData("# AprilTags Detected", currentDetections.size());
 
         // Step through the list of detections and display info for each one.
         if(!currentDetections.isEmpty()) {
             for (AprilTagDetection detection : currentDetections) {
-                if (detection.id == goalTagId) {
+                //if (detection.id == goalTagId) {
                     ledColor = "green";
                     if (detection.metadata != null) {
                         if (detection.id == 20){
@@ -153,7 +155,7 @@ public class AprilTag_E {
 //                        telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
 //                        telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
 //                    }
-                }
+                //}
             }
         }
 
@@ -163,9 +165,9 @@ public class AprilTag_E {
         }
 
         // Add "key" information to telemetry
-        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
-        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
-        telemetry.addLine("RBE = Range, Bearing & Elevation");
+//        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
+//        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
+//        telemetry.addLine("RBE = Range, Bearing & Elevation");
 
     }
 
@@ -267,8 +269,8 @@ public class AprilTag_E {
     @SuppressLint("DefaultLocale")
     private void telemetryAprilTag(Telemetry telemetry) {
 
-        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-        telemetry.addData("# AprilTags Detected", currentDetections.size());
+        currentDetections = aprilTag.getDetections();
+        //telemetry.addData("# AprilTags Detected", currentDetections.size());
 
         // Step through the list of detections and display info for each one.
         if(!currentDetections.isEmpty()) {
