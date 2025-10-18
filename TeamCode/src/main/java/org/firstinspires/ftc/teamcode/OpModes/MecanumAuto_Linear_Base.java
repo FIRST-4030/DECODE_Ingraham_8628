@@ -32,11 +32,13 @@ package org.firstinspires.ftc.teamcode.OpModes;
 import android.annotation.SuppressLint;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Autonomous(name="Mecanum Auto Base Code")
+@Disabled
 public class MecanumAuto_Linear_Base extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 motors.

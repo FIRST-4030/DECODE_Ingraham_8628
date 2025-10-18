@@ -33,6 +33,7 @@ import static java.lang.Math.abs;
 
 import android.annotation.SuppressLint;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -63,8 +64,9 @@ import org.firstinspires.ftc.teamcode.Datalogger;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  *
  */
-@TeleOp(name = "DCO: Mecanum and AprilTags")
-public class MecanumAndAprilTags_dco extends OpMode {
+@TeleOp(name = "DCO: Mecanum Auto - OpMode")
+@Disabled
+public class MecanumAuto_OpMode_dco extends OpMode {
 
     public static boolean logData = true;
     public static int decimation = 3;
@@ -163,12 +165,6 @@ public class MecanumAndAprilTags_dco extends OpMode {
         telemetry.addLine(String.format("AprilTagLog_%d_%4.2f", decimation, power));
 
         telemetry.update();
-    }
-
-    @Override
-    public void start() {
-        aprilTags.setSide(side);
-        runtime.reset(); // reset the clock
     }
 
     @Override
