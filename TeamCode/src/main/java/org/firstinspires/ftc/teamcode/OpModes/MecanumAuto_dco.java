@@ -140,17 +140,38 @@ public class MecanumAuto_dco extends LinearOpMode {
         aprilTags = new AprilTags_dco();
         aprilTags.initAprilTag(hardwareMap, telemetry, decimation);
 
-        do  {
-            aprilTags.scanForObelisk();
-        } while(opModeInInit());
-
+        do {
+            if (gamepad1.x) {
+                frontLeftDrive.setPower(0.5);
+            } else {
+                frontLeftDrive.setPower(0.);
+            }
+            if (gamepad1.y) {
+                frontRightDrive.setPower(0.5);
+            } else {
+                frontRightDrive.setPower(0.);
+            }
+            if (gamepad1.a) {
+                backLeftDrive.setPower(0.5);
+            } else {
+                backLeftDrive.setPower(0.);
+            }
+            if (gamepad1.b) {
+                backRightDrive.setPower(0.5);
+            } else {
+                backRightDrive.setPower(0.);
+            }
+        } while (true);
+//        do  {
+//            aprilTags.scanForObelisk();
+//        } while(opModeInInit());
         //waitForStart();
-        if (isStopRequested()) return;
+        //if (isStopRequested()) return;
 
 //        DriveForwardDistance(0.75, distance);
 //        DriveForwardForTime(0.75, 1.0);
 //
-        rotateRobot();
+//        rotateRobot();
     }
 
     @SuppressLint("DefaultLocale")
