@@ -106,7 +106,7 @@ public class AprilTag_E {
     public void scanField(Telemetry telemetry){
 
         currentDetections = aprilTag.getDetections();
-        //telemetry.addData("# AprilTags Detected", currentDetections.size());
+        telemetry.addData("# AprilTags Detected", currentDetections.size());
 
         // Step through the list of detections and display info for each one.
         if(!currentDetections.isEmpty()) {

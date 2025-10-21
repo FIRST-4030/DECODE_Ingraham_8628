@@ -46,18 +46,22 @@ import org.firstinspires.ftc.teamcode.AprilTag_E;
 import org.firstinspires.ftc.teamcode.Datalogger;
 
 /*
- * This OpMode illustrates how to program your robot to drive field relative.  This means
- * that the robot drives the direction you push the joystick regardless of the current orientation
- * of the robot.
- *
  * This OpMode assumes that you have four mecanum wheels each on its own motor named:
  *   front_left_motor, front_right_motor, back_left_motor, back_right_motor
- *
  *   and that the left motors are flipped such that when they turn clockwise the wheel moves backwards
  *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
+ * OpMode Information
+ * --------------------------
+ * Gamepad 1
+ * Left Stick - drive
+ * Right Stick - turn
+ * B (Hold) - half-speed
+ * X (During Init) - blue side
+ * B (During Init) - red side
  *
+ * April Tag Detection
+ * Robot-Centric Drive
+ * implemented data logging
  */
 @TeleOp(name = "Elijah: Robot-Centric Mecanum Drive", group = "Robot")
 public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
@@ -108,12 +112,11 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         backRightDrive.setDirection(DcMotor.Direction.REVERSE);
         frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
 
-        // This uses RUN_USING_ENCODER to be more accurate.   If you don't have the encoder
-        // wires, you should remove these
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // This can use RUN_USING_ENCODER to be more accurate
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         imu = hardwareMap.get(IMU.class, "imu");
         // This needs to be changed to match the orientation on your robot
@@ -168,30 +171,19 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
             directionServo.setPosition(0.4);
         }
 
-        if (gamepad1.bWasPressed()) {
-            stickPower = 0.25;
+        if (gamepad1.rightBumperWasPressed()) {
+            stickPower = 0.5;
         }
-        if(gamepad1.bWasReleased()) {
+        if(gamepad1.rightBumperWasReleased()) {
             stickPower = 1.0;
-
         }
-
-//        if (gamepad1.right_bumper && stickPower == 1) {
-//            stickPower = 0.5;
-//        }
-//        else if (gamepad1.right_bumper){
-//            stickPower = 1;
-//        }
 
         orientation = imu.getRobotYawPitchRollAngles();
         yawImu = orientation.getYaw();
 
-        // If you press the left bumper, you get a drive from the point of view of the robot
-        // (much like driving an RC vehicle)
             drive(driveSpd, strafe, turn, stickPower);
 
         datalog.runTime.set(runtime.seconds());
-        //datalog.ledColor.set(ledColor);
         datalog.yawApril.set(aprilTags.getYaw());
         datalog.yawImu.set(yawImu);
         datalog.bearing.set(aprilTags.getBearing());
@@ -203,7 +195,6 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
     // Thanks to FTC16072 for sharing this code!!
     public void drive(double forward, double right, double rotate, double maxSpeed) {
         // This calculates the power needed for each wheel based on the amount of forward,
-        // strafe right, and rotate
 
         double frontLeftPower = forward + right + rotate;
         double frontRightPower = forward - right - rotate;
@@ -211,36 +202,24 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         double backLeftPower = forward - right + rotate;
 
         double maxPower = 1.0;
-        //double maxSpeed = 1.0;  // make this slower for outreaches
-        //removed, replaced with argument
 
         // This is needed to make sure we don't pass > 1.0 to any wheel
         // It allows us to keep all of the motors in proportion to what they should
         // be and not get clipped
-        maxPower = Math.max(maxSpeed, abs(frontLeftPower));
-        maxPower = Math.max(maxSpeed, abs(frontRightPower));
-        maxPower = Math.max(maxSpeed, abs(backRightPower));
-        maxPower = Math.max(maxSpeed, abs(backLeftPower));
-        //originally each;   (maxPower, abs(frontLeftPower))
+        maxPower = Math.max(maxPower, abs(frontLeftPower));
+        maxPower = Math.max(maxPower, abs(frontRightPower));
+        maxPower = Math.max(maxPower, abs(backRightPower));
+        maxPower = Math.max(maxPower, abs(backLeftPower));
 
-        // We multiply by maxSpeed so that it can be set lower for outreaches
-        // When a young child is driving the robot, we may not want to allow full
-        // speed.
-        frontLeftDrive.setPower((frontLeftPower / maxPower));
-        frontRightDrive.setPower((frontRightPower / maxPower));
-        backLeftDrive.setPower((backLeftPower / maxPower));
-        backRightDrive.setPower((backRightPower / maxPower));
-        //originally each;   (maxPower * (frontLeftDrive / maxPower))
+        // multiply by maxSpeed so lower speed can be set
+        frontLeftDrive.setPower(maxSpeed * (frontLeftPower / maxPower));
+        frontRightDrive.setPower(maxSpeed * (frontRightPower / maxPower));
+        backLeftDrive.setPower(maxSpeed* (backLeftPower / maxPower));
+        backRightDrive.setPower(maxSpeed * (backRightPower / maxPower));
 
         telemetry.addLine("maxSpeed: "+maxSpeed);
+        telemetry.addLine("maxPower: "+maxPower);
     }
-
-//    private void setMotorPower(double fL, double fR, double bL, double bR){
-//        frontLeftDrive.setPower(fL);
-//        frontRightDrive.setPower(fR);
-//        backLeftDrive.setPower(bL);
-//        backRightDrive.setPower(bR);
-//    }
 
     @Override
     public void stop(){
@@ -260,7 +239,6 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
          *       in the setFields() call below
          */
         public Datalogger.GenericField runTime = new Datalogger.GenericField("RunTime");
-        //public Datalogger.GenericField ledColor = new Datalogger.GenericField("ledColor");
         public Datalogger.GenericField yawApril = new Datalogger.GenericField("yawApril");
         public Datalogger.GenericField yawImu = new Datalogger.GenericField("yawIMU");
         public Datalogger.GenericField bearing = new Datalogger.GenericField("bearing");
@@ -280,7 +258,6 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
                             yawApril,
                             yawImu,
                             runTime,
-                            //ledColor,
                             bearing,
                             range,
                             turn
