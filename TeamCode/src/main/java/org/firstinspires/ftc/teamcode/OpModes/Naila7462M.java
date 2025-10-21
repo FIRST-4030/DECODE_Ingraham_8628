@@ -87,10 +87,10 @@ public class Naila7462M extends OpMode {
 
         // We set the left motors in reverse which is needed for drive trains where the left
         // motors are opposite to the right ones.
-        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
-        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
+        frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
+        frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
+        backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
+        backRightDrive.setDirection(DcMotor.Direction.REVERSE);
 
         // This uses RUN_USING_ENCODER to be more accurate.   If you don't have the encoder
         // wires, you should remove these
@@ -122,7 +122,7 @@ public class Naila7462M extends OpMode {
                 RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
     }
-
+    private double driveSlower = 1;
     @Override
     public void loop() {
         telemetry.addData("collector:", collector.getVelocity());
@@ -138,13 +138,13 @@ public class Naila7462M extends OpMode {
         }
 
         if (gamepad1.aWasPressed()) {
-            shooter.setPower(1.0);
+            shooter.setPower(0.7);
         }
         if (gamepad1.aWasReleased()) {
             shooter.setPower(0.0);
         }
         if (gamepad1.bWasPressed()) {
-            collector.setPower(1.0);
+            collector.setPower(0.3);
         }
         if (gamepad1.bWasReleased()) {
             collector.setPower(0.0);
@@ -154,14 +154,16 @@ public class Naila7462M extends OpMode {
             sleep(500);
             shooterHinge.setPosition(0.5);
         }
-//        if (gamepad1.xWasReleased()) {
-//            shooterHinge.setPosition(0.6);
-//        }
-
+         if (gamepad1.yWasPressed()) {
+             driveSlower=0.5;
+        }
+        if (gamepad1.yWasReleased()) {
+            driveSlower=1;
+        }
         // If you press the left bumper, you get a drive from the point of view of the robot
         // (much like driving an RC vehicle)
         //if (gamepad1.left_bumper) {
-            drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+            drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x,driveSlower);
         //} else {
         //    driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
         //}
@@ -182,11 +184,11 @@ public class Naila7462M extends OpMode {
         double newRight = r * Math.cos(theta);
 
         // Finally, call the drive method with robot relative forward and right amounts
-        drive(newForward, newRight, rotate);
+        drive(newForward, newRight, rotate,driveSlower);
     }
 
     // Thanks to FTC16072 for sharing this code!!
-    public void drive(double forward, double right, double rotate) {
+    public void drive(double forward, double right, double rotate,double maxSpeed) {
         // This calculates the power needed for each wheel based on the amount of forward,
         // strafe right, and rotate
         double frontLeftPower = forward + right + rotate;
@@ -195,7 +197,7 @@ public class Naila7462M extends OpMode {
         double backLeftPower = forward - right + rotate;
 
         double maxPower = 1.0;
-        double maxSpeed = 1.0;  // make this slower for outreaches
+          // make this slower for outreaches
 
         // This is needed to make sure we don't pass > 1.0 to any wheel
         // It allows us to keep all of the motors in proportion to what they should
