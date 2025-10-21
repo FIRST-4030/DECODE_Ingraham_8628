@@ -144,7 +144,7 @@ public class Naila7462M extends OpMode {
             shooter.setPower(0.0);
         }
         if (gamepad1.bWasPressed()) {
-            collector.setPower(0.3);
+            collector.setPower(0.4);
         }
         if (gamepad1.bWasReleased()) {
             collector.setPower(0.0);
