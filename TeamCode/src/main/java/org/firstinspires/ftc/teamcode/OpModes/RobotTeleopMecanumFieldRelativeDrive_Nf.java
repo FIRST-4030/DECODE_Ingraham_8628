@@ -28,6 +28,8 @@
  */
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import static java.lang.Math.abs;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -162,10 +164,10 @@ public class RobotTeleopMecanumFieldRelativeDrive_Nf extends OpMode {
         // This is needed to make sure we don't pass > 1.0 to any wheel
         // It allows us to keep all of the motors in proportion to what they should
         // be and not get clipped
-        maxPower = Math.max(maxPower, Math.abs(frontLeftPower));
-        maxPower = Math.max(maxPower, Math.abs(frontRightPower));
-        maxPower = Math.max(maxPower, Math.abs(backRightPower));
-        maxPower = Math.max(maxPower, Math.abs(backLeftPower));
+        maxPower = Math.max(maxSpeed, abs(frontLeftPower));
+        maxPower = Math.max(maxSpeed, abs(frontRightPower));
+        maxPower = Math.max(maxSpeed, abs(backRightPower));
+        maxPower = Math.max(maxSpeed, abs(backLeftPower));
 
         // We multiply by maxSpeed so that it can be set lower for outreaches
         // When a young child is driving the robot, we may not want to allow full
