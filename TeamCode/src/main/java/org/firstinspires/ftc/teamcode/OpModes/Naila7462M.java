@@ -138,7 +138,9 @@ public class Naila7462M extends OpMode {
         }
 
         if (gamepad1.aWasPressed()) {
-            shooter.setPower(0.7);
+            //shooter.setPower(0.7);
+
+
         }
         if (gamepad1.aWasReleased()) {
             shooter.setPower(0.0);
@@ -160,6 +162,27 @@ public class Naila7462M extends OpMode {
         if (gamepad1.yWasReleased()) {
             driveSlower=1;
         }
+
+
+//        //Working out the boolean methods for the triggers. I'll leave this code commented out. -Elijah
+//        if (gamepad1.left_trigger >= 0.2) {
+//            shooter.setPower( 0.7 * (gamepad1.left_trigger));
+//            //replace with shooter.setPower(1); for set power instead of variable via float.
+//        }
+//        else {
+//            shooter.setPower(0);
+//        }
+//
+//        telemetry.addLine("shooterPower: "+gamepad1.left_trigger);
+//        telemetry.update();
+//
+//        //This code works, if you want to implement it. It changes the shooter power based on
+//        //float gamepad1.left_trigger, multiplied by a limiter.
+//
+//        //End of my tests and edits.
+
+
+
         // If you press the left bumper, you get a drive from the point of view of the robot
         // (much like driving an RC vehicle)
         //if (gamepad1.left_bumper) {
