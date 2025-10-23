@@ -38,6 +38,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.AprilTags_dco;
 import org.firstinspires.ftc.teamcode.Datalogger;
 
@@ -47,7 +48,7 @@ public class MecanumAuto_dco extends LinearOpMode {
     public static boolean logData = true;
     private final int NEVERREST_TICKS_PER_REV = 1120;
     private final double DIAMETER_GREY = 3.5;
-    private final double DIAMETER_GOBILDA = 100./10/2.54;
+    private final double DIAMETER_GOBILDA = 100. / 10 / 2.54;
     private int distance = 0;
     private double diameter = 0;
     private String wheels = "";
@@ -59,7 +60,7 @@ public class MecanumAuto_dco extends LinearOpMode {
     private String allianceSide = "";
     private int allianceId = 0;
 
-    DcMotor frontLeftDrive,  backLeftDrive, frontRightDrive, backRightDrive;
+    DcMotor frontLeftDrive, backLeftDrive, frontRightDrive, backRightDrive;
     IMU imu;
     AprilTags_dco aprilTags;
     Datalog datalog;
@@ -90,7 +91,7 @@ public class MecanumAuto_dco extends LinearOpMode {
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection =
                 RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection usbDirection =
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD;
 
         RevHubOrientationOnRobot orientationOnRobot = new
                 RevHubOrientationOnRobot(logoDirection, usbDirection);
@@ -99,44 +100,6 @@ public class MecanumAuto_dco extends LinearOpMode {
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-
-//        boolean inputComplete = false;
-//        while (!inputComplete) {
-//            telemetry.addLine("Select LB: to use GoBilda wheels");
-//            telemetry.addLine("             RB: to use grey mecanum wheels\n");
-//            telemetry.addLine("Select A: to decrease distance");
-//            telemetry.addLine("             Y: to increase distance\n");
-//            telemetry.addLine(String.format("Wheels: %s", wheels));
-//            telemetry.addLine(String.format("Alliance side: %d (%s)", allianceId, allianceSide));
-//            telemetry.addLine(String.format("Distance: %d: (in)", distance));
-//            telemetry.update();
-//            /*
-//             * Code that runs REPEATEDLY after the driver hits INIT, but before you hit START
-//             *    Tasks to include are,
-//             *       - Allow driver to set the alliance color
-//             */
-//
-//            if (gamepad1.right_bumper) {
-//                wheels = "Grey";
-//                diameter = DIAMETER_GREY;
-//            } else if (gamepad1.left_bumper) {
-//                wheels = "GoBilda";
-//                diameter = DIAMETER_GOBILDA;
-//            }
-//
-//            if (gamepad1.yWasPressed()) {
-//                distance = distance + 1;
-//            } else if (gamepad1.aWasPressed()) {
-//                distance = distance - 1;
-//                distance = Math.max(distance,0);
-//            }
-//        }
-//        int ticks = CalculateDistanceInTicks(distance,diameter/2);
-//        telemetry.addLine(String.format("Radius: %4.2f", diameter/2));
-//        telemetry.addLine(String.format("Distance: %d", distance));
-//        telemetry.addLine(String.format("Ticks: %d (%d)",ticks,eee));
-//        telemetry.addLine("Waiting to start match.");
-//        telemetry.update();
         /*
          * Code that runs ONCE when the driver hits START
          *    Tasks to include are,
@@ -155,122 +118,28 @@ public class MecanumAuto_dco extends LinearOpMode {
         aprilTags.initAprilTag(hardwareMap, telemetry, imu);
 
         do {
-            if (gamepad1.x) {
-                frontLeftDrive.setPower(0.5);
-            } else {
-                frontLeftDrive.setPower(0.);
-            }
-            if (gamepad1.y) {
-                frontRightDrive.setPower(0.5);
-            } else {
-                frontRightDrive.setPower(0.);
-            }
-            if (gamepad1.a) {
-                backLeftDrive.setPower(0.5);
-            } else {
-                backLeftDrive.setPower(0.);
-            }
-            if (gamepad1.b) {
-                backRightDrive.setPower(0.5);
-            } else {
-                backRightDrive.setPower(0.);
-            }
-        } while (true);
-//        do  {
-//            aprilTags.scanForObelisk();
-//        } while(opModeInInit());
+            aprilTags.scanForObelisk();
+        } while (opModeInInit());
         //waitForStart();
-        //if (isStopRequested()) return;
 
-//        DriveForwardDistance(0.75, distance);
-//        DriveForwardForTime(0.75, 1.0);
-//
-//        rotateRobot();
-    }
+        rotateTo(aprilTags.getBearing());
+        DriveForwardForTime(0.75, 1.0);
 
-    @SuppressLint("DefaultLocale")
-    public void rotateRobot() {
-        double Kp                = 0.03;   // start small, increase until responsive
-        double minPower          = 0.12;    // overcome stiction
-        double maxPower          = 0.6;     // safety cap
-        double tolerance         = 1.0;     // degrees
-        double target            = 0.;
-        double bearing;
-        int i = 0;
-        double rotationDirection = 0;       // CW = 1, CCW = -1
-
-        int tagId = aprilTags.getTagId();
-
-        aprilTags.getCurrentPosition(tagId);
-        bearing = aprilTags.getBearing();
-
-        telemetry.addLine(String.format("Bearing: %6.2f", bearing));
-        telemetry.addLine(String.format("ID: %d", tagId));
-        telemetry.update();
-
-        while (true) {
-
-            aprilTags.getCurrentPosition(tagId);
-            bearing = aprilTags.getBearing();
-            double error = target - bearing;
-
-            if (Math.abs(error) <= tolerance) break;
-
-            double power = Kp * error;
-
-            /* Data log
-             * Note: The order in which we set datalog fields does *not* matter!
-             *       Order is configured inside the Datalog class constructor.
-             */
-            if (logData) {
-                datalog.loopCounter.set(i);
-                datalog.tagCounter.set(aprilTags.getCurrentPositionCounter());
-                datalog.inLoopCounter.set(aprilTags.getRunInLoopCounter());
-                datalog.runTime.set(runtime.seconds());
-                datalog.bearing.set(bearing);
-                datalog.power.set(power);
-                datalog.error.set(error);
-                datalog.writeLine();
-            }
-            i++;
-
-            telemetry.addLine(String.format("Counter: %d", i++));
-            telemetry.addLine(String.format("Bearing: %6.2f", bearing));
-            telemetry.addLine(String.format("Power: %6.2f", power));
-            telemetry.addLine(String.format("Error: %6.2f", error));
-            telemetry.update();
-
-//            if (tagId==20) {             // blue
-//                rotationDirection = -1.;
-//            } else if (tagId==24) {      // red
-//                rotationDirection = 1.;
-//            }
-
-            // enforce min power so robot actually moves
-            if (Math.abs(power) < minPower) power = Math.signum(power) * minPower;
-//            if (Math.abs(power) < minPower) power = rotationDirection * minPower;
-            // clamp to max
-            power = Math.max(-maxPower, Math.min(maxPower, power));
-
-            frontLeftDrive.setPower(power);
-            frontRightDrive.setPower(-power);
-            backLeftDrive.setPower(power);
-            backRightDrive.setPower(-power);
-            sleep(50);
-
-//            if (aprilTags.getBearing() > 2. || aprilTags.getBearing() < -2.) {
-//                frontLeftDrive.setPower(rotationDirection * power);
-//                frontRightDrive.setPower(rotationDirection * power);
-//                backLeftDrive.setPower(rotationDirection * power);
-//                backRightDrive.setPower(rotationDirection * power);
-//
-//                telemetry.addLine(String.format("Bearing: %6.2f", aprilTags.getBearing()));
-//                telemetry.update();
-//            } else {
-//                break;
-//            }
-        }
-        StopDriving();
+//        /* Data log
+//         * Note: The order in which we set datalog fields does *not* matter!
+//         *       Order is configured inside the Datalog class constructor.
+//         */
+//        if (logData) {
+//            datalog.loopCounter.set(i);
+//            datalog.tagCounter.set(aprilTags.getCurrentPositionCounter());
+//            datalog.inLoopCounter.set(aprilTags.getRunInLoopCounter());
+//            datalog.runTime.set(runtime.seconds());
+//            datalog.bearing.set(bearing);
+//            datalog.power.set(power);
+//            datalog.error.set(error);
+//            datalog.writeLine();
+//        }
+//        i++;
     }
 
     public void DriveForwardDistance(double power, int distance) {
@@ -345,6 +214,68 @@ public class MecanumAuto_dco extends LinearOpMode {
         return ticks;
     }
 
+    private void rotateTo(double targetAngle) {
+        double Kp = 0.082;  // Proportional gain (tune this)
+        double Kd = 0.005;  // derivative gain
+        double minPower = 0.3;
+        double maxPower = 0.5;
+        double tolerance = 1.0; // degrees
+        double lastError = 0;
+        double derivative;
+        double currentAngle, error, turnPower;
+
+        long lastTime = System.nanoTime();
+
+        while (true) {
+            currentAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+
+            error = targetAngle - currentAngle;
+            error = (error + 540) % 360 - 180; // Wrap error to [-180, 180] range
+
+            long now = System.nanoTime();
+            double deltaTime = (now - lastTime) / 1e9;
+            lastTime = now;
+
+            derivative = (error - lastError) / deltaTime;
+            lastError = error;
+
+            if (Math.abs(error) < tolerance) break;
+
+            turnPower = Kp * error + Kd *derivative;
+
+            // Enforce minimum power
+            if (Math.abs(turnPower) < minPower) {
+                turnPower = Math.signum(turnPower) * minPower;
+            }
+            // Clamp maximum power
+            turnPower = Math.max(-maxPower, Math.min(maxPower, turnPower));
+
+            telemetry.addData("Target (deg)", "%.2f", targetAngle);
+            telemetry.addData("Current (deg)", "%.2f", currentAngle);
+            telemetry.addData("Error", "%.2f", error);
+            telemetry.addData("Turn Power", "%.2f", turnPower);
+            telemetry.update();
+
+            frontLeftDrive.setPower(-turnPower);
+            backLeftDrive.setPower(-turnPower);
+            frontRightDrive.setPower(turnPower);
+            backRightDrive.setPower(turnPower);
+        }
+
+        frontLeftDrive.setPower(0);
+        backLeftDrive.setPower(0);
+        frontRightDrive.setPower(0);
+        backRightDrive.setPower(0);
+//        sleep(100);
+
+//        telemetry.addData("Target (deg)", "%.2f", targetAngle);
+//        telemetry.addData("Current (deg)", "%.2f", currentAngle);
+//        telemetry.addData("Error", "%.2f", error);
+//        telemetry.addData("Turn Power", "%.2f", turnPower);
+//        telemetry.addLine("Aligned with AprilTag");
+//        telemetry.update();
+//        sleep(5000);
+    }
     /**
      * Datalog class encapsulates all the fields that will go into the datalog.
      */

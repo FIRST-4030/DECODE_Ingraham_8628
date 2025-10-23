@@ -153,12 +153,12 @@ public class MecanumTeleop_dco extends OpMode
             imu.resetYaw();
         }
 
-        if (gamepad1.x) {
-            reportCurrentAprilTagLoop = false;
-            imu.resetYaw();
-            rotateTo(aprilTags.getBearing());
-            reportCurrentAprilTagLoop = true;
-        }
+//        if (gamepad1.x) {
+//            reportCurrentAprilTagLoop = false;
+//            imu.resetYaw();
+//            rotateTo(aprilTags.getBearing());
+//            reportCurrentAprilTagLoop = true;
+//        }
 
         drive = -power * gamepad1.left_stick_y; // forward/back
         strafe = gamepad1.left_stick_x; // left/right
@@ -208,68 +208,5 @@ public class MecanumTeleop_dco extends OpMode
         frontRightDrive.setPower(maxSpeed * (frontRightPower / maxPower));
         backLeftDrive.setPower(maxSpeed * (backLeftPower / maxPower));
         backRightDrive.setPower(maxSpeed * (backRightPower / maxPower));
-    }
-
-    private void rotateTo(double targetAngle) {
-        double Kp = 0.082;  // Proportional gain (tune this)
-        double Kd = 0.005;  // derivative gain
-        double minPower = 0.3;
-        double maxPower = 0.5;
-        double tolerance = 1.0; // degrees
-        double lastError = 0;
-        double derivative;
-        double currentAngle, error, turnPower;
-
-        long lastTime = System.nanoTime();
-
-        while (true) {
-            currentAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-
-            error = targetAngle - currentAngle;
-            error = (error + 540) % 360 - 180; // Wrap error to [-180, 180] range
-
-            long now = System.nanoTime();
-            double deltaTime = (now - lastTime) / 1e9;
-            lastTime = now;
-
-            derivative = (error - lastError) / deltaTime;
-            lastError = error;
-
-            if (Math.abs(error) < tolerance) break;
-
-            turnPower = Kp * error + Kd *derivative;
-
-            // Enforce minimum power
-            if (Math.abs(turnPower) < minPower) {
-                turnPower = Math.signum(turnPower) * minPower;
-            }
-            // Clamp maximum power
-            turnPower = Math.max(-maxPower, Math.min(maxPower, turnPower));
-
-            telemetry.addData("Target (deg)", "%.2f", targetAngle);
-            telemetry.addData("Current (deg)", "%.2f", currentAngle);
-            telemetry.addData("Error", "%.2f", error);
-            telemetry.addData("Turn Power", "%.2f", turnPower);
-            telemetry.update();
-
-            frontLeftDrive.setPower(-turnPower);
-            backLeftDrive.setPower(-turnPower);
-            frontRightDrive.setPower(turnPower);
-            backRightDrive.setPower(turnPower);
-        }
-
-        frontLeftDrive.setPower(0);
-        backLeftDrive.setPower(0);
-        frontRightDrive.setPower(0);
-        backRightDrive.setPower(0);
-        sleep(100);
-
-//        telemetry.addData("Target (deg)", "%.2f", targetAngle);
-//        telemetry.addData("Current (deg)", "%.2f", currentAngle);
-//        telemetry.addData("Error", "%.2f", error);
-//        telemetry.addData("Turn Power", "%.2f", turnPower);
-//        telemetry.addLine("Aligned with AprilTag");
-//        telemetry.update();
-//        sleep(5000);
     }
 }
