@@ -31,15 +31,17 @@ package org.firstinspires.ftc.teamcode.OpModes;
 
 import android.annotation.SuppressLint;
 
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.AprilTags_dco;
 import org.firstinspires.ftc.teamcode.Datalogger;
 
-@Autonomous(name="DCO: Mecanum Auto")
+@Autonomous(name="DCO: Mecanum Auto", group="DCO")
 public class MecanumAuto_dco extends LinearOpMode {
 
     public static boolean logData = true;
@@ -58,6 +60,7 @@ public class MecanumAuto_dco extends LinearOpMode {
     private int allianceId = 0;
 
     DcMotor frontLeftDrive,  backLeftDrive, frontRightDrive, backRightDrive;
+    IMU imu;
     AprilTags_dco aprilTags;
     Datalog datalog;
 
@@ -81,6 +84,17 @@ public class MecanumAuto_dco extends LinearOpMode {
         frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        imu = hardwareMap.get(IMU.class, "imu");
+        // This needs to be changed to match the orientation on your robot
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection =
+                RevHubOrientationOnRobot.LogoFacingDirection.UP;
+        RevHubOrientationOnRobot.UsbFacingDirection usbDirection =
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+
+        RevHubOrientationOnRobot orientationOnRobot = new
+                RevHubOrientationOnRobot(logoDirection, usbDirection);
+        imu.initialize(new IMU.Parameters(orientationOnRobot));
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
@@ -138,7 +152,7 @@ public class MecanumAuto_dco extends LinearOpMode {
         runtime.reset();
 
         aprilTags = new AprilTags_dco();
-        aprilTags.initAprilTag(hardwareMap, telemetry, decimation);
+        aprilTags.initAprilTag(hardwareMap, telemetry, imu);
 
         do {
             if (gamepad1.x) {

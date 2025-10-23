@@ -29,9 +29,12 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import static android.os.SystemClock.sleep;
+
 import android.annotation.SuppressLint;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
@@ -96,12 +99,16 @@ public class AprilTags_dco {
     private double bearing, range, yaw, posX, posY;
     private int currentPosCounter = 0, runInLoopCounter = 0;
 
+    HardwareMap hardwareMap;
+    IMU imu;
     Telemetry telemetry;
     /**
      * Initialize the AprilTag processor.
      */
-    public void initAprilTag(HardwareMap hardwareMap, Telemetry tele, int decimation) {
+    public void initAprilTag(HardwareMap hardwareMap, Telemetry tele, IMU imu) {
         this.telemetry = tele;
+        this.hardwareMap = hardwareMap;
+        this.imu = imu;
         // Create the AprilTag processor
         tags = new AprilTagProcessor.Builder()
 
@@ -168,7 +175,7 @@ public class AprilTags_dco {
     /**
      * Add telemetry about AprilTag detections.
      */
-    public void runInLoop(Telemetry telemetry) {
+    public void runInLoop(Telemetry telemetry, boolean display) {
 
         runInLoopCounter++;
         List<AprilTagDetection> currentDetections = tags.getDetections();
@@ -178,20 +185,22 @@ public class AprilTags_dco {
             for (AprilTagDetection detection : currentDetections) {
                 if (detection.metadata != null) {
                     if (detection.id == tagId) {
-                        telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-                        telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-                        telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-                        telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
                         bearing = detection.ftcPose.bearing;
                         range = detection.ftcPose.range;
                         yaw = detection.ftcPose.yaw;
-                        telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                        telemetry.addLine(String.format("Bearing: %6.3f", bearing));
-                        telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+                        if (display) {
+                            telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                            telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+                            telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+                            telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+                            telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
+                            telemetry.addLine(String.format("Bearing: %6.3f", bearing));
+                            telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+                        }
                         ledColor = "green";
                     }
                 } // end of "metadata" test
-                telemetry.update();
+                if (display) { telemetry.update(); };
             }   // end for() loop
         } else {
             bearing = 99.;
@@ -201,10 +210,12 @@ public class AprilTags_dco {
         }
 
         // Add "key" information to telemetry
-        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
-        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
-        telemetry.addData("LED: ", ledColor);
-        telemetry.update();
+        if (display) {
+            telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
+            telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
+            telemetry.addData("LED: ", ledColor);
+            telemetry.update();
+        }
     }
     /*
      * Iteratively look for a change to the obelisk while continually tracking the

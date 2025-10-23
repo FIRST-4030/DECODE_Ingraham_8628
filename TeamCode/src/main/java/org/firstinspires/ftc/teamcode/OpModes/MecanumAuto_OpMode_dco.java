@@ -64,11 +64,11 @@ import org.firstinspires.ftc.teamcode.Datalogger;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  *
  */
-@TeleOp(name = "DCO: Mecanum Auto - OpMode")
+@TeleOp(name = "DCO: Mecanum Auto - OpMode", group="DCO")
 @Disabled
 public class MecanumAuto_OpMode_dco extends OpMode {
 
-    public static boolean logData = true;
+    public static boolean logData = false;
     public static int decimation = 3;
     public static double power = 0.7;
 
@@ -138,7 +138,7 @@ public class MecanumAuto_OpMode_dco extends OpMode {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
         aprilTags = new AprilTags_dco();
-        aprilTags.initAprilTag(hardwareMap, telemetry, decimation);
+        aprilTags.initAprilTag(hardwareMap, telemetry, imu);
 
         // Initialize the datalog
         if (logData) {
@@ -170,7 +170,7 @@ public class MecanumAuto_OpMode_dco extends OpMode {
     @Override
     public void loop() {
 
-        aprilTags.runInLoop(telemetry);
+        aprilTags.runInLoop(telemetry, true);
 
         String ledColor = aprilTags.getLedColor();
         if (ledColor.equals("green")) {
