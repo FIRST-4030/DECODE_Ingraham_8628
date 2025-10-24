@@ -46,19 +46,8 @@ import org.firstinspires.ftc.teamcode.Datalogger;
 public class MecanumAuto_dco extends LinearOpMode {
 
     public static boolean logData = true;
-    private final int NEVERREST_TICKS_PER_REV = 1120;
-    private final double DIAMETER_GREY = 3.5;
-    private final double DIAMETER_GOBILDA = 100. / 10 / 2.54;
-    private int distance = 0;
-    private double diameter = 0;
-    private String wheels = "";
-    public static int decimation = 1;
-    // Declare OpMode members for each of the 4 motors.
-    private ElapsedTime runtime = new ElapsedTime();
-    int eee;
 
-    private String allianceSide = "";
-    private int allianceId = 0;
+    private final ElapsedTime runtime = new ElapsedTime();
 
     DcMotor frontLeftDrive, backLeftDrive, frontRightDrive, backRightDrive;
     IMU imu;
@@ -87,7 +76,7 @@ public class MecanumAuto_dco extends LinearOpMode {
         backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         imu = hardwareMap.get(IMU.class, "imu");
-        // This needs to be changed to match the orientation on your robot
+
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection =
                 RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection usbDirection =
@@ -109,7 +98,7 @@ public class MecanumAuto_dco extends LinearOpMode {
 
         // Initialize the datalog
         if (logData) {
-            datalog = new Datalog(String.format("AprilTagLog"));
+            datalog = new Datalog("AprilTagLog");
         }
 
         runtime.reset();
@@ -122,8 +111,10 @@ public class MecanumAuto_dco extends LinearOpMode {
         } while (opModeInInit());
         //waitForStart();
 
-        rotateTo(aprilTags.getBearing());
-        DriveForwardForTime(0.75, 1.0);
+        while (opModeIsActive()) {
+
+            rotateTo(aprilTags.getBearing());
+            DriveForwardForTime(0.75, 1.0);
 
 //        /* Data log
 //         * Note: The order in which we set datalog fields does *not* matter!
@@ -140,41 +131,7 @@ public class MecanumAuto_dco extends LinearOpMode {
 //            datalog.writeLine();
 //        }
 //        i++;
-    }
-
-    public void DriveForwardDistance(double power, int distance) {
-        frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        frontLeftDrive.setTargetPosition(distance);
-        frontRightDrive.setTargetPosition(distance);
-        backLeftDrive.setTargetPosition(distance);
-        backRightDrive.setTargetPosition(distance);
-
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        backRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        DriveForward(power);
-
-        while (frontLeftDrive.isBusy() &&
-               frontRightDrive.isBusy() &&
-               backLeftDrive.isBusy() &&
-               backRightDrive.isBusy()) {
-            // Just wait until distance is achieved
         }
-
-        StopDriving();
-    }
-
-    public void DriveForward(double power) {
-        frontLeftDrive.setPower(power);
-        frontRightDrive.setPower(power);
-        backLeftDrive.setPower(power);
-        backRightDrive.setPower(power);
     }
 
     public void DriveForwardForTime(double power, double timeInSec) {
@@ -198,20 +155,6 @@ public class MecanumAuto_dco extends LinearOpMode {
         frontRightDrive.setPower(0);
         backLeftDrive.setPower(0);
         backRightDrive.setPower(0);
-    }
-
-    public int CalculateDistanceInTicks(double travelDistance,double radiusInInches) {
-        /*
-         * Calculate the number of wheel rotations you need to go the distance
-         */
-        double circumference = 2*Math.PI*radiusInInches;
-        double rotations = travelDistance / circumference;
-        /*
-         * Convert arc length to ticks
-         */
-        int ticks = (int) (rotations * NEVERREST_TICKS_PER_REV);
-        eee = ticks;
-        return ticks;
     }
 
     private void rotateTo(double targetAngle) {
