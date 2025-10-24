@@ -35,7 +35,6 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -55,8 +54,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  *
  */
-@TeleOp(name = "Teleop-NF 7462M", group = "Robot")
-public class Naila7462M extends OpMode {
+@TeleOp(name = "MecanumAuto_OpMode", group = "Robot")
+public class MecanumAuto_OpMode extends OpMode {
     // This declares the four motors needed
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
@@ -138,7 +137,7 @@ public class Naila7462M extends OpMode {
         }
 
         if (gamepad1.aWasPressed()) {
-            shooter.setPower(0.6);
+            shooter.setPower(0.7);
 
 
         }
@@ -156,11 +155,11 @@ public class Naila7462M extends OpMode {
             sleep(500);
             shooterHinge.setPosition(0.5);
         }
-         if (gamepad1.leftBumperWasPressed()) {
-             driveSlower=0.3;
+         if (gamepad1.yWasPressed()) {
+             driveSlower=0.5;
         }
-        if (gamepad1.leftBumperWasReleased()) {
-            driveSlower=0.3;
+        if (gamepad1.yWasReleased()) {
+            driveSlower=1;
         }
 
 

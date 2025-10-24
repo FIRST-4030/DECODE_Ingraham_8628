@@ -35,11 +35,11 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.Shooter;
 
 /*
  * This OpMode illustrates how to program your robot to drive field relative.  This means
@@ -55,15 +55,15 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  *
  */
-@TeleOp(name = "Teleop-NF 7462M", group = "Robot")
-public class Naila7462M extends OpMode {
+@TeleOp(name = "MecanumTeleop", group = "Robot")
+public class MecanumTeleop extends OpMode {
     // This declares the four motors needed
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
     DcMotorEx collector;
-    DcMotorEx shooter;
+    Shooter shooter;
     Servo shooterHinge;
     //    HelperAprilTag_Nf helperAprilTag;
     // This declares the IMU needed to get the current direction the robot is facing
@@ -80,7 +80,7 @@ public class Naila7462M extends OpMode {
         frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
+        shooter.init(Shooter   );
 
 //        helperAprilTag = new HelperAprilTag_Nf();
 //        helperAprilTag.initAprilTag(hardwareMap);
@@ -100,12 +100,12 @@ public class Naila7462M extends OpMode {
         backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         collector = hardwareMap.get(DcMotorEx.class, "collector");
-        shooter = hardwareMap.get(DcMotorEx.class, "shooter");
+
         collector.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
 
         collector.setDirection(DcMotor.Direction.REVERSE);
-        shooter.setDirection(DcMotor.Direction.FORWARD);
+
 
         shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
         shooterHinge.setPosition(0.5);
@@ -138,7 +138,7 @@ public class Naila7462M extends OpMode {
         }
 
         if (gamepad1.aWasPressed()) {
-            shooter.setPower(0.6);
+            shooter.setPower(0.67);
 
 
         }
@@ -183,32 +183,12 @@ public class Naila7462M extends OpMode {
 
 
 
-        // If you press the left bumper, you get a drive from the point of view of the robot
-        // (much like driving an RC vehicle)
-        //if (gamepad1.left_bumper) {
+
             drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x,driveSlower);
-        //} else {
-        //    driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-        //}
+
     }
 
-    // This routine drives the robot field relative
-    private void driveFieldRelative(double forward, double right, double rotate) {
-        // First, convert direction being asked to drive to polar coordinates
-        double theta = Math.atan2(forward, right);
-        double r = Math.hypot(right, forward);
 
-        // Second, rotate angle by the angle the robot is pointing
-        theta = AngleUnit.normalizeRadians(theta -
-                imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
-
-        // Third, convert back to cartesian
-        double newForward = r * Math.sin(theta);
-        double newRight = r * Math.cos(theta);
-
-        // Finally, call the drive method with robot relative forward and right amounts
-        drive(newForward, newRight, rotate,driveSlower);
-    }
 
     // Thanks to FTC16072 for sharing this code!!
     public void drive(double forward, double right, double rotate,double maxSpeed) {
