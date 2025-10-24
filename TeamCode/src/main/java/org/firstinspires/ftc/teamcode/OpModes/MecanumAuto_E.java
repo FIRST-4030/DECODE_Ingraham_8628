@@ -66,12 +66,12 @@ public class MecanumAuto_E extends LinearOpMode {
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
-    Servo directionServo;
+    //Servo directionServo;
     AprilTag_E aprilTag;
-    int side;
+    //int side;
 
-    private DigitalChannel redLED;
-    private DigitalChannel greenLED;
+    //private DigitalChannel redLED;
+    //private DigitalChannel greenLED;
 
     RobotTeleopMecanumFieldRelativeDrive_E.Datalog datalog;
     ElapsedTime runtime = new ElapsedTime();
@@ -92,14 +92,14 @@ public class MecanumAuto_E extends LinearOpMode {
         backLeftDrive = hardwareMap.get(DcMotor.class, "leftBack");
         backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
 
-        directionServo = hardwareMap.get(Servo.class, "direction");
+        //directionServo = hardwareMap.get(Servo.class, "direction");
 
         aprilTag = new AprilTag_E();
 
-        redLED = hardwareMap.get(DigitalChannel.class, "red");
-        greenLED = hardwareMap.get(DigitalChannel.class, "green");
-        redLED.setMode(DigitalChannel.Mode.OUTPUT);
-        greenLED.setMode(DigitalChannel.Mode.OUTPUT);
+        //redLED = hardwareMap.get(DigitalChannel.class, "red");
+        //greenLED = hardwareMap.get(DigitalChannel.class, "green");
+        //redLED.setMode(DigitalChannel.Mode.OUTPUT);
+        //greenLED.setMode(DigitalChannel.Mode.OUTPUT);
         // We set the left motors in reverse which is needed for drive trains where the left
         // motors are opposite to the right ones.
         backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -157,6 +157,10 @@ public class MecanumAuto_E extends LinearOpMode {
 
         runtime.reset();
 
+
+        moveForward(-1.0, 1000);
+
+
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
@@ -189,4 +193,29 @@ public class MecanumAuto_E extends LinearOpMode {
 //            telemetry.update();
         }
     }
+
+    private void moveForward(double power, double mseconds){
+        ElapsedTime timer = new ElapsedTime();
+        timer.reset();
+
+        while (timer.milliseconds() < mseconds) {
+            frontLeftDrive.setPower(power);
+            backLeftDrive.setPower(power);
+            frontRightDrive.setPower(power);
+            backRightDrive.setPower(power);
+        }
+
+        frontLeftDrive.setPower(0);
+        backLeftDrive.setPower(0);
+        frontRightDrive.setPower(0);
+        backRightDrive.setPower(0);
+    }
+
+    private void stopMotors(){
+        frontLeftDrive.setPower(0);
+        backLeftDrive.setPower(0);
+        frontRightDrive.setPower(0);
+        backRightDrive.setPower(0);
+    }
+
 }
