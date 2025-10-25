@@ -40,6 +40,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Shooter;
+//import org.firstinspires.ftc.teamcode.Shooter;
 
 /*
  * This OpMode illustrates how to program your robot to drive field relative.  This means
@@ -69,6 +70,9 @@ public class MecanumTeleop extends OpMode {
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
 
+    double shooterSpeedIncrement = 0.05;
+    double currentPower = 0.67;
+
     @Override
     public void init() {
         frontLeftDrive = hardwareMap.get(DcMotor.class, "leftFront");
@@ -80,7 +84,10 @@ public class MecanumTeleop extends OpMode {
         frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        shooter.init(Shooter   );
+
+        shooter=new Shooter();
+        shooter.init(hardwareMap);
+        shooter.initPower(currentPower);
 
 //        helperAprilTag = new HelperAprilTag_Nf();
 //        helperAprilTag.initAprilTag(hardwareMap);
@@ -103,13 +110,10 @@ public class MecanumTeleop extends OpMode {
 
         collector.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-
         collector.setDirection(DcMotor.Direction.REVERSE);
-
 
         shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
         shooterHinge.setPosition(0.5);
-
 
         imu = hardwareMap.get(IMU.class, "imu");
         // This needs to be changed to match the orientation on your robot
@@ -126,43 +130,61 @@ public class MecanumTeleop extends OpMode {
     @Override
     public void loop() {
         telemetry.addData("collector:", collector.getVelocity());
-        telemetry.addData("shooter:", shooter.getVelocity());
+//        telemetry.addData("shooter:", shooter.getVelocity());
 
 //        helperAprilTag.telemetryAprilTag(telemetry);
 
         // If you press the A button, then you reset the Yaw to be zero from the way
         // the robot is currently pointing
 
+        //Gamepad 1
         if (gamepad1.start) {
             imu.resetYaw();
         }
 
-        if (gamepad1.aWasPressed()) {
-            shooter.setPower(0.67);
-
-
-        }
-        if (gamepad1.aWasReleased()) {
-            shooter.setPower(0.0);
-        }
-        if (gamepad1.bWasPressed()) {
-            collector.setPower(0.4);
-        }
-        if (gamepad1.bWasReleased()) {
-            collector.setPower(0.0);
-        }
-        if (gamepad1.right_bumper) {
-            shooterHinge.setPosition(0.0);
-            sleep(500);
-            shooterHinge.setPosition(0.5);
-        }
-         if (gamepad1.leftBumperWasPressed()) {
-             driveSlower=0.3;
+        if (gamepad1.leftBumperWasPressed()) {
+            driveSlower=0.3;
         }
         if (gamepad1.leftBumperWasReleased()) {
             driveSlower=0.3;
         }
 
+
+        //Gamepad 2
+        if (gamepad2.start) {
+            imu.resetYaw();
+        }
+
+        if (gamepad2.leftBumperWasReleased()) {
+            shooter.shoot();
+        }
+        if (gamepad2.rightBumperWasReleased()) {
+            shooter.stop();
+        }
+
+        if (gamepad2.dpad_up) {
+            currentPower = shooter.adjustPower(shooterSpeedIncrement);
+        }
+
+        if (gamepad2.dpad_down) {
+            currentPower = shooter.adjustPower(-shooterSpeedIncrement);
+        }
+
+        if (gamepad2.bWasPressed()) {
+            collector.setPower(0.4);
+        }
+        if (gamepad2.bWasReleased()) {
+            collector.setPower(0.0);
+        }
+        if (gamepad2.aWasPressed()) {
+            shooterHinge.setPosition(0.0);
+            sleep(500);
+            shooterHinge.setPosition(0.5);
+        }
+
+
+        telemetry.addData("Shooter Power: ", currentPower);
+        telemetry.update();
 
 //        //Working out the boolean methods for the triggers. I'll leave this code commented out. -Elijah
 //        if (gamepad1.left_trigger >= 0.2) {
@@ -181,11 +203,7 @@ public class MecanumTeleop extends OpMode {
 //
 //        //End of my tests and edits.
 
-
-
-
-            drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x,driveSlower);
-
+        drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x,driveSlower);
     }
 
 
