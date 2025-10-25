@@ -115,6 +115,7 @@ public class MecanumAuto_dco extends LinearOpMode {
 
             rotateTo(aprilTags.getBearing());
             DriveForwardForTime(0.75, 1.0);
+            break;
 
 //        /* Data log
 //         * Note: The order in which we set datalog fields does *not* matter!
