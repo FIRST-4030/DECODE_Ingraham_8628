@@ -31,16 +31,14 @@ package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.AprilTag_E;
 
@@ -58,8 +56,8 @@ import org.firstinspires.ftc.teamcode.AprilTag_E;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@Autonomous(name="MecanumAuto_E", group="Linear OpMode")
-public class MecanumAuto_E extends LinearOpMode {
+@Autonomous(name="8628 Mecanum Auto", group="Linear OpMode")
+public class MecanumAuto extends LinearOpMode {
 
     // Declare OpMode members.
     DcMotor frontLeftDrive;
@@ -70,8 +68,8 @@ public class MecanumAuto_E extends LinearOpMode {
     AprilTag_E aprilTag;
     //int side;
 
-    //private DigitalChannel redLED;
-    //private DigitalChannel greenLED;
+    private DigitalChannel redLED;
+    private DigitalChannel greenLED;
 
     RobotTeleopMecanumFieldRelativeDrive_E.Datalog datalog;
     ElapsedTime runtime = new ElapsedTime();
@@ -96,10 +94,10 @@ public class MecanumAuto_E extends LinearOpMode {
 
         aprilTag = new AprilTag_E();
 
-        //redLED = hardwareMap.get(DigitalChannel.class, "red");
-        //greenLED = hardwareMap.get(DigitalChannel.class, "green");
-        //redLED.setMode(DigitalChannel.Mode.OUTPUT);
-        //greenLED.setMode(DigitalChannel.Mode.OUTPUT);
+        redLED = hardwareMap.get(DigitalChannel.class, "red");
+        greenLED = hardwareMap.get(DigitalChannel.class, "green");
+        redLED.setMode(DigitalChannel.Mode.OUTPUT);
+        greenLED.setMode(DigitalChannel.Mode.OUTPUT);
         // We set the left motors in reverse which is needed for drive trains where the left
         // motors are opposite to the right ones.
         backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -128,26 +126,6 @@ public class MecanumAuto_E extends LinearOpMode {
         aprilTags = new AprilTag_E();
         datalog = new RobotTeleopMecanumFieldRelativeDrive_E.Datalog(String.format("AprilTagLog_%d_%4.2f", decimation, power));
 
-        // Wait for the game to start (driver presses START)
-//        boolean inputComplete = false;
-//        while(!inputComplete){
-//
-//            if(gamepad1.x){
-//                side = 20;
-//            }
-//
-//            if(gamepad1.b){
-//                side = 24;
-//            }
-//
-//            if(gamepad1.y){
-//                inputComplete = true;
-//            }
-//
-//            telemetry.addData("Side; ",side);
-//            telemetry.update();
-//        }
-
         aprilTags = new AprilTag_E();
         aprilTags.initAprilTag(hardwareMap);
 
@@ -157,12 +135,14 @@ public class MecanumAuto_E extends LinearOpMode {
 
         runtime.reset();
 
-
-        moveForward(-1.0, 1000);
-
+        //moveForward(1.0, 1000);
+        rotateTo(30);
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+
+            rotateTo(aprilTags.getBearing());
+            moveForward(0.5, 1000);
 
             // Setup a variable for each drive wheel to save power level for telemetry
             double leftPower;
@@ -211,11 +191,59 @@ public class MecanumAuto_E extends LinearOpMode {
         backRightDrive.setPower(0);
     }
 
-    private void stopMotors(){
+    private void rotateTo(double targetAngle) {
+        double Kp = 0.082;  // Proportional gain (tune this)
+        double Kd = 0.005;  // derivative gain
+        double minPower = 0.3;
+        double maxPower = 0.5;
+        double tolerance = 1.0; // degrees
+        double lastError = 0;
+        double derivative;
+        double currentAngle, error, turnPower;
+
+        long lastTime = System.nanoTime();
+
+        while (true) {
+            currentAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+
+            error = targetAngle - currentAngle;
+            error = (error + 540) % 360 - 180; // Wrap error to [-180, 180] range
+
+            long now = System.nanoTime();
+            double deltaTime = (now - lastTime) / 1e9;
+            lastTime = now;
+
+            derivative = (error - lastError) / deltaTime;
+            lastError = error;
+
+            if (Math.abs(error) < tolerance) break;
+
+            turnPower = Kp * error + Kd * derivative;
+
+            // Enforce minimum power
+            if (Math.abs(turnPower) < minPower) {
+                turnPower = Math.signum(turnPower) * minPower;
+            }
+            // Clamp maximum power
+            turnPower = Math.max(-maxPower, Math.min(maxPower, turnPower));
+
+            telemetry.addData("Target (deg)", "%.2f", targetAngle);
+            telemetry.addData("Current (deg)", "%.2f", currentAngle);
+            telemetry.addData("Error", "%.2f", error);
+            telemetry.addData("Turn Power", "%.2f", turnPower);
+            telemetry.update();
+
+            frontLeftDrive.setPower(-turnPower);
+            backLeftDrive.setPower(-turnPower);
+            frontRightDrive.setPower(turnPower);
+            backRightDrive.setPower(turnPower);
+        }
+    }
+
+    private void stopMotors() {
         frontLeftDrive.setPower(0);
         backLeftDrive.setPower(0);
         frontRightDrive.setPower(0);
         backRightDrive.setPower(0);
     }
-
 }
