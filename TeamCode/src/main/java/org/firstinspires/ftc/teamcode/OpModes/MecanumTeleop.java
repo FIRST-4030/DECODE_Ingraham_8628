@@ -80,7 +80,6 @@ public class MecanumTeleop extends OpMode {
         frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        shooter.init(Shooter   );
 
 //        helperAprilTag = new HelperAprilTag_Nf();
 //        helperAprilTag.initAprilTag(hardwareMap);
@@ -126,7 +125,6 @@ public class MecanumTeleop extends OpMode {
     @Override
     public void loop() {
         telemetry.addData("collector:", collector.getVelocity());
-        telemetry.addData("shooter:", shooter.getVelocity());
 
 //        helperAprilTag.telemetryAprilTag(telemetry);
 
@@ -137,14 +135,6 @@ public class MecanumTeleop extends OpMode {
             imu.resetYaw();
         }
 
-        if (gamepad1.aWasPressed()) {
-            shooter.setPower(0.67);
-
-
-        }
-        if (gamepad1.aWasReleased()) {
-            shooter.setPower(0.0);
-        }
         if (gamepad1.bWasPressed()) {
             collector.setPower(0.4);
         }
