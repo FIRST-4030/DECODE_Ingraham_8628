@@ -101,12 +101,15 @@ public class AprilTag_E {
     private boolean redSide;
     private boolean PPG,PGP,GPP;
 
+    private double goalBearingBlue, goalBearingRed;
+
     List<AprilTagDetection> currentDetections;
 
+    @SuppressLint("DefaultLocale")
     public void scanField(Telemetry telemetry){
 
         currentDetections = aprilTag.getDetections();
-        telemetry.addData("# AprilTags Detected", currentDetections.size());
+        //telemetry.addData("# AprilTags Detected", currentDetections.size());
 
         // Step through the list of detections and display info for each one.
         if(!currentDetections.isEmpty()) {
@@ -117,10 +120,12 @@ public class AprilTag_E {
                         if (detection.id == 20){
                             blueSide = true;
                             redSide = false;
+                            goalBearingBlue = detection.ftcPose.bearing;
                         }
                         if (detection.id == 24){
                             blueSide = false;
                             redSide = true;
+                            goalBearingRed = detection.ftcPose.bearing;
                         }
                         if (detection.id == 22){ //PGP
                             PPG = false;
@@ -137,24 +142,33 @@ public class AprilTag_E {
                             GPP = true;
                             PGP = false;
                         }
-//                        distanceToGoal = detection.ftcPose.y;
-//                        telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-//                        telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-//                        telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-//                        telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
-//                        bearing = detection.ftcPose.bearing;
-//                        yaw = detection.ftcPose.yaw;
+                        distanceToGoal = detection.ftcPose.y;
+                        telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                        telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+                        telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+                        telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+                        bearing = detection.ftcPose.bearing;
+                        yaw = detection.ftcPose.yaw;
                         telemetry.addData("Blue; ",blueSide);
                         telemetry.addData("Red; ", redSide);
                         telemetry.addData("PPG; ",PPG);
                         telemetry.addData("PGP; ",PGP);
                         telemetry.addData("GPP; ",GPP);
-                        telemetry.update();
                     }
 
+                    if (blueSide) {
+                        bearing = goalBearingBlue;
+                    }
+
+                    if (redSide) {
+                        bearing = goalBearingRed;
+                    }
+
+                    telemetry.addData("bearing", bearing);
+                    telemetry.update();
 //                        telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
 //                        telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
-//                    }
+////                    }
                 //}
             }
         }
@@ -290,6 +304,7 @@ public class AprilTag_E {
                         telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
                     }
                 }
+                telemetry.update();
             }
         }
 
@@ -299,9 +314,9 @@ public class AprilTag_E {
         }
 
         // Add "key" information to telemetry
-        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
-        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
-        telemetry.addLine("RBE = Range, Bearing & Elevation");
+//        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
+//        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
+//        telemetry.addLine("RBE = Range, Bearing & Elevation");
 
     }   // end method telemetryAprilTag()
 
