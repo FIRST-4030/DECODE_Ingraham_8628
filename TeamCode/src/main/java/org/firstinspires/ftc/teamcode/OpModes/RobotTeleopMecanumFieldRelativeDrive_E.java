@@ -152,7 +152,7 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
 
     @Override
     public void loop() {
-        aprilTag.runInLoop(telemetry);
+        aprilTag.runInLoop(telemetry, false);
 
 
         double driveSpd = stickPower * (-gamepad1.left_stick_y);
@@ -187,7 +187,6 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         datalog.yawApril.set(aprilTags.getYaw());
         datalog.yawImu.set(yawImu);
         datalog.bearing.set(aprilTags.getBearing());
-        datalog.range.set(aprilTags.getRange());
         datalog.turn.set(turn);
         datalog.writeLine();
     }
@@ -242,7 +241,6 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         public Datalogger.GenericField yawApril = new Datalogger.GenericField("yawApril");
         public Datalogger.GenericField yawImu = new Datalogger.GenericField("yawIMU");
         public Datalogger.GenericField bearing = new Datalogger.GenericField("bearing");
-        public Datalogger.GenericField range = new Datalogger.GenericField("range");
         public Datalogger.GenericField turn = new Datalogger.GenericField("turn");
 
         public Datalog(String name) {
@@ -259,7 +257,6 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
                             yawImu,
                             runTime,
                             bearing,
-                            range,
                             turn
                     )
                     .build();

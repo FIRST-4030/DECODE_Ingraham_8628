@@ -29,9 +29,6 @@
 
 package org.firstinspires.ftc.teamcode;
 
-
-import static java.lang.Math.abs;
-
 import android.annotation.SuppressLint;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -47,30 +44,6 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 
-/*
- * This OpMode illustrates the basics of AprilTag recognition and pose estimation,
- * including Java Builder structures for specifying Vision parameters.
- *
- * For an introduction to AprilTags, see the FTC-DOCS link below:
- * https://ftc-docs.firstinspires.org/en/latest/apriltag/vision_portal/apriltag_intro/apriltag-intro.html
- *
- * In this sample, any visible tag ID will be detected and displayed, but only tags that are included in the default
- * "TagLibrary" will have their position and orientation information displayed.  This default TagLibrary contains
- * the current Season's AprilTags and a small set of "test Tags" in the high number range.
- *
- * When an AprilTag in the TagLibrary is detected, the SDK provides location and orientation of the tag, relative to the camera.
- * This information is provided in the "ftcPose" member of the returned "detection", and is explained in the ftc-docs page linked below.
- * https://ftc-docs.firstinspires.org/apriltag-detection-values
- *
- * To experiment with using AprilTags to navigate, try out these two driving samples:
- * RobotAutoDriveToAprilTagOmni and RobotAutoDriveToAprilTagTank
- *
- * There are many "default" VisionPortal and AprilTag configuration parameters that may be overridden if desired.
- * These default parameters are shown as comments in the code below.
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list.
- */
 public class AprilTag_E {
 
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
@@ -85,7 +58,6 @@ public class AprilTag_E {
      */
     private VisionPortal visionPortal;
 
-
     private int goalTagId;
 
     public double distanceToGoal;
@@ -95,7 +67,6 @@ public class AprilTag_E {
     private String ledColor;
 
     private double yaw;
-    private double range;
 
     private boolean blueSide;
     private boolean redSide;
@@ -109,102 +80,79 @@ public class AprilTag_E {
     public void scanField(Telemetry telemetry){
 
         currentDetections = aprilTag.getDetections();
-        //telemetry.addData("# AprilTags Detected", currentDetections.size());
 
         // Step through the list of detections and display info for each one.
         if(!currentDetections.isEmpty()) {
             for (AprilTagDetection detection : currentDetections) {
-                //if (detection.id == goalTagId) {
-                    ledColor = "green";
-                    if (detection.metadata != null) {
-                        if (detection.id == 20){
-                            blueSide = true;
-                            redSide = false;
-                            goalBearingBlue = detection.ftcPose.bearing;
-                        }
-                        if (detection.id == 24){
-                            blueSide = false;
-                            redSide = true;
-                            goalBearingRed = detection.ftcPose.bearing;
-                        }
-                        if (detection.id == 22){ //PGP
-                            PPG = false;
-                            GPP = false;
-                            PGP = true;
-                        }
-                        if (detection.id == 23){ //PPG
-                            PPG = true;
-                            GPP = false;
-                            PGP = false;
-                        }
-                        if (detection.id == 21){ //GPP
-                            PPG = false;
-                            GPP = true;
-                            PGP = false;
-                        }
-                        distanceToGoal = detection.ftcPose.y;
-                        telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-                        telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-                        telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-                        telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
-                        bearing = detection.ftcPose.bearing;
-                        yaw = detection.ftcPose.yaw;
-                        telemetry.addData("Blue; ",blueSide);
-                        telemetry.addData("Red; ", redSide);
-                        telemetry.addData("PPG; ",PPG);
-                        telemetry.addData("PGP; ",PGP);
-                        telemetry.addData("GPP; ",GPP);
+                ledColor = "green";
+                if (detection.metadata != null) {
+                    if (detection.id == 20){
+                        blueSide = true;
+                        redSide = false;
+                        goalBearingBlue = detection.ftcPose.bearing;
+                        goalTagId = detection.id;
                     }
-
-                    if (blueSide) {
-                        bearing = goalBearingBlue;
+                    if (detection.id == 24){
+                        blueSide = false;
+                        redSide = true;
+                        goalBearingRed = detection.ftcPose.bearing;
+                        goalTagId = detection.id;
                     }
-
-                    if (redSide) {
-                        bearing = goalBearingRed;
+                    if (detection.id == 22){ //PGP
+                        PPG = false;
+                        GPP = false;
+                        PGP = true;
                     }
-
-                    telemetry.addData("bearing", bearing);
-                    telemetry.update();
-//                        telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-//                        telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
-////                    }
-                //}
+                    if (detection.id == 23){ //PPG
+                        PPG = true;
+                        GPP = false;
+                        PGP = false;
+                    }
+                    if (detection.id == 21){ //GPP
+                        PPG = false;
+                        GPP = true;
+                        PGP = false;
+                    }
+                 }
             }
-        }
 
-        else{
+            telemetry.addLine(String.format("# AprilTags Detected: %d\n", currentDetections.size()));
+            telemetry.addLine(String.format("GPP=%b, PGP=%b, PPG=%b\n", GPP, PGP, PPG));
+            if (blueSide) {
+                bearing = goalBearingBlue;
+                telemetry.addLine(String.format("Blue  Goal:  Bearing=%6.2f", goalBearingBlue));
+            }
+            if (redSide) {
+                bearing = goalBearingRed;
+                telemetry.addLine(String.format("Red  Goal:  Bearing=%6.2f", goalBearingRed));
+            }
+        } else {
+            telemetry.addLine("No tags");
             bearing = 999;
             ledColor = "red";
         }
-
-        // Add "key" information to telemetry
-//        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
-//        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
-//        telemetry.addLine("RBE = Range, Bearing & Elevation");
-
+        telemetry.update();
     }
 
-    public void runInLoop(Telemetry telemetry) {
+//    public void runInLoop(Telemetry telemetry) {
 
         // Wait for the DS start button to be touched.
 
-                telemetryAprilTag(telemetry);
+//        telemetryAprilTag(telemetry);
 
-                // Push telemetry to the Driver Station.
+        // Push telemetry to the Driver Station.
+        // Save CPU resources; can resume streaming when needed.
+//        if (gamepad1.dpad_down) {
+//            visionPortal.stopStreaming();
+//        } else if (gamepad1.dpad_up) {
+//            visionPortal.resumeStreaming();
+//        }
 
-                // Save CPU resources; can resume streaming when needed.
-//                if (gamepad1.dpad_down) {
-//                    visionPortal.stopStreaming();
-//                } else if (gamepad1.dpad_up) {
-//                    visionPortal.resumeStreaming();
-//                }
-
-                // Share the CPU.
+        // Share the CPU.
 
         // Save more CPU resources when camera is no longer needed.
 
-    }   // end method runOpMode()
+//    }   // end method runOpMode()
 
     /**
      * Initialize the AprilTag processor.
@@ -281,10 +229,12 @@ public class AprilTag_E {
      * Add telemetry about AprilTag detections.
      */
     @SuppressLint("DefaultLocale")
-    private void telemetryAprilTag(Telemetry telemetry) {
+    public void runInLoop(Telemetry telemetry, boolean display) {
 
         currentDetections = aprilTag.getDetections();
-        //telemetry.addData("# AprilTags Detected", currentDetections.size());
+        if (display) {
+            telemetry.addData("# AprilTags Detected", currentDetections.size());
+        }
 
         // Step through the list of detections and display info for each one.
         if(!currentDetections.isEmpty()) {
@@ -293,39 +243,34 @@ public class AprilTag_E {
                     ledColor = "green";
                     if (detection.metadata != null) {
                         distanceToGoal = detection.ftcPose.y;
-                        telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-                        telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-                        telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-                        telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
                         bearing = detection.ftcPose.bearing;
                         yaw = detection.ftcPose.yaw;
+                        if (display) {
+                            telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                            telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+                            telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+                            telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+                        }
                     } else {
-                        telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                        telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+                        if (display) {
+                            telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
+                            telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+                        }
                     }
                 }
-                telemetry.update();
+                if (display) { telemetry.update(); };
             }
-        }
-
-        else{
+        } else{
             bearing = 999;
             ledColor = "red";
         }
-
-        // Add "key" information to telemetry
-//        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
-//        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
-//        telemetry.addLine("RBE = Range, Bearing & Elevation");
-
     }   // end method telemetryAprilTag()
+
+    public double getBearing() { return bearing; }
 
     public String getColor(){
         return ledColor;
     }
 
-    public double getBearing() { return bearing; }
     public double getYaw() { return yaw; }
-    public double getRange() { return range; }
-
 }

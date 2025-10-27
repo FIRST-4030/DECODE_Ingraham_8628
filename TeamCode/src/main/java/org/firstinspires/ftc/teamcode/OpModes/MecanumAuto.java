@@ -36,28 +36,12 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.AprilTag_E;
-import org.firstinspires.ftc.teamcode.BuildConfig;
 
-
-/*
- * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
- * the autonomous or the teleop period of an FTC match. The names of OpModes appear on the menu
- * of the FTC Driver Station. When a selection is made from the menu, the corresponding OpMode
- * class is instantiated on the Robot Controller and executed.
- *
- * This particular OpMode just executes a basic Tank Drive Teleop for a two wheeled robot
- * It includes all the skeletal structure that all linear OpModes contain.
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
- */
-
-@Autonomous(name="8628 Mecanum Auto", group="Linear OpMode")
+@Autonomous(name="Mecanum Auto", group="Linear OpMode")
 public class MecanumAuto extends LinearOpMode {
 
     // Declare OpMode members.
@@ -66,8 +50,6 @@ public class MecanumAuto extends LinearOpMode {
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
     //Servo directionServo;
-    AprilTag_E aprilTag;
-    //int side;
 
     private DigitalChannel redLED;
     private DigitalChannel greenLED;
@@ -92,8 +74,6 @@ public class MecanumAuto extends LinearOpMode {
         backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
 
         //directionServo = hardwareMap.get(Servo.class, "direction");
-
-        aprilTag = new AprilTag_E();
 
         redLED = hardwareMap.get(DigitalChannel.class, "red");
         greenLED = hardwareMap.get(DigitalChannel.class, "green");
@@ -124,7 +104,6 @@ public class MecanumAuto extends LinearOpMode {
                 RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
-        aprilTags = new AprilTag_E();
         datalog = new RobotTeleopMecanumFieldRelativeDrive_E.Datalog(String.format("AprilTagLog_%d_%4.2f", decimation, power));
 
         aprilTags = new AprilTag_E();
