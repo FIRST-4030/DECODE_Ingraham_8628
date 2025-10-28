@@ -15,6 +15,9 @@ public class Shooter {
         shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
+    public double getVelocity(){
+        return shooter.getVelocity();
+    }
 
     public void initPower(double power){
         this.power = power;

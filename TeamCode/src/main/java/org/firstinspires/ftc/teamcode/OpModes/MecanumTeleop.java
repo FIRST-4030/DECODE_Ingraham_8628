@@ -72,6 +72,7 @@ public class MecanumTeleop extends OpMode {
 
     double shooterSpeedIncrement = 0.05;
     double currentPower = 0.67;
+    double collectorSpeed=0.4;
 
     @Override
     public void init() {
@@ -146,7 +147,7 @@ public class MecanumTeleop extends OpMode {
             driveSlower=0.3;
         }
         if (gamepad1.leftBumperWasReleased()) {
-            driveSlower=0.3;
+            driveSlower=0.75;
         }
 
 
@@ -155,23 +156,23 @@ public class MecanumTeleop extends OpMode {
             imu.resetYaw();
         }
 
-        if (gamepad2.leftBumperWasReleased()) {
+        if (gamepad2.leftBumperWasPressed()) {
             shooter.shoot();
         }
-        if (gamepad2.rightBumperWasReleased()) {
+        if (gamepad2.leftBumperWasReleased()) {
             shooter.stop();
         }
 
-        if (gamepad2.dpad_up) {
+        if (gamepad2.dpadUpWasReleased()) {
             currentPower = shooter.adjustPower(shooterSpeedIncrement);
         }
 
-        if (gamepad2.dpad_down) {
+        if (gamepad2.dpadDownWasReleased()) {
             currentPower = shooter.adjustPower(-shooterSpeedIncrement);
         }
 
         if (gamepad2.bWasPressed()) {
-            collector.setPower(0.4);
+            collector.setPower(collectorSpeed);
         }
         if (gamepad2.bWasReleased()) {
             collector.setPower(0.0);
@@ -184,7 +185,10 @@ public class MecanumTeleop extends OpMode {
 
 
         telemetry.addData("Shooter Power: ", currentPower);
+        telemetry.addData("Velocity",shooter.getVelocity());
+
         telemetry.update();
+
 
 //        //Working out the boolean methods for the triggers. I'll leave this code commented out. -Elijah
 //        if (gamepad1.left_trigger >= 0.2) {
