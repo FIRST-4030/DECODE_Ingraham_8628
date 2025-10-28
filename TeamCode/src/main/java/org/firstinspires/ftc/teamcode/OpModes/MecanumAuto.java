@@ -35,11 +35,13 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.AprilTag_E;
+import org.firstinspires.ftc.teamcode.Shooter;
 
 @Autonomous(name="Mecanum Auto", group="Linear OpMode")
 public class MecanumAuto extends LinearOpMode {
@@ -50,9 +52,11 @@ public class MecanumAuto extends LinearOpMode {
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
     //Servo directionServo;
+    Shooter shooter;
+    Servo shooterHinge;
 
-    private DigitalChannel redLED;
-    private DigitalChannel greenLED;
+    //private DigitalChannel redLED;
+    //private DigitalChannel greenLED;
 
     RobotTeleopMecanumFieldRelativeDrive_E.Datalog datalog;
     ElapsedTime runtime = new ElapsedTime();
@@ -75,10 +79,17 @@ public class MecanumAuto extends LinearOpMode {
 
         //directionServo = hardwareMap.get(Servo.class, "direction");
 
-        redLED = hardwareMap.get(DigitalChannel.class, "red");
-        greenLED = hardwareMap.get(DigitalChannel.class, "green");
-        redLED.setMode(DigitalChannel.Mode.OUTPUT);
-        greenLED.setMode(DigitalChannel.Mode.OUTPUT);
+        //redLED = hardwareMap.get(DigitalChannel.class, "red");
+        //greenLED = hardwareMap.get(DigitalChannel.class, "green");
+        //redLED.setMode(DigitalChannel.Mode.OUTPUT);
+        //greenLED.setMode(DigitalChannel.Mode.OUTPUT);
+
+        //double shooterSpeedIncrement = 0.05;
+        double currentPower = 0.67;
+
+        shooter=new Shooter();
+        shooter.init(hardwareMap);
+        shooter.initPower(currentPower);
         // We set the left motors in reverse which is needed for drive trains where the left
         // motors are opposite to the right ones.
         backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -92,6 +103,9 @@ public class MecanumAuto extends LinearOpMode {
         frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
+        shooterHinge.setPosition(0.5);
 
         imu = hardwareMap.get(IMU.class, "imu");
         // This needs to be changed to match the orientation on your robot
@@ -122,10 +136,11 @@ public class MecanumAuto extends LinearOpMode {
         while (opModeIsActive()) {
 
             imu.resetYaw();
-            rotateTo(aprilTags.getBearing());
-            moveForward(0.5, 1000);
+            fireShooter(1);
+            //rotateTo(aprilTags.getBearing());
+            //moveForward(0.5, 1000);
 
-            break;
+            //break;
         }
     }
 
@@ -200,5 +215,19 @@ public class MecanumAuto extends LinearOpMode {
         backLeftDrive.setPower(0);
         frontRightDrive.setPower(0);
         backRightDrive.setPower(0);
+    }
+
+    public void fireShooter(int numFire) {
+        shooter.shoot();
+        sleep(600);
+
+        while(numFire > 0) {
+            shooterHinge.setPosition(0.0);
+            sleep(500);
+            shooterHinge.setPosition(0.5);
+            numFire --;
+        }
+
+        shooter.stop();
     }
 }
