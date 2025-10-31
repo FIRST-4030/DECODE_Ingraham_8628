@@ -85,7 +85,7 @@ public class MecanumAuto extends LinearOpMode {
         //greenLED.setMode(DigitalChannel.Mode.OUTPUT);
 
         //double shooterSpeedIncrement = 0.05;
-        double currentPower = 0.67;
+        double currentPower = 1.0;
 
         shooter=new Shooter();
         shooter.init(hardwareMap);
@@ -105,7 +105,7 @@ public class MecanumAuto extends LinearOpMode {
         backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
-        shooterHinge.setPosition(0.5);
+        shooterHinge.setPosition(0.7);
 
         imu = hardwareMap.get(IMU.class, "imu");
         // This needs to be changed to match the orientation on your robot
@@ -136,11 +136,11 @@ public class MecanumAuto extends LinearOpMode {
         while (opModeIsActive()) {
 
             imu.resetYaw();
-            fireShooter(1);
-            //rotateTo(aprilTags.getBearing());
-            //moveForward(0.5, 1000);
+            rotateTo(aprilTags.getBearing());
+            fireShooter(2);
+            moveForward(1.0, 700);
 
-            //break;
+            break;
         }
     }
 
@@ -162,11 +162,12 @@ public class MecanumAuto extends LinearOpMode {
     }
 
     private void rotateTo(double targetAngle) {
-        double Kp = 0.082;  // Proportional gain (tune this)
-        double Kd = 0.005;  // derivative gain
+        double Kp = 0.022;  // Proportional gain (tune this)
+        //double Kp = 0.082;
+        double Kd = 0.0;  // derivative gain
         double minPower = 0.3;
         double maxPower = 0.5;
-        double tolerance = 1.0; // degrees
+        double tolerance = 3.0; // degrees
         double lastError = 0;
         double derivative;
         double currentAngle, error, turnPower;
@@ -174,10 +175,11 @@ public class MecanumAuto extends LinearOpMode {
         long lastTime = System.nanoTime();
 
         while (true) {
-            currentAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            //currentAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
 
-            error = targetAngle - currentAngle;
-            error = (error + 540) % 360 - 180; // Wrap error to [-180, 180] range
+            error = targetAngle;// - currentAngle;
+//            error = -error;
+            //error = (error + 540) % 360 - 180; // Wrap error to [-180, 180] range
 
             long now = System.nanoTime();
             double deltaTime = (now - lastTime) / 1e9;
@@ -197,11 +199,11 @@ public class MecanumAuto extends LinearOpMode {
             // Clamp maximum power
             turnPower = Math.max(-maxPower, Math.min(maxPower, turnPower));
 
-//            telemetry.addData("Target (deg)", "%.2f", targetAngle);
-//            telemetry.addData("Current (deg)", "%.2f", currentAngle);
-//            telemetry.addData("Error", "%.2f", error);
-//            telemetry.addData("Turn Power", "%.2f", turnPower);
-//            telemetry.update();
+            telemetry.addData("Target (deg)", "%.2f", targetAngle);
+         //   telemetry.addData("Current (deg)", "%.2f", currentAngle);
+            telemetry.addData("Error", "%.2f", error);
+            telemetry.addData("Turn Power", "%.2f", turnPower);
+            telemetry.update();
 
             frontLeftDrive.setPower(-turnPower);
             backLeftDrive.setPower(-turnPower);
@@ -219,12 +221,12 @@ public class MecanumAuto extends LinearOpMode {
 
     public void fireShooter(int numFire) {
         shooter.shoot();
-        sleep(600);
+        sleep(3000);
 
         while(numFire > 0) {
             shooterHinge.setPosition(0.0);
             sleep(500);
-            shooterHinge.setPosition(0.5);
+            shooterHinge.setPosition(0.7);
             numFire --;
         }
 

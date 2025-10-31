@@ -111,10 +111,10 @@ public class MecanumTeleop extends OpMode {
 
         collector.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        collector.setDirection(DcMotor.Direction.REVERSE);
+        collector.setDirection(DcMotor.Direction.FORWARD);
 
         shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
-        shooterHinge.setPosition(0.5);
+        shooterHinge.setPosition(0.7);
 
         imu = hardwareMap.get(IMU.class, "imu");
         // This needs to be changed to match the orientation on your robot
@@ -180,7 +180,7 @@ public class MecanumTeleop extends OpMode {
         if (gamepad2.aWasPressed()) {
             shooterHinge.setPosition(0.0);
             sleep(500);
-            shooterHinge.setPosition(0.5);
+            shooterHinge.setPosition(0.7);
         }
 
 
