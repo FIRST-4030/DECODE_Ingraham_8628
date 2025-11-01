@@ -37,6 +37,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 //import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.ShooterVelo;
@@ -69,6 +70,7 @@ public class MecanumTeleop extends OpMode {
     //    HelperAprilTag_Nf helperAprilTag;
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
+    ElapsedTime shotTimer = new ElapsedTime();
 
     double shooterSpeedIncrement = 2.0;  // RPS rotations per second
     double currentVelocity = 20.0;  // RPS  rotations per second
@@ -87,7 +89,7 @@ public class MecanumTeleop extends OpMode {
         backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        shooter=new ShooterVelo(hardwareMap,"shooter",false);
+        shooter=new ShooterVelo(hardwareMap,"shooter",true);
 
 //        helperAprilTag = new HelperAprilTag_Nf();
 //        helperAprilTag.initAprilTag(hardwareMap);
@@ -110,7 +112,7 @@ public class MecanumTeleop extends OpMode {
 
         collector.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        collector.setDirection(DcMotor.Direction.FORWARD);
+        collector.setDirection(DcMotor.Direction.REVERSE);
 
         shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
         shooterHinge.setPosition(0.7);
@@ -155,27 +157,30 @@ public class MecanumTeleop extends OpMode {
 
         if (gamepad2.leftBumperWasPressed()) {
             shooting = true;
+            shotTimer.reset();
         }
+        shooter.overridePower();
+        shooter.setTargetVelocity(currentVelocity);
         if (shooting) {
-            shooter.setTargetVelocity(shooterSpeedIncrement);
-            shooter.overridePower();
+            shooter.setTargetVelocity(currentVelocity);
             if (shooter.atSpeed()) {
                 shooterHinge.setPosition(0.0);
-                sleep(500);
-                shooterHinge.setPosition(0.7);
-                shooting = false;
+                    if (shotTimer.milliseconds() > 500) {
+                        shooterHinge.setPosition(0.7);
+                        shooting = false;
+                    }
             }
-            shooter.setTargetVelocity(0);
+            //shooter.setTargetVelocity(0);
         }
 
         if (gamepad2.dpadUpWasPressed()) {
             currentVelocity += shooterSpeedIncrement;
-            shooter.setTargetVelocity(shooterSpeedIncrement);
+            shooter.setTargetVelocity(currentVelocity);
         }
 
         if (gamepad2.dpadDownWasPressed()) {
             currentVelocity -= shooterSpeedIncrement;
-            shooter.setTargetVelocity(-shooterSpeedIncrement);
+            shooter.setTargetVelocity(currentVelocity);
         }
 
         if (gamepad2.bWasPressed()) {

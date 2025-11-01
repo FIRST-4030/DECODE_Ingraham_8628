@@ -33,7 +33,6 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -41,7 +40,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.AprilTag_E;
-import org.firstinspires.ftc.teamcode.Shooter;
+import org.firstinspires.ftc.teamcode.ShooterVelo;
 
 @Autonomous(name="Mecanum Auto", group="Linear OpMode")
 public class MecanumAuto extends LinearOpMode {
@@ -51,8 +50,7 @@ public class MecanumAuto extends LinearOpMode {
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
-    //Servo directionServo;
-    Shooter shooter;
+    ShooterVelo shooter;
     Servo shooterHinge;
 
     //private DigitalChannel redLED;
@@ -67,6 +65,8 @@ public class MecanumAuto extends LinearOpMode {
 
     AprilTag_E aprilTags;
 
+    private boolean shooting = false;
+
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
 
@@ -77,19 +77,15 @@ public class MecanumAuto extends LinearOpMode {
         backLeftDrive = hardwareMap.get(DcMotor.class, "leftBack");
         backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
 
-        //directionServo = hardwareMap.get(Servo.class, "direction");
-
         //redLED = hardwareMap.get(DigitalChannel.class, "red");
         //greenLED = hardwareMap.get(DigitalChannel.class, "green");
         //redLED.setMode(DigitalChannel.Mode.OUTPUT);
         //greenLED.setMode(DigitalChannel.Mode.OUTPUT);
 
-        //double shooterSpeedIncrement = 0.05;
-        double currentPower = 1.0;
+        //double currentPower = 1.0;
 
-        shooter=new Shooter();
-        shooter.init(hardwareMap);
-        shooter.initPower(currentPower);
+        shooter = new ShooterVelo(hardwareMap, "shooter", true);
+        ///shooter.initPower(currentPower);
         // We set the left motors in reverse which is needed for drive trains where the left
         // motors are opposite to the right ones.
         backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -125,20 +121,19 @@ public class MecanumAuto extends LinearOpMode {
 
         do {
             aprilTags.scanField(telemetry);
-//            telemetry.addData("Compiled on: ", BuildConfig.COMPILATION_DATE);
 //            telemetry.addData("Tag: ", aprilTag.getBearing());
 //            telemetry.update();
         } while (opModeInInit());
 
         runtime.reset();
+        imu.resetYaw();
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
-            imu.resetYaw();
-            rotateTo(aprilTags.getBearing());
-            fireShooter(2);
-            moveForward(1.0, 700);
+            //rotateTo(-(aprilTags.getBearing()));
+            fireShooter(3);
+            //moveForward(0.5, 700);
 
             break;
         }
@@ -162,8 +157,7 @@ public class MecanumAuto extends LinearOpMode {
     }
 
     private void rotateTo(double targetAngle) {
-        double Kp = 0.022;  // Proportional gain (tune this)
-        //double Kp = 0.082;
+        double Kp = 0.03;  // Proportional gain (tune this)
         double Kd = 0.0;  // derivative gain
         double minPower = 0.3;
         double maxPower = 0.5;
@@ -175,11 +169,10 @@ public class MecanumAuto extends LinearOpMode {
         long lastTime = System.nanoTime();
 
         while (true) {
-            //currentAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            currentAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
 
-            error = targetAngle;// - currentAngle;
-//            error = -error;
-            //error = (error + 540) % 360 - 180; // Wrap error to [-180, 180] range
+            error = -targetAngle - currentAngle;
+            error = (error + 540) % 360 - 180; // Wrap error to [-180, 180] range
 
             long now = System.nanoTime();
             double deltaTime = (now - lastTime) / 1e9;
@@ -200,7 +193,7 @@ public class MecanumAuto extends LinearOpMode {
             turnPower = Math.max(-maxPower, Math.min(maxPower, turnPower));
 
             telemetry.addData("Target (deg)", "%.2f", targetAngle);
-         //   telemetry.addData("Current (deg)", "%.2f", currentAngle);
+            telemetry.addData("Current (deg)", "%.2f", currentAngle);
             telemetry.addData("Error", "%.2f", error);
             telemetry.addData("Turn Power", "%.2f", turnPower);
             telemetry.update();
@@ -220,16 +213,26 @@ public class MecanumAuto extends LinearOpMode {
     }
 
     public void fireShooter(int numFire) {
-        shooter.shoot();
-        sleep(3000);
+        shooting = true;
+        shooter.setTargetVelocity(35);
 
-        while(numFire > 0) {
-            shooterHinge.setPosition(0.0);
-            sleep(500);
-            shooterHinge.setPosition(0.7);
-            numFire --;
-        }
+            shooter.overridePower();
 
-        shooter.stop();
+            if (shooting) {
+                if (shooter.atSpeed()) {
+
+                    while (numFire > 0) {
+                        shooterHinge.setPosition(0.0);
+                        sleep(500);
+                        shooterHinge.setPosition(0.7);
+                        sleep(500);
+                        numFire--;
+                    }
+                    shooter.setTargetVelocity(0);
+                    shooting = false;
+                }
+//                shooter.setTargetVelocity(0);
+//                shooting = false;
+            }
     }
 }
