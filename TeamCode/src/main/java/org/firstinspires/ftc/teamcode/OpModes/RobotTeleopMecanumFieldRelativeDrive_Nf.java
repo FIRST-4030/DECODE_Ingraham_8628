@@ -31,6 +31,7 @@ package org.firstinspires.ftc.teamcode.OpModes;
 import static java.lang.Math.abs;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -53,6 +54,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  *
  */
+@Disabled
 @TeleOp(name = "Robot: Field Relative Mecanum Drive-Nf", group = "Robot")
 public class RobotTeleopMecanumFieldRelativeDrive_Nf extends OpMode {
     // This declares the four motors needed

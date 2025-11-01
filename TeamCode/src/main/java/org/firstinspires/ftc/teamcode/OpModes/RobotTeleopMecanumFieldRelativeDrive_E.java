@@ -33,6 +33,7 @@ import static java.lang.Math.abs;
 import android.annotation.SuppressLint;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -63,6 +64,7 @@ import org.firstinspires.ftc.teamcode.Datalogger;
  * Robot-Centric Drive
  * implemented data logging
  */
+@Disabled
 @TeleOp(name = "Elijah: Robot-Centric Mecanum Drive", group = "Robot")
 public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
     // This declares the four motors needed

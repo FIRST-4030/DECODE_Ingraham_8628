@@ -38,8 +38,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.Shooter;
+//import org.firstinspires.ftc.teamcode.Shooter;
+import org.firstinspires.ftc.teamcode.ShooterVelo;
 //import org.firstinspires.ftc.teamcode.Shooter;
 
 /*
@@ -64,14 +64,15 @@ public class MecanumTeleop extends OpMode {
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
     DcMotorEx collector;
-    Shooter shooter;
+    ShooterVelo shooter;
     Servo shooterHinge;
     //    HelperAprilTag_Nf helperAprilTag;
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
 
-    double shooterSpeedIncrement = 0.05;
-    double currentPower = 0.67;
+    double shooterSpeedIncrement = 2.0;  // RPS rotations per second
+    double currentVelocity = 20.0;  // RPS  rotations per second
+    boolean shooting = false; // true when shooting sequence begins
     double collectorSpeed=0.4;
 
     @Override
@@ -86,9 +87,7 @@ public class MecanumTeleop extends OpMode {
         backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        shooter=new Shooter();
-        shooter.init(hardwareMap);
-        shooter.initPower(currentPower);
+        shooter=new ShooterVelo(hardwareMap,"shooter",false);
 
 //        helperAprilTag = new HelperAprilTag_Nf();
 //        helperAprilTag.initAprilTag(hardwareMap);
@@ -130,8 +129,6 @@ public class MecanumTeleop extends OpMode {
     private double driveSlower = 1;
     @Override
     public void loop() {
-        telemetry.addData("collector:", collector.getVelocity());
-//        telemetry.addData("shooter:", shooter.getVelocity());
 
 //        helperAprilTag.telemetryAprilTag(telemetry);
 
@@ -157,35 +154,41 @@ public class MecanumTeleop extends OpMode {
         }
 
         if (gamepad2.leftBumperWasPressed()) {
-            shooter.shoot();
+            shooting = true;
         }
-        if (gamepad2.leftBumperWasReleased()) {
-            shooter.stop();
+        if (shooting) {
+            shooter.setTargetVelocity(shooterSpeedIncrement);
+            shooter.overridePower();
+            if (shooter.atSpeed()) {
+                shooterHinge.setPosition(0.0);
+                sleep(500);
+                shooterHinge.setPosition(0.7);
+                shooting = false;
+            }
+            shooter.setTargetVelocity(0);
         }
 
-        if (gamepad2.dpadUpWasReleased()) {
-            currentPower = shooter.adjustPower(shooterSpeedIncrement);
+        if (gamepad2.dpadUpWasPressed()) {
+            currentVelocity += shooterSpeedIncrement;
+            shooter.setTargetVelocity(shooterSpeedIncrement);
         }
 
-        if (gamepad2.dpadDownWasReleased()) {
-            currentPower = shooter.adjustPower(-shooterSpeedIncrement);
+        if (gamepad2.dpadDownWasPressed()) {
+            currentVelocity -= shooterSpeedIncrement;
+            shooter.setTargetVelocity(-shooterSpeedIncrement);
         }
 
         if (gamepad2.bWasPressed()) {
             collector.setPower(collectorSpeed);
         }
-        if (gamepad2.bWasReleased()) {
+        if (gamepad2.aWasPressed()) {
             collector.setPower(0.0);
         }
-        if (gamepad2.aWasPressed()) {
-            shooterHinge.setPosition(0.0);
-            sleep(500);
-            shooterHinge.setPosition(0.7);
-        }
 
-
-        telemetry.addData("Shooter Power: ", currentPower);
-        telemetry.addData("Velocity",shooter.getVelocity());
+        telemetry.addData("collector current velocity:", collector.getVelocity());
+        telemetry.addData("collector target power", collectorSpeed);
+        telemetry.addData("Shooter Current Velocity:", shooter.getVelocity());
+        telemetry.addData("Shooter Target Velocity: ", currentVelocity);
 
         telemetry.update();
 

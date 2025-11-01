@@ -2,9 +2,10 @@ package org.firstinspires.ftc.teamcode.OpModes;
 
 import android.annotation.SuppressLint;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-
+@Disabled
 @TeleOp(name="Gamepad F310 Buttons")
 public class Gamepad_F310_Buttons extends OpMode
 {
