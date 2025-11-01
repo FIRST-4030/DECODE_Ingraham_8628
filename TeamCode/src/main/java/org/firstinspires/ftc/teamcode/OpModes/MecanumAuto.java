@@ -132,8 +132,9 @@ public class MecanumAuto extends LinearOpMode {
         while (opModeIsActive()) {
 
             //rotateTo(-(aprilTags.getBearing()));
-            fireShooter(3);
-            //moveForward(0.5, 700);
+            turn(-0.3,430);
+            fireShooter(3,32.0);
+            moveForward(0.5, 400);
 
             break;
         }
@@ -150,10 +151,20 @@ public class MecanumAuto extends LinearOpMode {
             backRightDrive.setPower(power);
         }
 
-        frontLeftDrive.setPower(0);
-        backLeftDrive.setPower(0);
-        frontRightDrive.setPower(0);
-        backRightDrive.setPower(0);
+        stopMotors();
+    }
+    private void turn(double power, double mseconds){
+        ElapsedTime timer = new ElapsedTime();
+        timer.reset();
+
+        while (timer.milliseconds() < mseconds) {
+            frontLeftDrive.setPower(power);
+            backLeftDrive.setPower(power);
+            frontRightDrive.setPower(-power);
+            backRightDrive.setPower(-power);
+        }
+
+        stopMotors();
     }
 
     private void rotateTo(double targetAngle) {
@@ -212,27 +223,29 @@ public class MecanumAuto extends LinearOpMode {
         backRightDrive.setPower(0);
     }
 
-    public void fireShooter(int numFire) {
+    public void fireShooter(int numFire,double velocity) {
         shooting = true;
-        shooter.setTargetVelocity(35);
+        shooter.setTargetVelocity(velocity);
 
+        while (shooting) {
             shooter.overridePower();
 
-            if (shooting) {
-                if (shooter.atSpeed()) {
+            if (shooter.atSpeed()) {
 
                     while (numFire > 0) {
                         shooterHinge.setPosition(0.0);
                         sleep(500);
                         shooterHinge.setPosition(0.7);
-                        sleep(500);
+                        sleep(700);
                         numFire--;
                     }
-                    shooter.setTargetVelocity(0);
-                    shooting = false;
-                }
-//                shooter.setTargetVelocity(0);
-//                shooting = false;
+                    if (numFire == 0) {
+                        shooter.setTargetVelocity(0);
+                        shooting = false;
+                        break;
+                    }
+
             }
+        }
     }
 }

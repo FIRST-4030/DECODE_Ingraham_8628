@@ -47,11 +47,13 @@ public class ShooterVelo {
     public double getPower() {
         return shooter.getPower();
     }
+
     public double getVelocity() {
         return shooter.getVelocity(AngleUnit.DEGREES)/COUNTS_PER_REV;
     }
+
     public boolean atSpeed() {
-        if (0.9*targetVelocity < this.getVelocity() && this.getVelocity() < 1.1*targetVelocity) {
+        if (0.98*targetVelocity < this.getVelocity() && this.getVelocity() < 1.02*targetVelocity) {
             return true;
         } else {
             return false;

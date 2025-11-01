@@ -77,6 +77,8 @@ public class MecanumTeleop extends OpMode {
     boolean shooting = false; // true when shooting sequence begins
     double collectorSpeed=0.4;
 
+    private double driveSlower = 1;
+
     @Override
     public void init() {
         frontLeftDrive = hardwareMap.get(DcMotor.class, "leftFront");
@@ -128,7 +130,20 @@ public class MecanumTeleop extends OpMode {
                 RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
     }
-    private double driveSlower = 1;
+
+    @Override
+    public void init_loop() {
+        telemetry.addData("PAD 1, LEFT BUMPER", "SLOW DOWN");
+        telemetry.addData("--", "--");
+        telemetry.addData("PAD 2, LEFT BUMPER", "SHOOT");
+        telemetry.addData("PAD 2, UP", "FASTER SHOT");
+        telemetry.addData("PAD 2, DOWN", "SLOWER SHOT");
+        telemetry.addData("PAD 2, B", "COLLECT ON");
+        telemetry.addData("PAD 2, A", "COLLECT OFF");
+        telemetry.addData("PAD 2, X", "COLLECT REVERSE");
+
+        telemetry.update();
+    }
     @Override
     public void loop() {
 
@@ -136,7 +151,6 @@ public class MecanumTeleop extends OpMode {
 
         // If you press the A button, then you reset the Yaw to be zero from the way
         // the robot is currently pointing
-
         //Gamepad 1
         if (gamepad1.start) {
             imu.resetYaw();
@@ -188,6 +202,9 @@ public class MecanumTeleop extends OpMode {
         }
         if (gamepad2.aWasPressed()) {
             collector.setPower(0.0);
+        }
+        if (gamepad2.xWasPressed()) {
+            collector.setPower(-collectorSpeed);
         }
 
         telemetry.addData("collector current velocity:", collector.getVelocity());

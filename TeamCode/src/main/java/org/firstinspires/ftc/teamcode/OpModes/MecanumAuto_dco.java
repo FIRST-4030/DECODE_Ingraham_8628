@@ -42,7 +42,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.AprilTags_dco;
 import org.firstinspires.ftc.teamcode.Datalogger;
-//@Disabled
+@Disabled
 @Autonomous(name="DCO: Mecanum Auto", group="DCO")
 public class MecanumAuto_dco extends LinearOpMode {
 
