@@ -147,6 +147,7 @@ public class MecanumTeleop extends OpMode {
     @Override
     public void loop() {
 
+
 //        helperAprilTag.telemetryAprilTag(telemetry);
 
         // If you press the A button, then you reset the Yaw to be zero from the way
@@ -160,7 +161,7 @@ public class MecanumTeleop extends OpMode {
             driveSlower=0.3;
         }
         if (gamepad1.leftBumperWasReleased()) {
-            driveSlower=0.75;
+            driveSlower=1;
         }
 
 

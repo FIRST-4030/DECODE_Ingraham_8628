@@ -133,7 +133,7 @@ public class MecanumAuto extends LinearOpMode {
 
             //rotateTo(-(aprilTags.getBearing()));
             turn(-0.3,430);
-            fireShooter(3,32.0);
+            fireShooter(3,35.0);
             moveForward(0.5, 400);
 
             break;
@@ -229,6 +229,9 @@ public class MecanumAuto extends LinearOpMode {
 
         while (shooting) {
             shooter.overridePower();
+            telemetry.addData("Shooter Velocity", "%.2f", shooter.getVelocity());
+            telemetry.addData("Target Velocity", "%.2f", velocity);
+            telemetry.update();
 
             if (shooter.atSpeed()) {
 

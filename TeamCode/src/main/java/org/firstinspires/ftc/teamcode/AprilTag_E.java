@@ -113,6 +113,8 @@ public class AprilTag_E {
                         GPP = true;
                         PGP = false;
                     }
+                    telemetry.addLine(String.format("Bearing=%6.2f", detection.ftcPose.bearing));
+                    telemetry.addLine(String.format("Range=%6.2f", detection.ftcPose.range));
                  }
             }
 
@@ -126,11 +128,14 @@ public class AprilTag_E {
                 bearing = goalBearingRed;
                 telemetry.addLine(String.format("Red  Goal:  Bearing=%6.2f", goalBearingRed));
             }
+
+            telemetry.update();
         } else {
             telemetry.addLine("No tags");
             bearing = 999;
             ledColor = "red";
         }
+        //telemetry.addLine(String.format("Bearing=%6.2f", goalBearingBlue));
         telemetry.update();
     }
 
