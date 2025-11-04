@@ -73,6 +73,8 @@ public class AprilTag_E {
     private boolean PPG,PGP,GPP;
 
     private double goalBearingBlue, goalBearingRed;
+    private double oboliskBearing = -99;
+    private double oboliskRange = -99;
 
     List<AprilTagDetection> currentDetections;
 
@@ -102,19 +104,24 @@ public class AprilTag_E {
                         PPG = false;
                         GPP = false;
                         PGP = true;
+                        oboliskRange = detection.ftcPose.range;
+                        oboliskBearing = detection.ftcPose.bearing;
                     }
                     if (detection.id == 23){ //PPG
                         PPG = true;
                         GPP = false;
                         PGP = false;
+                        oboliskRange = detection.ftcPose.range;
+                        oboliskBearing = detection.ftcPose.bearing;
                     }
                     if (detection.id == 21){ //GPP
                         PPG = false;
                         GPP = true;
                         PGP = false;
+                        oboliskRange = detection.ftcPose.range;
+                        oboliskBearing = detection.ftcPose.bearing;
                     }
-                    telemetry.addLine(String.format("Bearing=%6.2f", detection.ftcPose.bearing));
-                    telemetry.addLine(String.format("Range=%6.2f", detection.ftcPose.range));
+
                  }
             }
 
@@ -129,14 +136,14 @@ public class AprilTag_E {
                 telemetry.addLine(String.format("Red  Goal:  Bearing=%6.2f", goalBearingRed));
             }
 
-            telemetry.update();
+            //telemetry.update();
         } else {
             telemetry.addLine("No tags");
             bearing = 999;
             ledColor = "red";
         }
         //telemetry.addLine(String.format("Bearing=%6.2f", goalBearingBlue));
-        telemetry.update();
+        //telemetry.update();
     }
 
 //    public void runInLoop(Telemetry telemetry) {
@@ -272,6 +279,8 @@ public class AprilTag_E {
     }   // end method telemetryAprilTag()
 
     public double getBearing() { return bearing; }
+    public double getOboliskBearing() { return oboliskBearing; }
+    public double getOboliskRange() { return oboliskRange; }
 
     public String getColor(){
         return ledColor;

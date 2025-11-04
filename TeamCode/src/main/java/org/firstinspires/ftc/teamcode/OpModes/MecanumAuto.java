@@ -37,7 +37,6 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.AprilTag_E;
 import org.firstinspires.ftc.teamcode.ShooterVelo;
@@ -58,14 +57,17 @@ public class MecanumAuto extends LinearOpMode {
 
     RobotTeleopMecanumFieldRelativeDrive_E.Datalog datalog;
     ElapsedTime runtime = new ElapsedTime();
-    public static int decimation = 3;
-    public static double power = 0.7;
-    double yawImu;
-    YawPitchRollAngles orientation;
+    //public static int decimation = 3;
+    //public static double power = 0.7;
+    //double yawImu;
+    //YawPitchRollAngles orientation;
 
     AprilTag_E aprilTags;
 
     private boolean shooting = false;
+
+    ElapsedTime shotTimer = new ElapsedTime();
+
 
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
@@ -114,29 +116,37 @@ public class MecanumAuto extends LinearOpMode {
                 RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
-        datalog = new RobotTeleopMecanumFieldRelativeDrive_E.Datalog(String.format("AprilTagLog_%d_%4.2f", decimation, power));
+        //datalog = new RobotTeleopMecanumFieldRelativeDrive_E.Datalog(String.format("AprilTagLog_%d_%4.2f", decimation, power));
+        datalog = new RobotTeleopMecanumFieldRelativeDrive_E.Datalog("Auto8628");
 
         aprilTags = new AprilTag_E();
         aprilTags.initAprilTag(hardwareMap);
 
         do {
             aprilTags.scanField(telemetry);
-//            telemetry.addData("Tag: ", aprilTag.getBearing());
-//            telemetry.update();
+
+            telemetry.addData("Obolisk Bearing ", aprilTags.getOboliskBearing());
+            telemetry.addData("Obolisk Range ", aprilTags.getOboliskRange());
+
+            telemetry.update();
         } while (opModeInInit());
 
         runtime.reset();
         imu.resetYaw();
 
         // run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
+        while (opModeIsActive() && aprilTags.getOboliskRange() > 0) {
 
             //rotateTo(-(aprilTags.getBearing()));
-            turn(-0.3,430);
-            fireShooter(3,35.0);
+            if (aprilTags.getOboliskBearing() > 0) {
+                turn(-0.3,430);
+            } else {
+                turn(0.3,430);
+            }
+            fireShooter(35.0);
+            fireShooter(35.0);
+            fireShooter(35.0);
             moveForward(0.5, 400);
-
-            break;
         }
     }
 
@@ -167,6 +177,37 @@ public class MecanumAuto extends LinearOpMode {
         stopMotors();
     }
 
+    private void stopMotors() {
+        frontLeftDrive.setPower(0);
+        backLeftDrive.setPower(0);
+        frontRightDrive.setPower(0);
+        backRightDrive.setPower(0);
+    }
+
+    public void fireShooter(double velocity) {
+        shooting = true;
+        shooter.setTargetVelocity(velocity);
+        shotTimer.reset();
+
+        while (shooting) {
+            shooter.overridePower();
+            telemetry.addData("Shooter Velocity", "%.2f", shooter.getVelocity());
+            telemetry.addData("Target Velocity", "%.2f", velocity);
+            telemetry.update();
+
+            if (shooter.atSpeed()) {
+                if (shotTimer.seconds() < 0.5 ) {
+                    shooterHinge.setPosition(0.0);
+                } else if(shotTimer.seconds() < 1.3) {
+                    shooterHinge.setPosition(0.7);
+                } else {
+                    shooting = false;
+                    break;
+                }
+            }
+        }
+    }
+/*
     private void rotateTo(double targetAngle) {
         double Kp = 0.03;  // Proportional gain (tune this)
         double Kd = 0.0;  // derivative gain
@@ -215,40 +256,6 @@ public class MecanumAuto extends LinearOpMode {
             backRightDrive.setPower(turnPower);
         }
     }
+*/
 
-    private void stopMotors() {
-        frontLeftDrive.setPower(0);
-        backLeftDrive.setPower(0);
-        frontRightDrive.setPower(0);
-        backRightDrive.setPower(0);
-    }
-
-    public void fireShooter(int numFire,double velocity) {
-        shooting = true;
-        shooter.setTargetVelocity(velocity);
-
-        while (shooting) {
-            shooter.overridePower();
-            telemetry.addData("Shooter Velocity", "%.2f", shooter.getVelocity());
-            telemetry.addData("Target Velocity", "%.2f", velocity);
-            telemetry.update();
-
-            if (shooter.atSpeed()) {
-
-                    while (numFire > 0) {
-                        shooterHinge.setPosition(0.0);
-                        sleep(500);
-                        shooterHinge.setPosition(0.7);
-                        sleep(700);
-                        numFire--;
-                    }
-                    if (numFire == 0) {
-                        shooter.setTargetVelocity(0);
-                        shooting = false;
-                        break;
-                    }
-
-            }
-        }
-    }
 }
