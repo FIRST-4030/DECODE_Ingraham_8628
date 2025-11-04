@@ -53,7 +53,7 @@ public class ShooterVelo {
     }
 
     public boolean atSpeed() {
-        if (0.99*targetVelocity < this.getVelocity() && this.getVelocity() < 1.01*targetVelocity) {
+        if (0.98*targetVelocity < this.getVelocity() && this.getVelocity() < 1.02*targetVelocity) {
             return true;
         } else {
             return false;

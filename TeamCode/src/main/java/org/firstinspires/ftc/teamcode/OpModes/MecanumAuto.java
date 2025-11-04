@@ -68,6 +68,7 @@ public class MecanumAuto extends LinearOpMode {
 
     ElapsedTime shotTimer = new ElapsedTime();
 
+    double obBearing, obDist;
 
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
@@ -124,9 +125,13 @@ public class MecanumAuto extends LinearOpMode {
 
         do {
             aprilTags.scanField(telemetry);
+            obBearing = aprilTags.getOboliskBearing();
+            obDist = aprilTags.getOboliskRange();
 
-            telemetry.addData("Obolisk Bearing ", aprilTags.getOboliskBearing());
-            telemetry.addData("Obolisk Range ", aprilTags.getOboliskRange());
+            telemetry.addData("Obolisk Bearing ", obBearing);
+            telemetry.addData("Obolisk Range ", obDist);
+            if (obBearing > 0) telemetry.addData("SIDE ", "RED");
+            if (obBearing < 0 && obBearing > -30) telemetry.addData("SIDE ", "BLUE");
 
             telemetry.update();
         } while (opModeInInit());
@@ -135,10 +140,10 @@ public class MecanumAuto extends LinearOpMode {
         imu.resetYaw();
 
         // run until the end of the match (driver presses STOP)
-        while (opModeIsActive() && aprilTags.getOboliskRange() > 0) {
+        while (opModeIsActive() && obDist > 0) {
 
             //rotateTo(-(aprilTags.getBearing()));
-            if (aprilTags.getOboliskBearing() > 0) {
+            if (obBearing > 0) {
                 turn(-0.3,430);
             } else {
                 turn(0.3,430);
@@ -146,7 +151,10 @@ public class MecanumAuto extends LinearOpMode {
             fireShooter(35.0);
             fireShooter(35.0);
             fireShooter(35.0);
+            shooter.setTargetVelocity(0);
+            shooter.overridePower();
             moveForward(0.5, 400);
+            break;
         }
     }
 
@@ -186,8 +194,8 @@ public class MecanumAuto extends LinearOpMode {
 
     public void fireShooter(double velocity) {
         shooting = true;
+        boolean atSpeed = false;
         shooter.setTargetVelocity(velocity);
-        shotTimer.reset();
 
         while (shooting) {
             shooter.overridePower();
@@ -196,9 +204,13 @@ public class MecanumAuto extends LinearOpMode {
             telemetry.update();
 
             if (shooter.atSpeed()) {
-                if (shotTimer.seconds() < 0.5 ) {
+                if (!atSpeed) {
+                    shotTimer.reset();
+                    atSpeed=true;
+                }
+                if (shotTimer.seconds() < 0.5) {
                     shooterHinge.setPosition(0.0);
-                } else if(shotTimer.seconds() < 1.3) {
+                } else if (shotTimer.seconds() < 2.0 ) {
                     shooterHinge.setPosition(0.7);
                 } else {
                     shooting = false;
