@@ -39,7 +39,6 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-//import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.ShooterVelo;
 //import org.firstinspires.ftc.teamcode.Shooter;
 
@@ -150,13 +149,12 @@ public class MecanumTeleop extends OpMode {
 
 //        helperAprilTag.telemetryAprilTag(telemetry);
 
-        // If you press the A button, then you reset the Yaw to be zero from the way
-        // the robot is currently pointing
         //Gamepad 1
         if (gamepad1.start) {
             imu.resetYaw();
         }
 
+        //Slow Drive
         if (gamepad1.leftBumperWasPressed()) {
             driveSlower=0.3;
         }
@@ -164,12 +162,26 @@ public class MecanumTeleop extends OpMode {
             driveSlower=1;
         }
 
+        //Precision Drive
+        if (gamepad1.rightBumperWasPressed()) {
+            driveSlower=0.1;
+        }
+        if (gamepad1.rightBumperWasReleased()) {
+            driveSlower=1;
+        }
+
+        //Variable Drive (Concept)
+//        if (gamepad1.left_trigger > 0.1) {
+//            double driveSpd = 1.0 - gamepad1.left_trigger;
+//            driveSlower = 0.05 + (driveSpd * 0.75);
+//        }
 
         //Gamepad 2
         if (gamepad2.start) {
             imu.resetYaw();
         }
 
+        //Shooter Controls
         if (gamepad2.leftBumperWasPressed()) {
             shooting = true;
             shotTimer.reset();
@@ -188,6 +200,7 @@ public class MecanumTeleop extends OpMode {
             //shooter.setTargetVelocity(0);
         }
 
+        //Dpad Shooter Speed Control
         if (gamepad2.dpadUpWasPressed()) {
             currentVelocity += shooterSpeedIncrement;
             shooter.setTargetVelocity(currentVelocity);
@@ -198,12 +211,25 @@ public class MecanumTeleop extends OpMode {
             shooter.setTargetVelocity(currentVelocity);
         }
 
+        if (gamepad2.dpadRightWasPressed()) {
+            currentVelocity = 36;
+            shooter.setTargetVelocity(currentVelocity);
+        }
+
+        if (gamepad2.dpadLeftWasPressed()) {
+            currentVelocity = 30;
+            shooter.setTargetVelocity(currentVelocity);
+        }
+
+        //Collector Controls
         if (gamepad2.bWasPressed()) {
             collector.setPower(collectorSpeed);
         }
+
         if (gamepad2.aWasPressed()) {
             collector.setPower(0.0);
         }
+
         if (gamepad2.xWasPressed()) {
             collector.setPower(-collectorSpeed);
         }
@@ -212,11 +238,12 @@ public class MecanumTeleop extends OpMode {
         telemetry.addData("collector target power", collectorSpeed);
         telemetry.addData("Shooter Current Velocity:", shooter.getVelocity());
         telemetry.addData("Shooter Target Velocity: ", currentVelocity);
+        telemetry.addLine("dpad left: 30  |  dpad right: 36");
 
         telemetry.update();
 
 
-//        //Working out the boolean methods for the triggers. I'll leave this code commented out. -Elijah
+//        //Working out the boolean methods for the triggers. I'll leave this code commented out. -E
 //        if (gamepad1.left_trigger >= 0.2) {
 //            shooter.setPower( 0.7 * (gamepad1.left_trigger));
 //            //replace with shooter.setPower(1); for set power instead of variable via float.
@@ -225,13 +252,13 @@ public class MecanumTeleop extends OpMode {
 //            shooter.setPower(0);
 //        }
 //
-//        telemetry.addLine("shooterPower: "+gamepad1.left_trigger);
+//        telemetry.addData("shooterPower:", gamepad1.left_trigger);
 //        telemetry.update();
 //
-//        //This code works, if you want to implement it. It changes the shooter power based on
+//        //This code changes the shooter power based on
 //        //float gamepad1.left_trigger, multiplied by a limiter.
 //
-//        //End of my tests and edits.
+//        //End of edits.
 
         drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x,driveSlower);
     }
@@ -248,7 +275,7 @@ public class MecanumTeleop extends OpMode {
         double backLeftPower = forward - right + rotate;
 
         double maxPower = 1.0;
-          // make this slower for outreaches
+          // make this slower for slower drive
 
         // This is needed to make sure we don't pass > 1.0 to any wheel
         // It allows us to keep all of the motors in proportion to what they should
@@ -258,9 +285,7 @@ public class MecanumTeleop extends OpMode {
         maxPower = Math.max(maxPower, Math.abs(backRightPower));
         maxPower = Math.max(maxPower, Math.abs(backLeftPower));
 
-        // We multiply by maxSpeed so that it can be set lower for outreaches
-        // When a young child is driving the robot, we may not want to allow full
-        // speed.
+        // We multiply by maxSpeed so that it can be set lower
         frontLeftDrive.setPower(maxSpeed * (frontLeftPower / maxPower));
         frontRightDrive.setPower(maxSpeed * (frontRightPower / maxPower));
         backLeftDrive.setPower(maxSpeed * (backLeftPower / maxPower));
