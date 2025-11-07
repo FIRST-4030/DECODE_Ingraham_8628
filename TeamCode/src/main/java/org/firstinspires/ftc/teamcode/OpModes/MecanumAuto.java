@@ -122,6 +122,7 @@ public class MecanumAuto extends LinearOpMode {
 
         aprilTags = new AprilTag_E();
         aprilTags.initAprilTag(hardwareMap);
+        long delaySeconds=0;
 
         do {
             aprilTags.scanField(telemetry);
@@ -132,7 +133,14 @@ public class MecanumAuto extends LinearOpMode {
             telemetry.addData("Obolisk Range ", obDist);
             if (obBearing > 0) telemetry.addData("SIDE ", "RED");
             if (obBearing < 0 && obBearing > -30) telemetry.addData("SIDE ", "BLUE");
-
+            telemetry.addData("press x to add 1 sec to delay",delaySeconds);
+            telemetry.addData("press y to remove 1 sec from delay",delaySeconds);
+            if (gamepad1.xWasPressed()) {
+                delaySeconds+=1;
+            }
+            if (gamepad1.yWasPressed()) {
+                delaySeconds-=1;
+            }
             telemetry.update();
         } while (opModeInInit());
 
@@ -141,7 +149,7 @@ public class MecanumAuto extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive() && obDist > 0) {
-
+            sleep(delaySeconds);
             //rotateTo(-(aprilTags.getBearing()));
             if (obBearing > 0) {
                 turn(-0.3,430);
@@ -161,7 +169,6 @@ public class MecanumAuto extends LinearOpMode {
     private void moveForward(double power, double mseconds){
         ElapsedTime timer = new ElapsedTime();
         timer.reset();
-
         while (timer.milliseconds() < mseconds) {
             frontLeftDrive.setPower(power);
             backLeftDrive.setPower(power);

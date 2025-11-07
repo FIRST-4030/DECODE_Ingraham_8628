@@ -100,6 +100,7 @@ public class MecanumAuto_OpMode extends OpMode {
         backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+
         collector = hardwareMap.get(DcMotorEx.class, "collector");
         shooter = hardwareMap.get(DcMotorEx.class, "shooter");
         collector.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -162,6 +163,7 @@ public class MecanumAuto_OpMode extends OpMode {
         }
         if (gamepad1.yWasReleased()) {
             driveSlower=1;
+
         }
 
 
