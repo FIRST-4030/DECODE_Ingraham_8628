@@ -149,7 +149,7 @@ public class MecanumAuto extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive() && obDist > 0) {
-            sleep(delaySeconds);
+            sleep(delaySeconds * 1000);
             //rotateTo(-(aprilTags.getBearing()));
             if (obBearing > 0) {
                 turn(-0.3,430);
@@ -161,7 +161,7 @@ public class MecanumAuto extends LinearOpMode {
             fireShooter(35.0);
             shooter.setTargetVelocity(0);
             shooter.overridePower();
-            moveForward(0.5, 400);
+            moveForward(1.0, 400);
             break;
         }
     }

@@ -108,7 +108,11 @@ public class MecanumTeleop extends OpMode {
         frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         collector = hardwareMap.get(DcMotorEx.class, "collector");
 
@@ -234,6 +238,10 @@ public class MecanumTeleop extends OpMode {
         if (gamepad2.xWasPressed()) {
             collector.setPower(-collectorSpeed);
         }
+
+//        if (gamepad2.yWasReleased()) {
+//            boolean shooterOn = false;
+//        }
 
         telemetry.addData("collector current velocity:", collector.getVelocity());
         telemetry.addData("collector target power", collectorSpeed);
