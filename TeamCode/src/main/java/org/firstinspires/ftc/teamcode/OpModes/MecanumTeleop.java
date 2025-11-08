@@ -75,6 +75,7 @@ public class MecanumTeleop extends OpMode {
     double currentVelocity = 20.0;  // RPS  rotations per second
     boolean shooting = false; // true when shooting sequence begins
     double collectorSpeed=0.4;
+    boolean shooterOn = false;
 
     private double driveSlower = 1;
 
@@ -161,24 +162,27 @@ public class MecanumTeleop extends OpMode {
 
         //Slow Drive
         if (gamepad1.leftBumperWasPressed()) {
-            driveSlower=0.3;
+            driveSlower = 0.3;
         }
         if (gamepad1.leftBumperWasReleased()) {
-            driveSlower=1;
+            driveSlower = 1;
         }
 
         //Precision Drive
         if (gamepad1.rightBumperWasPressed()) {
-            driveSlower=0.1;
+            driveSlower = 0.1;
         }
         if (gamepad1.rightBumperWasReleased()) {
-            driveSlower=1;
+            driveSlower = 1;
         }
 
         //Variable Drive (Concept)
 //        if (gamepad1.left_trigger > 0.1) {
 //            double driveSpd = 1.0 - gamepad1.left_trigger;
 //            driveSlower = 0.05 + (driveSpd * 0.75);
+//        }
+//        else if (gamepad1.left_trigger <= 0.1) {
+//            driveSlower = 1;
 //        }
 
         //Gamepad 2
@@ -187,23 +191,29 @@ public class MecanumTeleop extends OpMode {
         }
 
         //Shooter Controls
-        if (gamepad2.leftBumperWasPressed()) {
-            shooting = true;
-            shotTimer.reset();
-        }
-        shooter.overridePower();
-        shooter.setTargetVelocity(currentVelocity);
-        if (shooting) {
+        if (shooterOn) {
+            if (gamepad2.leftBumperWasPressed()) {
+                shooting = true;
+                shotTimer.reset();
+            }
+            shooter.overridePower();
             shooter.setTargetVelocity(currentVelocity);
-            if (shooter.atSpeed()) {
-                shooterHinge.setPosition(0.0);
+            if (shooting) {
+                shooter.setTargetVelocity(currentVelocity);
+                if (shooter.atSpeed()) {
+                    shooterHinge.setPosition(0.0);
                     if (shotTimer.milliseconds() > 500) {
                         shooterHinge.setPosition(0.7);
                         shooting = false;
                     }
+                }
+                //shooter.setTargetVelocity(0);
             }
-            //shooter.setTargetVelocity(0);
         }
+        else {
+            shooter.overridePower();
+            shooter.setTargetVelocity(0);
+            }
 
         //Dpad Shooter Speed Control
         if (gamepad2.dpadUpWasPressed()) {
@@ -239,9 +249,15 @@ public class MecanumTeleop extends OpMode {
             collector.setPower(-collectorSpeed);
         }
 
-//        if (gamepad2.yWasReleased()) {
-//            boolean shooterOn = false;
-//        }
+        //Shooter Toggle
+        if (gamepad2.yWasReleased()) {
+            if (shooterOn) {
+                shooterOn = false;
+            }
+            else {
+                shooterOn = true;
+            }
+        }
 
         telemetry.addData("collector current velocity:", collector.getVelocity());
         telemetry.addData("collector target power", collectorSpeed);
