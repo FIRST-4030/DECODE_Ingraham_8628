@@ -180,9 +180,9 @@ public class MecanumAuto extends LinearOpMode {
             sleep(delaySeconds * 1000);
 
             if (obBearing > 0) {
-                turn(-0.3,430);
+                turn(-0.3,445);//Red?? add 15 milliseconds to shoot accurately
             } else {
-                turn(0.3,430);
+                turn(0.3,430); //blue?? Check These
             }
             shootShooter(35.0);
             shootShooter(35.0);
@@ -190,16 +190,19 @@ public class MecanumAuto extends LinearOpMode {
             stopShooter();
             moveForward(1.0, 400);
 
-            rotate(1130);
+            rotate(1130, 1);
 
             collector.setPower(collectorSpeed);
 
-            moveForward(-0.25, 2500);
+            moveForward(-0.25, 2650);
 
             collectorTime.reset();
             while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
 
             collector.setPower(0);
+
+            //moveForward(1.0, 900);
+            //rotate(1000, -1);
             break;
         }
     }
@@ -292,16 +295,16 @@ public class MecanumAuto extends LinearOpMode {
         shooter.overridePower();
     }
 
-    private void rotate (double milliseconds) {
+    private void rotate (double milliseconds, int reverse) {
         ElapsedTime turnTimer = new ElapsedTime();
         turnTimer.reset();
         int leftSidepos;
 
         if (blueSide) {
-            leftSidepos = 1;
+            leftSidepos = reverse;
         }
         else {
-            leftSidepos = -1;
+            leftSidepos = -1 * reverse;
         }
 
         while (turnTimer.milliseconds() < milliseconds) {
