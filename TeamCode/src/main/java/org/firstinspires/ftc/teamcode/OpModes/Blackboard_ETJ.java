@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
 public class Blackboard_ETJ {
-    public static enum Alliance {
+    public enum Alliance {
         RED,
         BLUE,
         UNKNOWN,
