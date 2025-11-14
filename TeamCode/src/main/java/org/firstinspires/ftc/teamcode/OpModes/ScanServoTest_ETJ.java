@@ -53,8 +53,8 @@ public class ScanServoTest_ETJ extends LinearOpMode {
 
     static final double INCREMENT   = 0.01;     // amount to slew servo each CYCLE_MS cycle
     static final int    CYCLE_MS    =   50;     // period of each cycle
-    static final double MAX_POS     =  1.0;     // Maximum rotational position
-    static final double MIN_POS     =  0.0;     // Minimum rotational position
+    static final double MAX_POS     =  0.7;     // Maximum rotational position
+    static final double MIN_POS     =  0.3;     // Minimum rotational position
 
     // Define class members
     Servo   servo;
@@ -67,7 +67,7 @@ public class ScanServoTest_ETJ extends LinearOpMode {
 
         // Connect to servo (Assume Robot Left Hand)
         // Change the text in quotes to match any servo name on your robot.
-        servo = hardwareMap.get(Servo.class, "servo");
+        servo = hardwareMap.get(Servo.class, "shooterHinge");
 
         // Wait for the start button
         telemetry.addData(">", "Press Start to scan Servo." );
