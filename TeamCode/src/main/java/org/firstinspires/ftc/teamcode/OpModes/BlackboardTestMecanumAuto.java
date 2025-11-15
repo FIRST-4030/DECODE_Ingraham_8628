@@ -30,8 +30,9 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
+import org.firstinspires.ftc.teamcode.Blackboard;
 
 /*
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -51,21 +52,28 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
  */
 
 @Autonomous(name="Test Mecanum Auto Edson", group="Linear OpMode")
-@Disabled
-public class BlackboardTestMecanumAuto_ETJ extends LinearOpMode {
+public class BlackboardTestMecanumAuto extends LinearOpMode {
     @Override
     public void runOpMode() {
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
+        while (opModeInInit()) {
+            telemetry.addData("Status", "Initialized");
+            telemetry.addData("Alliance", Blackboard.getAllianceAsString());
+            telemetry.addLine("Press X to set alliance to BLUE");
+            telemetry.addLine("Press B to set alliance to RED");
+            telemetry.update();
 
-        // Test the custom blackboard
-        Blackboard_ETJ.alliance = Blackboard_ETJ.Alliance.BLUE;
+            if (gamepad1.xWasPressed()) {
+                Blackboard.alliance = Blackboard.Alliance.BLUE;
+            } else if (gamepad1.bWasPressed()) {
+                Blackboard.alliance = Blackboard.Alliance.RED;
+            }
+        }
 
         // Wait for the game to start (driver presses START)
         waitForStart();
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            telemetry.addData("Alliance", Blackboard_ETJ.getAllianceAsString());
+            telemetry.addData("Alliance", Blackboard.getAllianceAsString());
             telemetry.update();
             sleep(3000);
         }

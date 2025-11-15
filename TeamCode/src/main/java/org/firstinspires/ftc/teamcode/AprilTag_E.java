@@ -287,4 +287,9 @@ public class AprilTag_E {
     //}
 
     public double getYaw() { return yaw; }
+
+    public void SetgoalTagId(int value) {
+        goalTagId = value;
+    }
+
 }
