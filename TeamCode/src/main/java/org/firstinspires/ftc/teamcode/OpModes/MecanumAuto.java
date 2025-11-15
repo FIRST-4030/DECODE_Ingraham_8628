@@ -34,11 +34,12 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.AprilTag_E;
 import org.firstinspires.ftc.teamcode.ShooterVelo;
 
@@ -50,12 +51,9 @@ public class MecanumAuto extends LinearOpMode {
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
-    DcMotorEx collector;
-    ShooterVelo shooter;
-    Servo shooterHinge;
-
-    //private DigitalChannel redLED;
-    //private DigitalChannel greenLED;
+    //DcMotorEx collector;
+    //ShooterVelo shooter;
+    //Servo shooterHinge;
 
     RobotTeleopMecanumFieldRelativeDrive_E.Datalog datalog;
     ElapsedTime runtime = new ElapsedTime();
@@ -85,15 +83,10 @@ public class MecanumAuto extends LinearOpMode {
         backLeftDrive = hardwareMap.get(DcMotor.class, "leftBack");
         backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
 
-        //redLED = hardwareMap.get(DigitalChannel.class, "red");
-        //greenLED = hardwareMap.get(DigitalChannel.class, "green");
-        //redLED.setMode(DigitalChannel.Mode.OUTPUT);
-        //greenLED.setMode(DigitalChannel.Mode.OUTPUT);
+        ////double currentPower = 1.0;
 
-        //double currentPower = 1.0;
+        //shooter = new ShooterVelo(hardwareMap, "shooter", true);
 
-        shooter = new ShooterVelo(hardwareMap, "shooter", true);
-        ///shooter.initPower(currentPower);
         // We set the left motors in reverse which is needed for drive trains where the left
         // motors are opposite to the right ones.
         backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -113,12 +106,12 @@ public class MecanumAuto extends LinearOpMode {
         backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        collector = hardwareMap.get(DcMotorEx.class, "collector");
-        collector.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        collector.setDirection(DcMotor.Direction.REVERSE);
-
-        shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
-        shooterHinge.setPosition(0.7);
+//        collector = hardwareMap.get(DcMotorEx.class, "collector");
+//        collector.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        collector.setDirection(DcMotor.Direction.REVERSE);
+//
+//        shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
+//        shooterHinge.setPosition(0.7);
 
         imu = hardwareMap.get(IMU.class, "imu");
         // This needs to be changed to match the orientation on your robot
@@ -179,30 +172,32 @@ public class MecanumAuto extends LinearOpMode {
 
             sleep(delaySeconds * 1000);
 
-            if (obBearing > 0) {
-                turn(-0.3,445);//Red?? add 15 milliseconds to shoot accurately
-            } else {
-                turn(0.3,430); //blue?? Check These
-            }
-            shootShooter(35.0);
-            shootShooter(35.0);
-            shootShooter(35.0);
-            stopShooter();
-            moveForward(1.0, 400);
+//            if (obBearing > 0) {
+//                //turn(-0.3,445);//Red?? add 15 milliseconds to shoot accurately
+//            } else {
+//                //turn(0.3,430); //blue?? Check These
+//            }
 
-            rotate(1130, 1);
+            //rotateTo(aprilTags.getBearing());
+            moveForward(1.0, 500);
 
-            collector.setPower(collectorSpeed);
+//            shootShooter(35.0);
+//            shootShooter(35.0);
+//            shootShooter(35.0);
+//            stopShooter();
+//            moveForward(1.0, 400);
+//
+//            rotate(1130, 1);
+//
+//            collector.setPower(collectorSpeed);
+//
+//            moveForward(-0.25, 2650);
+//
+//            collectorTime.reset();
+//            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
+//
+//            collector.setPower(0);
 
-            moveForward(-0.25, 2650);
-
-            collectorTime.reset();
-            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
-
-            collector.setPower(0);
-
-            //moveForward(1.0, 900);
-            //rotate(1000, -1);
             break;
         }
     }
@@ -219,19 +214,19 @@ public class MecanumAuto extends LinearOpMode {
 
         stopMotors();
     }
-    private void turn(double power, double mseconds){
-        ElapsedTime timer = new ElapsedTime();
-        timer.reset();
-
-        while (timer.milliseconds() < mseconds) {
-            frontLeftDrive.setPower(power);
-            backLeftDrive.setPower(power);
-            frontRightDrive.setPower(-power);
-            backRightDrive.setPower(-power);
-        }
-
-        stopMotors();
-    }
+//    private void turn(double power, double mseconds){
+//        ElapsedTime timer = new ElapsedTime();
+//        timer.reset();
+//
+//        while (timer.milliseconds() < mseconds) {
+//            frontLeftDrive.setPower(power);
+//            backLeftDrive.setPower(power);
+//            frontRightDrive.setPower(-power);
+//            backRightDrive.setPower(-power);
+//        }
+//
+//        stopMotors();
+//    }
 
     private void stopMotors() {
         frontLeftDrive.setPower(0);
@@ -240,60 +235,60 @@ public class MecanumAuto extends LinearOpMode {
         backRightDrive.setPower(0);
     }
 
-    public void fireShooter(double velocity) {
-        shooting = true;
-        boolean atSpeed = false;
-        shooter.setTargetVelocity(velocity);
+//    public void fireShooter(double velocity) {
+//        shooting = true;
+//        boolean atSpeed = false;
+//        shooter.setTargetVelocity(velocity);
+//
+//        while (shooting) {
+//            shooter.overridePower();
+//            telemetry.addData("Shooter Velocity", "%.2f", shooter.getVelocity());
+//            telemetry.addData("Target Velocity", "%.2f", velocity);
+//            telemetry.update();
+//
+//            if (shooter.atSpeed()) {
+//                if (!atSpeed) {
+//                    shotTimer.reset();
+//                    atSpeed=true;
+//                }
+//                if (shotTimer.seconds() < 0.5) {
+//                    shooterHinge.setPosition(0.0);
+//                } else if (shotTimer.seconds() < 2.0 ) {
+//                    shooterHinge.setPosition(0.7);
+//                } else {
+//                    shooting = false;
+//                    break;
+//                }
+//            }
+//        }
+//    }
 
-        while (shooting) {
-            shooter.overridePower();
-            telemetry.addData("Shooter Velocity", "%.2f", shooter.getVelocity());
-            telemetry.addData("Target Velocity", "%.2f", velocity);
-            telemetry.update();
-
-            if (shooter.atSpeed()) {
-                if (!atSpeed) {
-                    shotTimer.reset();
-                    atSpeed=true;
-                }
-                if (shotTimer.seconds() < 0.5) {
-                    shooterHinge.setPosition(0.0);
-                } else if (shotTimer.seconds() < 2.0 ) {
-                    shooterHinge.setPosition(0.7);
-                } else {
-                    shooting = false;
-                    break;
-                }
-            }
-        }
-    }
-
-    public void shootShooter(double velocity) {
-        shooter.setTargetVelocity(velocity);
-        ElapsedTime shooterTimer = new ElapsedTime();
-
-        while (!shooter.atSpeed()) {
-            shooter.overridePower();
-        }
-
-        shooterTimer.reset();
-        shooterHinge.setPosition(0.0);
-
-        while (shooterTimer.seconds() < 2) {
-            shooter.overridePower();
-        }
-
-        shooterHinge.setPosition(0.7);
-
-        while (shooterTimer.seconds() < 3) {
-            shooter.overridePower();
-        }
-    }
-
-    public void stopShooter() {
-        shooter.setTargetVelocity(0);
-        shooter.overridePower();
-    }
+//    public void shootShooter(double velocity) {
+//        shooter.setTargetVelocity(velocity);
+//        ElapsedTime shooterTimer = new ElapsedTime();
+//
+//        while (!shooter.atSpeed()) {
+//            shooter.overridePower();
+//        }
+//
+//        shooterTimer.reset();
+//        shooterHinge.setPosition(0.0);
+//
+//        while (shooterTimer.seconds() < 2) {
+//            shooter.overridePower();
+//        }
+//
+//        shooterHinge.setPosition(0.7);
+//
+//        while (shooterTimer.seconds() < 3) {
+//            shooter.overridePower();
+//        }
+//    }
+//
+//    public void stopShooter() {
+//        shooter.setTargetVelocity(0);
+//        shooter.overridePower();
+//    }
 
     private void rotate (double milliseconds, int reverse) {
         ElapsedTime turnTimer = new ElapsedTime();
@@ -316,7 +311,7 @@ public class MecanumAuto extends LinearOpMode {
 
         stopMotors();
     }
-/*
+
     private void rotateTo(double targetAngle) {
         double Kp = 0.03;  // Proportional gain (tune this)
         double Kd = 0.0;  // derivative gain
@@ -365,6 +360,4 @@ public class MecanumAuto extends LinearOpMode {
             backRightDrive.setPower(turnPower);
         }
     }
-*/
-
 }

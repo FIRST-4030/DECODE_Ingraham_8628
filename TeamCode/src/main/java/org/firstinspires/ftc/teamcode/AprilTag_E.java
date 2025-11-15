@@ -73,8 +73,8 @@ public class AprilTag_E {
     private boolean PPG,PGP,GPP;
 
     private double goalBearingBlue, goalBearingRed;
-    private double oboliskBearing = -99;
-    private double oboliskRange = -99;
+    private double oboliskBearing;
+    private double oboliskRange;
 
     List<AprilTagDetection> currentDetections;
 
@@ -282,9 +282,9 @@ public class AprilTag_E {
     public double getOboliskBearing() { return oboliskBearing; }
     public double getOboliskRange() { return oboliskRange; }
 
-    public String getColor(){
-        return ledColor;
-    }
+    //public String getColor(){
+    //    return ledColor;
+    //}
 
     public double getYaw() { return yaw; }
 }
