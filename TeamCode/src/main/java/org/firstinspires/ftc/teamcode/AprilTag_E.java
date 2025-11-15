@@ -50,6 +50,9 @@ import java.util.List;
 Options:
 
 ScanField -- Scans field for April Tags, sets boolean for visible side (Red/Blue) and obelisk orientation
+initAprilTag -- Builds AprilTag processor
+closeAprilTag -- Closes vision portal
+runInLoop --
 
  */
 
@@ -145,14 +148,14 @@ public class AprilTag_E {
                         oboliskRange = detection.ftcPose.range;
                         oboliskBearing = detection.ftcPose.bearing;
                     }
-                    if (detection.id == 23){ //PPG
+                    else if (detection.id == 23){ //PPG
                         PPG = true;
                         GPP = false;
                         PGP = false;
                         oboliskRange = detection.ftcPose.range;
                         oboliskBearing = detection.ftcPose.bearing;
                     }
-                    if (detection.id == 21){ //GPP
+                    else if (detection.id == 21){ //GPP
                         PPG = false;
                         GPP = true;
                         PGP = false;
@@ -184,20 +187,6 @@ public class AprilTag_E {
         //telemetry.update();
     }
 
-//    public void runInLoop(Telemetry telemetry) {
-
-        // Wait for the DS start button to be touched.
-
-//        telemetryAprilTag(telemetry);
-
-        // Push telemetry to the Driver Station.
-        // Save CPU resources; can resume streaming when needed.
-//        if (gamepad1.dpad_down) {
-//            visionPortal.stopStreaming();
-//        } else if (gamepad1.dpad_up) {
-//            visionPortal.resumeStreaming();
-//        }
-
         // Share the CPU.
 
         // Save more CPU resources when camera is no longer needed.
@@ -214,8 +203,8 @@ public class AprilTag_E {
 
             // The following default settings are available to un-comment and edit as needed.
             //.setDrawAxes(false)
-            //.setDrawCubeProjection(false)
-            .setDrawTagOutline(true)
+            .setDrawCubeProjection(true)
+            //.setDrawTagOutline(true)
             //.setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
             //.setTagLibrary(AprilTagGameDatabase.getCenterStageTagLibrary())
             .setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
