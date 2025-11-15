@@ -136,8 +136,8 @@ public class MecanumAuto extends LinearOpMode {
             obBearing = aprilTags.getOboliskBearing();
             obDist = aprilTags.getOboliskRange();
 
-            telemetry.addData("Obolisk Bearing ", obBearing);
-            telemetry.addData("Obolisk Range ", obDist);
+            telemetry.addData("Obelisk Bearing ", obBearing);
+            telemetry.addData("Obelisk Range ", obDist);
             if (obBearing > 0) {
                 telemetry.addData("SIDE ", "RED");
                 redSide = true;
@@ -150,7 +150,7 @@ public class MecanumAuto extends LinearOpMode {
             }
             telemetry.addData("press x to add 1 sec to delay",delaySeconds);
             telemetry.addData("press y to remove 1 sec from delay",delaySeconds);
-            telemetry.addData("Range to AprilTag", aprilTags.getOboliskRange());
+            telemetry.addData("Range to Obelisk AprilTag", aprilTags.getOboliskRange());
 
             if (aprilTags.getOboliskRange() > 100) telemetry.addData("Field Position", "Far");
             if (aprilTags.getOboliskRange() < 100) telemetry.addData("Field Position", "Close");
@@ -178,8 +178,8 @@ public class MecanumAuto extends LinearOpMode {
 //                //turn(0.3,430); //blue?? Check These
 //            }
 
-            //rotateTo(aprilTags.getBearing());
-            moveForward(1.0, 500);
+            rotateTo(aprilTags.getBearing());
+            //moveForward(1.0, 500);
 
 //            shootShooter(35.0);
 //            shootShooter(35.0);
@@ -317,7 +317,7 @@ public class MecanumAuto extends LinearOpMode {
         double Kd = 0.0;  // derivative gain
         double minPower = 0.3;
         double maxPower = 0.5;
-        double tolerance = 3.0; // degrees
+        double tolerance = 1.0; // degrees
         double lastError = 0;
         double derivative;
         double currentAngle, error, turnPower;
@@ -327,7 +327,7 @@ public class MecanumAuto extends LinearOpMode {
         while (true) {
             currentAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
 
-            error = -targetAngle - currentAngle;
+            error = targetAngle - currentAngle;
             error = (error + 540) % 360 - 180; // Wrap error to [-180, 180] range
 
             long now = System.nanoTime();
