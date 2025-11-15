@@ -53,7 +53,6 @@ import org.firstinspires.ftc.teamcode.Blackboard_ETJ;
  */
 
 @Autonomous(name="Test Mecanum Auto Edson", group="Linear OpMode")
-@Disabled
 public class BlackboardTestMecanumAuto_ETJ extends LinearOpMode {
     @Override
     public void runOpMode() {
