@@ -62,8 +62,12 @@ public class BlackboardTestMecanumAuto_ETJ extends LinearOpMode {
             telemetry.addLine("Press B to set alliance to RED");
             telemetry.update();
 
-        // Test the custom blackboard
-        Blackboard_ETJ.alliance = Blackboard_ETJ.Alliance.BLUE;
+            if (gamepad1.xWasPressed()) {
+                Blackboard_ETJ.alliance = Blackboard_ETJ.Alliance.BLUE;
+            } else if (gamepad1.bWasPressed()) {
+                Blackboard_ETJ.alliance = Blackboard_ETJ.Alliance.RED;
+            }
+        }
 
         // Wait for the game to start (driver presses START)
         waitForStart();
