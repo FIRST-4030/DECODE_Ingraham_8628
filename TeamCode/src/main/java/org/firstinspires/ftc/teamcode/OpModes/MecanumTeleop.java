@@ -40,6 +40,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 
 import org.firstinspires.ftc.teamcode.AprilTag_E;
+import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.ShooterVelo;
 //import org.firstinspires.ftc.teamcode.Shooter;
 
@@ -141,7 +142,7 @@ public class MecanumTeleop extends OpMode {
 
         aprilTags = new AprilTag_E();
         aprilTags.initAprilTag(hardwareMap);
-        if ( Blackboard_ETJ.alliance==Blackboard_ETJ.Alliance.RED){
+        if ( Blackboard.alliance== Blackboard.Alliance.RED){
             aprilTags.SetgoalTagId(24);
         }else{
             aprilTags.SetgoalTagId(20);
