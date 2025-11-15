@@ -55,8 +55,12 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 public class BlackboardTestMecanumAuto_ETJ extends LinearOpMode {
     @Override
     public void runOpMode() {
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
+        while (opModeInInit()) {
+            telemetry.addData("Status", "Initialized");
+            telemetry.addData("Alliance", Blackboard_ETJ.getAllianceAsString());
+            telemetry.addLine("Press X to set alliance to BLUE");
+            telemetry.addLine("Press B to set alliance to RED");
+            telemetry.update();
 
         // Test the custom blackboard
         Blackboard_ETJ.alliance = Blackboard_ETJ.Alliance.BLUE;
