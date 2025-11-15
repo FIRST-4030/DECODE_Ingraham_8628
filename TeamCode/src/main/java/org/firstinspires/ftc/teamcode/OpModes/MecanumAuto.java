@@ -45,7 +45,6 @@ import org.firstinspires.ftc.teamcode.ShooterVelo;
 @Autonomous(name="Mecanum Auto", group="Linear OpMode")
 public class MecanumAuto extends LinearOpMode {
 
-    // Declare OpMode members.
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
@@ -54,24 +53,16 @@ public class MecanumAuto extends LinearOpMode {
     ShooterVelo shooter;
     Servo shooterHinge;
 
-    RobotTeleopMecanumFieldRelativeDrive_E.Datalog datalog;
     ElapsedTime runtime = new ElapsedTime();
-    //public static int decimation = 3;
-    //public static double power = 0.7;
-    //double yawImu;
-    //YawPitchRollAngles orientation;
 
     AprilTag_E aprilTags;
-
-    private boolean shooting = false;
-
+    
     ElapsedTime collectorTime = new ElapsedTime();
 
     double obBearing, obDist;
-    double collectorSpeed=0.4;
+    double collectorSpeed = 0.4;
     boolean redSide, blueSide;
 
-    // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
 
     @Override
@@ -83,8 +74,6 @@ public class MecanumAuto extends LinearOpMode {
 
         shooter = new ShooterVelo(hardwareMap, "shooter", true);
 
-        // We set the left motors in reverse which is needed for drive trains where the left
-        // motors are opposite to the right ones.
         backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         backRightDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -118,17 +107,14 @@ public class MecanumAuto extends LinearOpMode {
                 RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
-        //datalog = new RobotTeleopMecanumFieldRelativeDrive_E.Datalog(String.format("AprilTagLog_%d_%4.2f", decimation, power));
-        datalog = new RobotTeleopMecanumFieldRelativeDrive_E.Datalog("Auto8628");
-
         aprilTags = new AprilTag_E();
         aprilTags.initAprilTag(hardwareMap);
         long delaySeconds=0;
 
         do {
             aprilTags.scanField(telemetry);
-            obBearing = aprilTags.getOboliskBearing();
-            obDist = aprilTags.getOboliskRange();
+            obBearing = aprilTags.getObeliskBearing();
+            obDist = aprilTags.getObeliskRange();
 
             telemetry.addData("Obelisk Bearing ", obBearing);
             telemetry.addData("Obelisk Range ", obDist);
@@ -144,10 +130,10 @@ public class MecanumAuto extends LinearOpMode {
             }
             telemetry.addData("press x to add 1 sec to delay",delaySeconds);
             telemetry.addData("press y to remove 1 sec from delay",delaySeconds);
-            telemetry.addData("Range to Obelisk AprilTag", aprilTags.getOboliskRange());
+            telemetry.addData("Range to Obelisk AprilTag", aprilTags.getObeliskRange());
 
-            if (aprilTags.getOboliskRange() > 100) telemetry.addData("Field Position", "Far");
-            if (aprilTags.getOboliskRange() < 100) telemetry.addData("Field Position", "Close");
+            if (aprilTags.getObeliskRange() > 100) telemetry.addData("Field Position", "Far");
+            if (aprilTags.getObeliskRange() < 100) telemetry.addData("Field Position", "Close");
 
             if (gamepad1.xWasPressed()) {
                 delaySeconds ++;

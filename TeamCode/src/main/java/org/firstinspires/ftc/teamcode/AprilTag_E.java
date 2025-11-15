@@ -54,8 +54,8 @@ initAprilTag -- Builds AprilTag processor
 closeAprilTag -- Closes vision portal
 runInLoop -- Updates the bearing to goal April Tag
 getBearing -- Returns bearing of selected goal tag
-getOboliskBearing -- Returns current Obelisk bearing
-getOboliskRange -- Returns current Obelisk range
+getObeliskBearing -- Returns current Obelisk bearing
+getObeliskRange -- Returns current Obelisk range
 getYaw -- Returns yaw of selected goal tag
 SetGoalTagId -- Manually sets the goal April Tag id
 getColor -- Gets string (red/green) depending on detection of the goal id
@@ -64,7 +64,7 @@ getColor -- Gets string (red/green) depending on detection of the goal id
 
 public class AprilTag_E {
 
-    private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
+    private static final boolean USE_WEBCAM = true;  // true = webcam, false = phone
 
     /**
      * Variables to store the position and orientation of the camera on the robot. Setting these
@@ -95,33 +95,23 @@ public class AprilTag_E {
     private final YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,
             0, -90, 0, 0);
 
-    /**
-     * The variable to store our instance of the AprilTag processor.
-     */
     private AprilTagProcessor aprilTag;
-
-    /**
-     * The variable to store our instance of the vision portal.
-     */
     private VisionPortal visionPortal;
 
     private int goalTagId;
 
     public double distanceToGoal;
-
     private double bearing;
+    private double yaw;
+    private double goalBearingBlue, goalBearingRed;
+    private double obeliskBearing;
+    private double obeliskRange;
 
     private String ledColor;
-
-    private double yaw;
 
     private boolean blueSide;
     private boolean redSide;
     private boolean PPG,PGP,GPP;
-
-    private double goalBearingBlue, goalBearingRed;
-    private double oboliskBearing;
-    private double oboliskRange;
 
     List<AprilTagDetection> currentDetections;
 
@@ -130,7 +120,6 @@ public class AprilTag_E {
 
         currentDetections = aprilTag.getDetections();
 
-        // Step through the list of detections and display info for each one.
         if(!currentDetections.isEmpty()) {
             for (AprilTagDetection detection : currentDetections) {
                 ledColor = "green";
@@ -151,22 +140,22 @@ public class AprilTag_E {
                         PPG = false;
                         GPP = false;
                         PGP = true;
-                        oboliskRange = detection.ftcPose.range;
-                        oboliskBearing = detection.ftcPose.bearing;
+                        obeliskRange = detection.ftcPose.range;
+                        obeliskBearing = detection.ftcPose.bearing;
                     }
                     else if (detection.id == 23){ //PPG
                         PPG = true;
                         GPP = false;
                         PGP = false;
-                        oboliskRange = detection.ftcPose.range;
-                        oboliskBearing = detection.ftcPose.bearing;
+                        obeliskRange = detection.ftcPose.range;
+                        obeliskBearing = detection.ftcPose.bearing;
                     }
                     else if (detection.id == 21){ //GPP
                         PPG = false;
                         GPP = true;
                         PGP = false;
-                        oboliskRange = detection.ftcPose.range;
-                        oboliskBearing = detection.ftcPose.bearing;
+                        obeliskRange = detection.ftcPose.range;
+                        obeliskBearing = detection.ftcPose.bearing;
                     }
 
                  }
@@ -183,31 +172,17 @@ public class AprilTag_E {
                 telemetry.addLine(String.format("Red  Goal:  Bearing=%6.2f", goalBearingRed));
             }
 
-            //telemetry.update();
         } else {
             telemetry.addLine("No tags");
             bearing = 999;
             ledColor = "red";
         }
-        //telemetry.addLine(String.format("Bearing=%6.2f", goalBearingBlue));
-        //telemetry.update();
     }
 
-        // Share the CPU.
-
-        // Save more CPU resources when camera is no longer needed.
-
-//    }   // end method runOpMode()
-
-    /**
-     * Initialize the AprilTag processor.
-     */
     public void initAprilTag(HardwareMap hardwareMap) {
 
-        // Create the AprilTag processor.
         aprilTag = new AprilTagProcessor.Builder()
 
-            // The following default settings are available to un-comment and edit as needed.
             //.setDrawAxes(false)
             .setDrawCubeProjection(true)
             //.setDrawTagOutline(true)
@@ -233,10 +208,8 @@ public class AprilTag_E {
         // Note: Decimation can be changed on-the-fly to adapt during a match.
         //aprilTag.setDecimation(3);
 
-        // Create the vision portal by using a builder.
         VisionPortal.Builder builder = new VisionPortal.Builder();
 
-        // Set the camera (webcam vs. built-in RC phone camera).
         if (USE_WEBCAM) {
             builder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
         } else {
@@ -266,7 +239,7 @@ public class AprilTag_E {
         // Disable or re-enable the aprilTag processor at any time.
         //visionPortal.setProcessorEnabled(aprilTag, true);
 
-    }   // end method initAprilTag()
+    }
 
     public void closeAprilTag(){
         visionPortal.close();
@@ -282,7 +255,6 @@ public class AprilTag_E {
             telemetry.addData("# AprilTags Detected", currentDetections.size());
         }
 
-        // Step through the list of detections and display info for each one.
         if(!currentDetections.isEmpty()) {
             for (AprilTagDetection detection : currentDetections) {
                 if (detection.metadata != null) {
@@ -304,26 +276,22 @@ public class AprilTag_E {
                         }
                     }
                 }
-                if (display) { telemetry.update(); };
+                if (display) { telemetry.update(); }
             }
-        } else{
+        }
+        else {
             bearing = 999;
             ledColor = "red";
         }
     }
 
     public double getBearing() { return bearing; }
-    public double getOboliskBearing() { return oboliskBearing; }
-    public double getOboliskRange() { return oboliskRange; }
-
-    public String getColor(){
-        return ledColor;
-    }
-
     public double getYaw() { return yaw; }
+    public double getObeliskBearing() { return obeliskBearing; }
+    public double getObeliskRange() { return obeliskRange; }
 
-    public void SetgoalTagId(int value) {
-        goalTagId = value;
-    }
+    public String getColor(){ return ledColor; }
+
+    public void SetgoalTagId(int value) { goalTagId = value; }
 
 }

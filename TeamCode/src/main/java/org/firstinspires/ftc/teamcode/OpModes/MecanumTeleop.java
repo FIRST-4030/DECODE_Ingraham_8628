@@ -42,25 +42,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.AprilTag_E;
 import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.ShooterVelo;
-//import org.firstinspires.ftc.teamcode.Shooter;
 
-/*
- * This OpMode illustrates how to program your robot to drive field relative.  This means
- * that the robot drives the direction you push the joystick regardless of the current orientation
- * of the robot.
- *
- * This OpMode assumes that you have four mecanum wheels each on its own motor named:
- *   front_left_motor, front_right_motor, back_left_motor, back_right_motor
- *
- *   and that the left motors are flipped such that when they turn clockwise the wheel moves backwards
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
- *
- */
 @TeleOp(name = "MecanumTeleop", group = "Robot")
 public class MecanumTeleop extends OpMode {
-    // This declares the four motors needed
+
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
@@ -97,10 +82,6 @@ public class MecanumTeleop extends OpMode {
 
         shooter=new ShooterVelo(hardwareMap,"shooter",true);
 
-
-//        helperAprilTag = new HelperAprilTag_Nf();
-//        helperAprilTag.initAprilTag(hardwareMap);
-
         // We set the left motors in reverse which is needed for drive trains where the left
         // motors are opposite to the right ones.
         frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -108,8 +89,6 @@ public class MecanumTeleop extends OpMode {
         backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
         backRightDrive.setDirection(DcMotor.Direction.REVERSE);
 
-        // This uses RUN_USING_ENCODER to be more accurate.   If you don't have the encoder
-        // wires, you should remove these
         frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -168,7 +147,6 @@ public class MecanumTeleop extends OpMode {
     public void loop() {
 
         aprilTags.runInLoop(telemetry, false);
-//        helperAprilTag.telemetryAprilTag(telemetry);
 
         //Gamepad 1
         if (gamepad1.start) {
@@ -190,15 +168,6 @@ public class MecanumTeleop extends OpMode {
         if (gamepad1.rightBumperWasReleased()) {
             driveSlower = 1;
         }
-
-        //Variable Drive (Concept)
-//        if (gamepad1.left_trigger > 0.1) {
-//            double driveSpd = 1.0 - gamepad1.left_trigger;
-//            driveSlower = 0.05 + (driveSpd * 0.75);
-//        }
-//        else if (gamepad1.left_trigger <= 0.1) {
-//            driveSlower = 1;
-//        }
 
         //Gamepad 2
         if (gamepad2.start) {
@@ -224,7 +193,6 @@ public class MecanumTeleop extends OpMode {
                         shooting = false;
                     }
                 }
-                //shooter.setTargetVelocity(0);
             }
         }
         else {
@@ -283,24 +251,6 @@ public class MecanumTeleop extends OpMode {
         telemetry.addLine("dpad left: 30  |  dpad right: 36");
 
         telemetry.update();
-
-
-//        //Working out the boolean methods for the triggers. I'll leave this code commented out. -E
-//        if (gamepad1.left_trigger >= 0.2) {
-//            shooter.setPower( 0.7 * (gamepad1.left_trigger));
-//            //replace with shooter.setPower(1); for set power instead of variable via float.
-//        }
-//        else {
-//            shooter.setPower(0);
-//        }
-//
-//        telemetry.addData("shooterPower:", gamepad1.left_trigger);
-//        telemetry.update();
-//
-//        //This code changes the shooter power based on
-//        //float gamepad1.left_trigger, multiplied by a limiter.
-//
-//        //End of edits.
 
         drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x,driveSlower);
     }

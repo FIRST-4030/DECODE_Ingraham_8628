@@ -64,10 +64,11 @@ import org.firstinspires.ftc.teamcode.Datalogger;
  * Robot-Centric Drive
  * implemented data logging
  */
+
 @Disabled
 @TeleOp(name = "Elijah: Robot-Centric Mecanum Drive", group = "Robot")
 public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
-    // This declares the four motors needed
+
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
@@ -85,10 +86,8 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
     public static double power = 0.7;
     double yawImu;
     YawPitchRollAngles orientation;
-
     AprilTag_E aprilTags;
 
-    // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
 
     @SuppressLint("DefaultLocale")
@@ -107,21 +106,19 @@ public class RobotTeleopMecanumFieldRelativeDrive_E extends OpMode {
         greenLED = hardwareMap.get(DigitalChannel.class, "green");
         redLED.setMode(DigitalChannel.Mode.OUTPUT);
         greenLED.setMode(DigitalChannel.Mode.OUTPUT);
-        // We set the left motors in reverse which is needed for drive trains where the left
-        // motors are opposite to the right ones.
+
         backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
         frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
         backRightDrive.setDirection(DcMotor.Direction.REVERSE);
         frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
 
-        // This can use RUN_USING_ENCODER to be more accurate
         frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         imu = hardwareMap.get(IMU.class, "imu");
-        // This needs to be changed to match the orientation on your robot
+
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection =
                 RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection usbDirection =
