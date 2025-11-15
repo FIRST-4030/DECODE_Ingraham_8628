@@ -28,7 +28,6 @@
  */
 package org.firstinspires.ftc.teamcode.OpModes;
 
-import static android.os.SystemClock.sleep;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -39,6 +38,8 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+
+import org.firstinspires.ftc.teamcode.AprilTag_E;
 import org.firstinspires.ftc.teamcode.ShooterVelo;
 //import org.firstinspires.ftc.teamcode.Shooter;
 
@@ -66,8 +67,10 @@ public class MecanumTeleop extends OpMode {
     DcMotorEx collector;
     ShooterVelo shooter;
     Servo shooterHinge;
-    //    HelperAprilTag_Nf helperAprilTag;
-    // This declares the IMU needed to get the current direction the robot is facing
+    AprilTag_E aprilTags;
+
+
+
     IMU imu;
     ElapsedTime shotTimer = new ElapsedTime();
 
@@ -92,6 +95,7 @@ public class MecanumTeleop extends OpMode {
         backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         shooter=new ShooterVelo(hardwareMap,"shooter",true);
+
 
 //        helperAprilTag = new HelperAprilTag_Nf();
 //        helperAprilTag.initAprilTag(hardwareMap);
@@ -134,6 +138,16 @@ public class MecanumTeleop extends OpMode {
         RevHubOrientationOnRobot orientationOnRobot = new
                 RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
+
+        aprilTags = new AprilTag_E();
+        aprilTags.initAprilTag(hardwareMap);
+        if ( Blackboard_ETJ.alliance==Blackboard_ETJ.Alliance.RED){
+            aprilTags.SetgoalTagId(24);
+        }else{
+            aprilTags.SetgoalTagId(20);
+        }
+
+
     }
 
     @Override
@@ -152,7 +166,7 @@ public class MecanumTeleop extends OpMode {
     @Override
     public void loop() {
 
-
+        aprilTags.runInLoop(telemetry, false);
 //        helperAprilTag.telemetryAprilTag(telemetry);
 
         //Gamepad 1
@@ -197,6 +211,8 @@ public class MecanumTeleop extends OpMode {
                 shotTimer.reset();
             }
             shooter.overridePower();
+            currentVelocity=(aprilTags.distanceToGoal + 202.17) / 8.92124;
+
             shooter.setTargetVelocity(currentVelocity);
             if (shooting) {
                 shooter.setTargetVelocity(currentVelocity);
