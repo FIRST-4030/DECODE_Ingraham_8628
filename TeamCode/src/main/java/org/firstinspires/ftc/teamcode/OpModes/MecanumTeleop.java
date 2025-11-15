@@ -78,7 +78,7 @@ public class MecanumTeleop extends OpMode {
     double shooterSpeedIncrement = 2.0;  // RPS rotations per second
     double currentVelocity = 20.0;  // RPS  rotations per second
     boolean shooting = false; // true when shooting sequence begins
-    double collectorSpeed=0.4;
+    double collectorSpeed = 0.4;
     boolean shooterOn = false;
 
     private double driveSlower = 1;
@@ -127,7 +127,7 @@ public class MecanumTeleop extends OpMode {
         collector.setDirection(DcMotor.Direction.REVERSE);
 
         shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
-        shooterHinge.setPosition(0.7);
+        shooterHinge.setPosition(0.25);
 
         imu = hardwareMap.get(IMU.class, "imu");
         // This needs to be changed to match the orientation on your robot
@@ -218,9 +218,9 @@ public class MecanumTeleop extends OpMode {
             if (shooting) {
                 shooter.setTargetVelocity(currentVelocity);
                 if (shooter.atSpeed()) {
-                    shooterHinge.setPosition(0.0);
+                    shooterHinge.setPosition(0.55);
                     if (shotTimer.milliseconds() > 500) {
-                        shooterHinge.setPosition(0.7);
+                        shooterHinge.setPosition(0.25);
                         shooting = false;
                     }
                 }

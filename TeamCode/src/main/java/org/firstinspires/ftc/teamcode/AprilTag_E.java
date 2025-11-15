@@ -47,12 +47,18 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import java.util.List;
 
 /*
-Options:
-
-ScanField -- Scans field for April Tags, sets boolean for visible side (Red/Blue) and obelisk orientation
+Documentation:
+---------------------------------------------------------------
+ScanField -- Scans field for April Tags, sets boolean for visible side (red/blue) and obelisk orientation
 initAprilTag -- Builds AprilTag processor
 closeAprilTag -- Closes vision portal
-runInLoop --
+runInLoop -- Updates the bearing to goal April Tag
+getBearing -- Returns bearing of selected goal tag
+getOboliskBearing -- Returns current Obelisk bearing
+getOboliskRange -- Returns current Obelisk range
+getYaw -- Returns yaw of selected goal tag
+SetGoalTagId -- Manually sets the goal April Tag id
+getColor -- Gets string (red/green) depending on detection of the goal id
 
  */
 
@@ -85,7 +91,7 @@ public class AprilTag_E {
      * to +/-90 degrees if it's vertical, or 180 degrees if it's upside-down.
      */
     private final Position cameraPosition = new Position(DistanceUnit.INCH,
-            3.0, 0, 15.0, 0);
+            15.0, 9.0, 15.0, 0);
     private final YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,
             0, -90, 0, 0);
 
@@ -304,15 +310,15 @@ public class AprilTag_E {
             bearing = 999;
             ledColor = "red";
         }
-    }   // end method telemetryAprilTag()
+    }
 
     public double getBearing() { return bearing; }
     public double getOboliskBearing() { return oboliskBearing; }
     public double getOboliskRange() { return oboliskRange; }
 
-    //public String getColor(){
-    //    return ledColor;
-    //}
+    public String getColor(){
+        return ledColor;
+    }
 
     public double getYaw() { return yaw; }
 
