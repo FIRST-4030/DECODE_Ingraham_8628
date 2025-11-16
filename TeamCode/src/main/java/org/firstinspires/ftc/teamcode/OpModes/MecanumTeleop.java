@@ -39,7 +39,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 
-import org.firstinspires.ftc.teamcode.AprilTag_E;
+import org.firstinspires.ftc.teamcode.AprilTag;
 import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.ShooterVelo;
 
@@ -53,9 +53,7 @@ public class MecanumTeleop extends OpMode {
     DcMotorEx collector;
     ShooterVelo shooter;
     Servo shooterHinge;
-    AprilTag_E aprilTags;
-
-
+    AprilTag aprilTags;
 
     IMU imu;
     ElapsedTime shotTimer = new ElapsedTime();
@@ -82,8 +80,6 @@ public class MecanumTeleop extends OpMode {
 
         shooter=new ShooterVelo(hardwareMap,"shooter",true);
 
-        // We set the left motors in reverse which is needed for drive trains where the left
-        // motors are opposite to the right ones.
         frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
         frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
         backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -109,7 +105,7 @@ public class MecanumTeleop extends OpMode {
         shooterHinge.setPosition(0.25);
 
         imu = hardwareMap.get(IMU.class, "imu");
-        // This needs to be changed to match the orientation on your robot
+
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection =
                 RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection usbDirection =
@@ -119,15 +115,13 @@ public class MecanumTeleop extends OpMode {
                 RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
-        aprilTags = new AprilTag_E();
+        aprilTags = new AprilTag();
         aprilTags.initAprilTag(hardwareMap);
         if ( Blackboard.alliance== Blackboard.Alliance.RED){
             aprilTags.SetgoalTagId(24);
         }else{
             aprilTags.SetgoalTagId(20);
         }
-
-
     }
 
     @Override
@@ -143,6 +137,7 @@ public class MecanumTeleop extends OpMode {
 
         telemetry.update();
     }
+
     @Override
     public void loop() {
 
@@ -254,8 +249,6 @@ public class MecanumTeleop extends OpMode {
 
         drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x,driveSlower);
     }
-
-
 
     // Thanks to FTC16072 for sharing this code!!
     public void drive(double forward, double right, double rotate,double maxSpeed) {

@@ -62,7 +62,7 @@ getColor -- Gets string (red/green) depending on detection of the goal id
 
  */
 
-public class AprilTag_E {
+public class AprilTag {
 
     private static final boolean USE_WEBCAM = true;  // true = webcam, false = phone
 

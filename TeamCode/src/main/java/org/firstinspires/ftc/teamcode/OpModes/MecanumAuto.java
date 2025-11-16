@@ -39,7 +39,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.AprilTag_E;
+import org.firstinspires.ftc.teamcode.AprilTag;
 import org.firstinspires.ftc.teamcode.ShooterVelo;
 
 @Autonomous(name="Mecanum Auto", group="Linear OpMode")
@@ -55,7 +55,7 @@ public class MecanumAuto extends LinearOpMode {
 
     ElapsedTime runtime = new ElapsedTime();
 
-    AprilTag_E aprilTags;
+    AprilTag aprilTags;
     
     ElapsedTime collectorTime = new ElapsedTime();
 
@@ -107,7 +107,7 @@ public class MecanumAuto extends LinearOpMode {
                 RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
-        aprilTags = new AprilTag_E();
+        aprilTags = new AprilTag();
         aprilTags.initAprilTag(hardwareMap);
         long delaySeconds=0;
 
@@ -136,10 +136,10 @@ public class MecanumAuto extends LinearOpMode {
             if (aprilTags.getObeliskRange() < 100) telemetry.addData("Field Position", "Close");
 
             if (gamepad1.xWasPressed()) {
-                delaySeconds ++;
+                delaySeconds++;
             }
             if (gamepad1.yWasPressed()) {
-                delaySeconds --;
+                delaySeconds--;
             }
             telemetry.update();
         } while (opModeInInit());
