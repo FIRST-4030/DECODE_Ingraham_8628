@@ -34,6 +34,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -80,10 +81,10 @@ public class MecanumTeleop extends OpMode {
 
         shooter=new ShooterVelo(hardwareMap,"shooter",true);
 
-        frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
-        frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
-        backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
-        backRightDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
+        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
 
         frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
