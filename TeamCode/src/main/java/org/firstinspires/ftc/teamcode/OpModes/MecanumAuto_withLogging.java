@@ -1,4 +1,4 @@
-/* Copyright (c) 2021 FIRST. All rights reserved.
+/* Copyright (c) 2017 FIRST. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted (subject to the limitations in the disclaimer below) provided that
@@ -29,11 +29,8 @@
 
 package org.firstinspires.ftc.teamcode.OpModes;
 
-import android.annotation.SuppressLint;
-
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -42,36 +39,46 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.AprilTags_dco;
+import org.firstinspires.ftc.teamcode.AprilTag;
 import org.firstinspires.ftc.teamcode.Datalogger;
 import org.firstinspires.ftc.teamcode.ShooterVelo;
 
-@Disabled
-@Autonomous(name="DCO: Mecanum Auto", group="DCO")
-public class MecanumAuto_dco extends LinearOpMode {
+@Autonomous(name="DCO: MecanumAuto_with Logging", group="DCO")
+public class MecanumAuto_withLogging extends LinearOpMode {
 
-    public static boolean logData = true;
-
-    private final ElapsedTime runtime = new ElapsedTime();
-
-    DcMotor frontLeftDrive, backLeftDrive, frontRightDrive, backRightDrive;
-    IMU imu;
+    DcMotor frontLeftDrive;
+    DcMotor frontRightDrive;
+    DcMotor backLeftDrive;
+    DcMotor backRightDrive;
     DcMotorEx collector;
     ShooterVelo shooter;
     Servo shooterHinge;
-    AprilTags_dco aprilTags;
-    Datalog datalog;
 
-    @SuppressLint("DefaultLocale")
+    ElapsedTime runtime = new ElapsedTime();
+
+    AprilTag aprilTags;
+    Datalog datalog;
+    double error;
+    static double currentAngle;
+    static double turnPower;
+    boolean logData = true;
+
+    ElapsedTime collectorTime = new ElapsedTime();
+
+    double obBearing, obDist;
+    double collectorSpeed = 0.4;
+    boolean redSide, blueSide;
+
+    IMU imu;
+
     @Override
     public void runOpMode() {
-
-        // Initialize the hardware variables. Note that the strings used here must correspond
-        // to the names assigned during the robot configuration step on the DS or RC devices.
         frontLeftDrive = hardwareMap.get(DcMotor.class, "leftFront");
-        backLeftDrive = hardwareMap.get(DcMotor.class, "leftBack");
         frontRightDrive = hardwareMap.get(DcMotor.class, "rightFront");
+        backLeftDrive = hardwareMap.get(DcMotor.class, "leftBack");
         backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
+
+        shooter = new ShooterVelo(hardwareMap, "shooter", true);
 
         backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
@@ -88,8 +95,15 @@ public class MecanumAuto_dco extends LinearOpMode {
         backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        imu = hardwareMap.get(IMU.class, "imu");
+        collector = hardwareMap.get(DcMotorEx.class, "collector");
+        collector.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        collector.setDirection(DcMotor.Direction.REVERSE);
 
+        shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
+        shooterHinge.setPosition(0.25);
+
+        imu = hardwareMap.get(IMU.class, "imu");
+        // This needs to be changed to match the orientation on your robot
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection =
                 RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection usbDirection =
@@ -99,29 +113,33 @@ public class MecanumAuto_dco extends LinearOpMode {
                 RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
-        // Wait for the game to start (driver presses START)
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
-        /*
-         * Code that runs ONCE when the driver hits START
-         *    Tasks to include are,
-         *       - Initialize April tags
-         *       - Initialize any time parameters
-         */
-
-        // Initialize the datalog
+        aprilTags = new AprilTag();
+        aprilTags.initAprilTag(hardwareMap);
         if (logData) {
-            datalog = new Datalog("AprilTagLog");
+            datalog = new Datalog("AutoLog");
         }
-
-        runtime.reset();
-
-        aprilTags = new AprilTags_dco();
-        aprilTags.initAprilTag(hardwareMap, telemetry, imu);
         long delaySeconds=0;
 
         do {
-            aprilTags.scanForObelisk();
+            aprilTags.scanField(telemetry);
+            obBearing = aprilTags.getObeliskBearing();
+            obDist = aprilTags.getObeliskRange();
+
+            telemetry.addData("Obelisk Bearing ", obBearing);
+            telemetry.addData("Obelisk Range ", obDist);
+            if (obBearing > 0) {
+                telemetry.addData("SIDE ", "RED");
+                redSide = true;
+                blueSide = false;
+            }
+            if (obBearing < 0 && obBearing > -30) {
+                telemetry.addData("SIDE ", "BLUE");
+                redSide = false;
+                blueSide = true;
+            }
+            telemetry.addData("press x to add 1 sec to delay",delaySeconds);
+            telemetry.addData("press y to remove 1 sec from delay",delaySeconds);
+            telemetry.addData("Range to Obelisk AprilTag", aprilTags.getObeliskRange());
 
             if (aprilTags.getObeliskRange() > 100) telemetry.addData("Field Position", "Far");
             if (aprilTags.getObeliskRange() < 100) telemetry.addData("Field Position", "Close");
@@ -132,55 +150,58 @@ public class MecanumAuto_dco extends LinearOpMode {
             if (gamepad1.yWasPressed()) {
                 delaySeconds--;
             }
+            telemetry.update();
         } while (opModeInInit());
-        //waitForStart();
 
-        while (opModeIsActive()) {
+        runtime.reset();
+        imu.resetYaw();
+
+        // run until the end of the match (driver presses STOP)
+        while (opModeIsActive() && obDist > 0) {
 
             sleep(delaySeconds * 1000);
 
-            rotateTo(aprilTags.getBearing()-4.0);
+            rotateTo(aprilTags.getBearing()-4);
 
             shootShooter(35.0);
             shootShooter(35.0);
             shootShooter(35.0);
             stopShooter();
+            moveForward(1.0, 400);
 
-            DriveForwardForTime(0.75, 1.0);
+            //rotate(1130, 1);
+
+            //collector.setPower(collectorSpeed);
+
+            //moveForward(-0.25, 2650);
+
+            //collectorTime.reset();
+            //while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
+
+            //collector.setPower(0);
+
             break;
-
-//        /* Data log
-//         * Note: The order in which we set datalog fields does *not* matter!
-//         *       Order is configured inside the Datalog class constructor.
-//         */
-//        if (logData) {
-//            datalog.loopCounter.set(i);
-//            datalog.tagCounter.set(aprilTags.getCurrentPositionCounter());
-//            datalog.inLoopCounter.set(aprilTags.getRunInLoopCounter());
-//            datalog.runTime.set(runtime.seconds());
-//            datalog.bearing.set(bearing);
-//            datalog.power.set(power);
-//            datalog.error.set(error);
-//            datalog.writeLine();
-//        }
-//        i++;
         }
     }
 
-    public void DriveForwardForTime(double power, double timeInSec) {
-
+    private void moveForward(double power, double mseconds){
         ElapsedTime timer = new ElapsedTime();
-
         timer.reset();
-        while (timer.seconds() < timeInSec) {
+        while (timer.milliseconds() < mseconds) {
             frontLeftDrive.setPower(power);
-            frontRightDrive.setPower(power);
             backLeftDrive.setPower(power);
+            frontRightDrive.setPower(power);
             backRightDrive.setPower(power);
         }
 
-        // Stop motors
-        StopDriving();
+        stopMotors();
+    }
+
+    private void stopMotors() {
+        frontLeftDrive.setPower(0);
+        backLeftDrive.setPower(0);
+        frontRightDrive.setPower(0);
+        backRightDrive.setPower(0);
     }
 
     public void shootShooter(double velocity) {
@@ -210,26 +231,57 @@ public class MecanumAuto_dco extends LinearOpMode {
         shooter.overridePower();
     }
 
-    public void StopDriving() {
-        frontLeftDrive.setPower(0);
-        frontRightDrive.setPower(0);
-        backLeftDrive.setPower(0);
-        backRightDrive.setPower(0);
+    private void rotate (double milliseconds, int reverse) {
+        ElapsedTime turnTimer = new ElapsedTime();
+        turnTimer.reset();
+        int leftSidepos;
+
+        if (blueSide) {
+            leftSidepos = reverse;
+        }
+        else {
+            leftSidepos = -reverse;
+        }
+
+        while (turnTimer.milliseconds() < milliseconds) {
+            frontLeftDrive.setPower(leftSidepos * -0.5);
+            backLeftDrive.setPower(leftSidepos * -0.5);
+            frontRightDrive.setPower(leftSidepos * 0.5);
+            backRightDrive.setPower(leftSidepos * 0.5);
+        }
+
+        stopMotors();
     }
 
     private void rotateTo(double targetAngle) {
-        double Kp = 0.082;  // Proportional gain (tune this)
+        double Kp = 0.2;  // Proportional gain (tune this)
         double Kd = 0.005;  // derivative gain
         double minPower = 0.3;
         double maxPower = 0.5;
-        double tolerance = 1.0; // degrees
+        double tolerance = 2.0;// degrees
         double lastError = 0;
         double derivative;
-        double currentAngle, error, turnPower;
 
         long lastTime = System.nanoTime();
+        int i = 0;
 
         while (true) {
+
+            /* Data log
+             * Note: The order in which we set datalog fields does *not* matter!
+             *       Order is configured inside the Datalog class constructor.
+             */
+            if (logData) {
+                datalog.runTime.set(runtime.seconds());
+                datalog.bearing.set(aprilTags.getBearing());
+                datalog.error.set(error);
+                datalog.currentAngle.set(currentAngle);
+                datalog.turnPower.set(turnPower);
+                datalog.loopCounter.set(i);
+                datalog.writeLine();
+            }
+            i++;
+
             currentAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
 
             error = targetAngle - currentAngle;
@@ -244,7 +296,7 @@ public class MecanumAuto_dco extends LinearOpMode {
 
             if (Math.abs(error) < tolerance) break;
 
-            turnPower = Kp * error + Kd *derivative;
+            turnPower = Kp * error + Kd * derivative;
 
             // Enforce minimum power
             if (Math.abs(turnPower) < minPower) {
@@ -264,20 +316,7 @@ public class MecanumAuto_dco extends LinearOpMode {
             frontRightDrive.setPower(turnPower);
             backRightDrive.setPower(turnPower);
         }
-
-        frontLeftDrive.setPower(0);
-        backLeftDrive.setPower(0);
-        frontRightDrive.setPower(0);
-        backRightDrive.setPower(0);
-//        sleep(100);
-
-//        telemetry.addData("Target (deg)", "%.2f", targetAngle);
-//        telemetry.addData("Current (deg)", "%.2f", currentAngle);
-//        telemetry.addData("Error", "%.2f", error);
-//        telemetry.addData("Turn Power", "%.2f", turnPower);
-//        telemetry.addLine("Aligned with AprilTag");
-//        telemetry.update();
-//        sleep(5000);
+        stopMotors();
     }
     /**
      * Datalog class encapsulates all the fields that will go into the datalog.
@@ -294,11 +333,10 @@ public class MecanumAuto_dco extends LinearOpMode {
          */
         public Datalogger.GenericField loopCounter = new Datalogger.GenericField("LoopCounter");
         public Datalogger.GenericField runTime = new Datalogger.GenericField("RunTime");
-        public Datalogger.GenericField power = new Datalogger.GenericField("Power");
         public Datalogger.GenericField bearing = new Datalogger.GenericField("Bearing");
         public Datalogger.GenericField error = new Datalogger.GenericField("Error");
-        public Datalogger.GenericField tagCounter = new Datalogger.GenericField("Tag Cnt");
-        public Datalogger.GenericField inLoopCounter = new Datalogger.GenericField("Run In Loop");
+        public Datalogger.GenericField currentAngle = new Datalogger.GenericField("Angle");
+        public Datalogger.GenericField turnPower = new Datalogger.GenericField("Turn Power");
 
         public Datalog(String name) {
             datalogger = new Datalogger.Builder()
@@ -311,10 +349,9 @@ public class MecanumAuto_dco extends LinearOpMode {
                      */
                     .setFields(
                             bearing,
-                            power,
+                            currentAngle,
+                            turnPower,
                             loopCounter,
-                            inLoopCounter,
-                            tagCounter,
                             runTime,
                             error
                     )

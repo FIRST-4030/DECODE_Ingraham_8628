@@ -91,7 +91,7 @@ public class AprilTags_dco {
     private double goalRangeBlue, goalRangeRed; // inches
     private double goalBearingBlue, goalBearingRed; // radians
     private double BotXBlue, BotYBlue, BotXRed, BotYRed;
-
+    private double obeliskRange;
     public AprilTagProcessor tags;
 
     public VisionPortal visionPortal;
@@ -251,14 +251,17 @@ public class AprilTags_dco {
                         GPP = true;
                         PGP = false;
                         PPG = false;
+                        obeliskRange = detection.ftcPose.bearing;
                     } else if (detection.id == 22) {
                         GPP = false;
                         PGP = true;
                         PPG = false;
+                        obeliskRange = detection.ftcPose.bearing;
                     } else if (detection.id == 23) {
                         GPP = false;
                         PGP = false;
                         PPG = true;
+                        obeliskRange = detection.ftcPose.bearing;
                     }
                 }
             }
@@ -302,6 +305,8 @@ public class AprilTags_dco {
     }
 
     public void closeAprilTag() { visionPortal.close(); }
+
+    public double getObeliskRange() { return obeliskRange; }
 
     public double getBearing() { return bearing; }
 
