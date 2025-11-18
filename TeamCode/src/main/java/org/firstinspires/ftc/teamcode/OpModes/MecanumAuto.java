@@ -152,7 +152,7 @@ public class MecanumAuto extends LinearOpMode {
 
             sleep(delaySeconds * 1000);
 
-            rotateTo(aprilTags.getBearing());
+            rotateTo(aprilTags.getBearing()-4);
 
             shootShooter(35.0);
             shootShooter(35.0);
