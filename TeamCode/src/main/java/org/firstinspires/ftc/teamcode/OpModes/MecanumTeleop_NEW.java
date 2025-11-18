@@ -30,7 +30,6 @@ package org.firstinspires.ftc.teamcode.OpModes;
 
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -43,9 +42,8 @@ import org.firstinspires.ftc.teamcode.AprilTag;
 import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Shooter;
 
-@Disabled
-@TeleOp(name = "MecanumTeleop - OLD", group = "Robot")
-public class MecanumTeleop extends OpMode {
+@TeleOp(name = "MecanumTeleop - NEW", group = "Robot")
+public class MecanumTeleop_NEW extends OpMode {
 
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
@@ -78,7 +76,6 @@ public class MecanumTeleop extends OpMode {
         backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         shooter=new Shooter(hardwareMap,"shooter",true);
-        shooter.setControllerValues(0.3,0.0243);
 
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -126,14 +123,12 @@ public class MecanumTeleop extends OpMode {
 
     @Override
     public void init_loop() {
-        telemetry.addData("Pad 1, Left Bumper", "SLOW DOWN");
+        telemetry.addData("Pad 1, Left Bumper", "Slow Down");
         telemetry.addData("--", "--");
         telemetry.addData("Pad 2, Left Bumper", "Shoot");
-        telemetry.addData("Pad 2, Up", "Faster Shot");
-        telemetry.addData("Pad 2, Down", "Slower Shot");
-        telemetry.addData("Pad 2, B", "Collector On");
-        telemetry.addData("Pad 2, A", "Collector Off");
-        telemetry.addData("Pad 2, X", "Collector Reverse");
+        telemetry.addData("Pad 2, B", "Collect On");
+        telemetry.addData("Pad 2, A", "Collect Off");
+        telemetry.addData("Pad 2, X", "Collect Reverse");
         telemetry.update();
     }
 
@@ -172,25 +167,6 @@ public class MecanumTeleop extends OpMode {
             imu.resetYaw();
         }
 
-        //Shooter Controls
-        if (shooterOn) {
-            shooter.targetVelocity = (aprilTags.distanceToGoal + 202.17) / 8.92124;
-            shooting = true;
-            shotTimer.reset();
-        }
-
-        if (shooting) {
-            if (shooter.atSpeed()) {
-                shotTimer.reset();
-                shooterHinge.setPosition(0.55);
-                shooting = false;
-            }
-        }
-
-        if (shotTimer.seconds() > 2) {
-            shooterHinge.setPosition(0.25);
-        }
-
         //Collector Controls
         if (gamepad2.bWasPressed()) {
             collector.setPower(collectorSpeed);
@@ -206,14 +182,28 @@ public class MecanumTeleop extends OpMode {
 
         //Shooter Toggle
         if (gamepad2.yWasReleased()) {
-            shooterOn = !shooterOn;
+            shooter.targetVelocity = (aprilTags.distanceToGoal + 202.17) / 8.92124;
+            shooting = true;
+            shotTimer.reset();
+            shooterOn = false;
+        }
+
+        if (shooting) {
+            if (shooter.atSpeed()) {
+                shotTimer.reset();
+                shooterHinge.setPosition(0.55);
+                shooting = false;
+            }
+        }
+
+        if (shotTimer.seconds() > 2) {
+            shooterHinge.setPosition(0.25);
         }
 
         telemetry.addData("Collector Current Velocity:", collector.getVelocity());
         telemetry.addData("Collector Target Power", collectorSpeed);
         telemetry.addData("Shooter Current Velocity:", shooter.getVelocity());
         telemetry.addData("Shooter Target Velocity: ", shooter.targetVelocity);
-
         telemetry.update();
 
         drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x,driveSlower);

@@ -40,7 +40,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.AprilTag;
-import org.firstinspires.ftc.teamcode.ShooterVelo;
+import org.firstinspires.ftc.teamcode.Shooter;
 
 @Autonomous(name="Mecanum Auto", group="Linear OpMode")
 public class MecanumAuto extends LinearOpMode {
@@ -50,7 +50,7 @@ public class MecanumAuto extends LinearOpMode {
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
     DcMotorEx collector;
-    ShooterVelo shooter;
+    Shooter shooter;
     Servo shooterHinge;
 
     ElapsedTime runtime = new ElapsedTime();
@@ -72,7 +72,7 @@ public class MecanumAuto extends LinearOpMode {
         backLeftDrive = hardwareMap.get(DcMotor.class, "leftBack");
         backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
 
-        shooter = new ShooterVelo(hardwareMap, "shooter", true);
+        shooter = new Shooter(hardwareMap, "shooter", true);
 
         backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
@@ -196,7 +196,7 @@ public class MecanumAuto extends LinearOpMode {
     }
 
     public void shootShooter(double velocity) {
-        shooter.setTargetVelocity(velocity);
+        shooter.targetVelocity = velocity;
         ElapsedTime shooterTimer = new ElapsedTime();
 
         while (!shooter.atSpeed()) {
@@ -218,7 +218,7 @@ public class MecanumAuto extends LinearOpMode {
     }
 
     public void stopShooter() {
-        shooter.setTargetVelocity(0);
+        shooter.targetVelocity = 0;
         shooter.overridePower();
     }
 

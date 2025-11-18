@@ -44,7 +44,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.AprilTags_dco;
 import org.firstinspires.ftc.teamcode.Datalogger;
-import org.firstinspires.ftc.teamcode.ShooterVelo;
+import org.firstinspires.ftc.teamcode.Shooter;
 
 @Disabled
 @Autonomous(name="DCO: Mecanum Auto", group="DCO")
@@ -57,7 +57,7 @@ public class MecanumAuto_dco extends LinearOpMode {
     DcMotor frontLeftDrive, backLeftDrive, frontRightDrive, backRightDrive;
     IMU imu;
     DcMotorEx collector;
-    ShooterVelo shooter;
+    Shooter shooter;
     Servo shooterHinge;
     AprilTags_dco aprilTags;
     Datalog datalog;
@@ -184,7 +184,7 @@ public class MecanumAuto_dco extends LinearOpMode {
     }
 
     public void shootShooter(double velocity) {
-        shooter.setTargetVelocity(velocity);
+        shooter.targetVelocity = velocity;
         ElapsedTime shooterTimer = new ElapsedTime();
 
         while (!shooter.atSpeed()) {
@@ -206,7 +206,7 @@ public class MecanumAuto_dco extends LinearOpMode {
     }
 
     public void stopShooter() {
-        shooter.setTargetVelocity(0);
+        shooter.targetVelocity = 0;
         shooter.overridePower();
     }
 
