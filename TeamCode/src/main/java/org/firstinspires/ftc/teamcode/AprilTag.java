@@ -38,8 +38,6 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDir
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Position;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
@@ -90,10 +88,6 @@ public class AprilTag {
      * it's pointing straight left, -90 degrees for straight right, etc. You can also set the roll
      * to +/-90 degrees if it's vertical, or 180 degrees if it's upside-down.
      */
-    private final Position cameraPosition = new Position(DistanceUnit.INCH,
-            15.0, 9.0, 15.0, 0);
-    private final YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,
-            0, -90, 0, 0);
 
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
@@ -112,6 +106,7 @@ public class AprilTag {
     private boolean blueSide;
     private boolean redSide;
     private boolean PPG,PGP,GPP;
+    private boolean targetInView = false;
 
     List<AprilTagDetection> currentDetections;
 
@@ -248,7 +243,7 @@ public class AprilTag {
      * Add telemetry about AprilTag detections.
      */
     @SuppressLint("DefaultLocale")
-    public void runInLoop(Telemetry telemetry, boolean display) {
+    public boolean runInLoop(Telemetry telemetry, boolean display) {
 
         currentDetections = aprilTag.getDetections();
         if (display) {
@@ -260,6 +255,7 @@ public class AprilTag {
                 if (detection.metadata != null) {
                     ledColor = "green";
                     if (detection.id == goalTagId) {
+                        targetInView = true;
                         distanceToGoal = detection.ftcPose.y;
                         bearing = detection.ftcPose.bearing;
                         yaw = detection.ftcPose.yaw;
@@ -270,6 +266,7 @@ public class AprilTag {
                             telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
                         }
                     } else {
+                        targetInView = false;
                         if (display) {
                             telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
                             telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
@@ -283,6 +280,7 @@ public class AprilTag {
             bearing = 999;
             ledColor = "red";
         }
+        return targetInView;
     }
 
     public double getBearing() { return bearing; }

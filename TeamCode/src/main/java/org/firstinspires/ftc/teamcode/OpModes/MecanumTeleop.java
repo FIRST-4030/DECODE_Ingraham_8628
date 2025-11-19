@@ -61,7 +61,7 @@ public class MecanumTeleop extends OpMode {
 
     boolean shooting = false; // true when shooting sequence begins
     double collectorSpeed = 0.4;
-    boolean shooterOn = false;
+    boolean targetInView;
 
     private double driveSlower = 1;
 
@@ -140,9 +140,10 @@ public class MecanumTeleop extends OpMode {
     @Override
     public void loop() {
 
-        aprilTags.runInLoop(telemetry, false);
+        targetInView = aprilTags.runInLoop(telemetry, false);
         shooter.overridePower();
 
+        telemetry.addData("Target is in view:", targetInView);
         telemetry.addData("Shooter Current Velocity", shooter.getVelocity());
         telemetry.addData("Shooter Target Velocity", shooter.targetVelocity);
 
@@ -172,12 +173,19 @@ public class MecanumTeleop extends OpMode {
             imu.resetYaw();
         }
 
-        //Shooter Controls
-        if (shooterOn) {
+        //Collector Controls
+        if (gamepad2.xWasPressed()) {
+            collector.setPower(-collectorSpeed);
+        }
+
+        //Shoot
+        if (gamepad2.leftBumperWasPressed()) {
             shooter.targetVelocity = (aprilTags.distanceToGoal + 202.17) / 8.92124;
             shooting = true;
             shotTimer.reset();
         }
+
+        collector.setPower(collectorSpeed);
 
         if (shooting) {
             if (shooter.atSpeed()) {
@@ -189,24 +197,6 @@ public class MecanumTeleop extends OpMode {
 
         if (shotTimer.seconds() > 2) {
             shooterHinge.setPosition(0.25);
-        }
-
-        //Collector Controls
-        if (gamepad2.bWasPressed()) {
-            collector.setPower(collectorSpeed);
-        }
-
-        if (gamepad2.aWasPressed()) {
-            collector.setPower(0.0);
-        }
-
-        if (gamepad2.xWasPressed()) {
-            collector.setPower(-collectorSpeed);
-        }
-
-        //Shooter Toggle
-        if (gamepad2.yWasReleased()) {
-            shooterOn = !shooterOn;
         }
 
         telemetry.addData("Collector Current Velocity:", collector.getVelocity());
