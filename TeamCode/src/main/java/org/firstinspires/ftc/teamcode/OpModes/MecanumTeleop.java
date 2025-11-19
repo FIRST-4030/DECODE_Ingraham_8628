@@ -59,9 +59,11 @@ public class MecanumTeleop extends OpMode {
     IMU imu;
     ElapsedTime shotTimer = new ElapsedTime();
 
-    boolean shooting = false; // true when shooting sequence begins
     double collectorSpeed = 0.4;
+
+    boolean shooting = false; // true when shooting sequence begins
     boolean targetInView;
+    boolean collectorOn = false;
 
     private double driveSlower = 1;
 
@@ -129,17 +131,16 @@ public class MecanumTeleop extends OpMode {
         telemetry.addData("Pad 1, Left Bumper", "SLOW DOWN");
         telemetry.addData("--", "--");
         telemetry.addData("Pad 2, Left Bumper", "Shoot");
-        telemetry.addData("Pad 2, Up", "Faster Shot");
-        telemetry.addData("Pad 2, Down", "Slower Shot");
-        telemetry.addData("Pad 2, B", "Collector On");
-        telemetry.addData("Pad 2, A", "Collector Off");
+        //telemetry.addData("Pad 2, Up", "Faster Shot");
+        //telemetry.addData("Pad 2, Down", "Slower Shot");
+        telemetry.addData("Pad 2, B", "Collector On/Off");
+        //telemetry.addData("Pad 2, A", "Collector Off");
         telemetry.addData("Pad 2, X", "Collector Reverse");
         telemetry.update();
     }
 
     @Override
     public void loop() {
-
         targetInView = aprilTags.runInLoop(telemetry, false);
         shooter.overridePower();
 
@@ -174,9 +175,19 @@ public class MecanumTeleop extends OpMode {
         }
 
         //Collector Controls
-        if (gamepad2.xWasPressed()) {
+        if (gamepad2.bWasReleased() && !collectorOn) {
+            collector.setPower(collectorSpeed);
+            collectorOn = true;
+        }
+        else if (gamepad2.bWasReleased() && collectorOn) {
+            collector.setPower(0.0);
+            collectorOn = false;
+        }
+        if (gamepad2.x) {
             collector.setPower(-collectorSpeed);
         }
+
+
 
         //Shoot
         if (gamepad2.leftBumperWasPressed()) {
@@ -184,8 +195,6 @@ public class MecanumTeleop extends OpMode {
             shooting = true;
             shotTimer.reset();
         }
-
-        collector.setPower(collectorSpeed);
 
         if (shooting) {
             if (shooter.atSpeed()) {
@@ -229,7 +238,7 @@ public class MecanumTeleop extends OpMode {
         maxPower = Math.max(maxPower, Math.abs(backRightPower));
         maxPower = Math.max(maxPower, Math.abs(backLeftPower));
 
-        // We multiply by maxSpeed so that it can be set lower
+        // multiply by maxSpeed so it can be set lower
         frontLeftDrive.setPower(maxSpeed * (frontLeftPower / maxPower));
         frontRightDrive.setPower(maxSpeed * (frontRightPower / maxPower));
         backLeftDrive.setPower(maxSpeed * (backLeftPower / maxPower));
