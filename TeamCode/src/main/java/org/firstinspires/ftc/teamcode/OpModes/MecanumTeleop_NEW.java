@@ -60,6 +60,8 @@ public class MecanumTeleop_NEW extends OpMode {
     boolean shooting = false; // true when shooting sequence begins
     double collectorSpeed = 0.4;
     boolean shooterOn = false;
+    boolean targetInView;
+    boolean collectorOn = false;
 
     private double driveSlower = 1;
 
@@ -123,21 +125,22 @@ public class MecanumTeleop_NEW extends OpMode {
 
     @Override
     public void init_loop() {
-        telemetry.addData("Pad 1, Left Bumper", "Slow Down");
+        telemetry.addData("Pad 1, Left Bumper", "Slow Drive");
+        telemetry.addData("Pad 1, Right Bumper", "Very Slow Drive");
         telemetry.addData("--", "--");
         telemetry.addData("Pad 2, Left Bumper", "Shoot");
-        telemetry.addData("Pad 2, B", "Collect On");
-        telemetry.addData("Pad 2, A", "Collect Off");
-        telemetry.addData("Pad 2, X", "Collect Reverse");
+        telemetry.addData("Pad 2, B", "Collector On/Off");
+        telemetry.addData("Pad 2, X", "Collector Reverse");
         telemetry.update();
     }
 
     @Override
     public void loop() {
 
-        aprilTags.runInLoop(telemetry, false);
+        targetInView = aprilTags.runInLoop(telemetry, false);
         shooter.overridePower();
 
+        telemetry.addData("Target is in view:", targetInView);
         telemetry.addData("Shooter Current Velocity", shooter.getVelocity());
         telemetry.addData("Shooter Target Velocity", shooter.targetVelocity);
 
@@ -168,20 +171,35 @@ public class MecanumTeleop_NEW extends OpMode {
         }
 
         //Collector Controls
-        if (gamepad2.bWasPressed()) {
-            collector.setPower(collectorSpeed);
+        if (gamepad2.bWasReleased()) {
+            if (!collectorOn) {
+                collector.setPower(collectorSpeed);
+                collectorOn = true;
+            } else {
+                collector.setPower(0.0);
+                collectorOn = false;
+            }
         }
-
-        if (gamepad2.aWasPressed()) {
-            collector.setPower(0.0);
-        }
-
+//        if (gamepad2.bWasReleased() && !collectorOn) {
+//            collector.setPower(collectorSpeed);
+//            collectorOn = true;
+//        }
+//        else if (gamepad2.bWasReleased() && collectorOn) {
+//            collector.setPower(0.0);
+//            collectorOn = false;
+//        }
         if (gamepad2.xWasPressed()) {
             collector.setPower(-collectorSpeed);
         }
+        if (gamepad2.xWasReleased()) {
+            collector.setPower(0.0);
+            collectorOn = false;
+        }
 
         //Shooter Toggle
-        if (gamepad2.yWasReleased()) {
+        if (gamepad2.leftBumperWasReleased()) {
+            collector.setPower(0.0);
+            collectorOn = false;
             shooter.targetVelocity = (aprilTags.distanceToGoal + 202.17) / 8.92124;
             shooting = true;
             shotTimer.reset();
@@ -196,7 +214,7 @@ public class MecanumTeleop_NEW extends OpMode {
             }
         }
 
-        if (shotTimer.seconds() > 2) {
+        if (shotTimer.milliseconds() > 500) {
             shooterHinge.setPosition(0.25);
         }
 
