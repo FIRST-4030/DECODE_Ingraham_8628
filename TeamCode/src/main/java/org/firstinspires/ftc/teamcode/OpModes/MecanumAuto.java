@@ -59,9 +59,11 @@ public class MecanumAuto extends LinearOpMode {
     
     ElapsedTime collectorTime = new ElapsedTime();
 
+    int sideInt;
     double obBearing, obDist;
     double collectorSpeed = 0.5;
     boolean redSide, blueSide;
+
 
     IMU imu;
 
@@ -150,9 +152,16 @@ public class MecanumAuto extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
+            if (redSide) {
+                sideInt = 1;
+            }
+            else {
+                sideInt = -1;
+            }
+
             sleep(delaySeconds * 1000);
 
-            if (obDist > 0) {
+            if (obDist > 100) {
                 runFromFar();
             }
             else {
@@ -165,7 +174,8 @@ public class MecanumAuto extends LinearOpMode {
 
     private void runFromFar() {
         double velocity = 34.0; //(aprilTags.distanceToGoal + 202.17) / 8.92124;
-        rotateTo(aprilTags.getBearing()-4);
+        if (redSide) { rotateTo(aprilTags.getBearing() - 4); }
+        else { rotateTo (aprilTags.getBearing() - 2); }
 
         shootShooter(velocity);
         shootShooter(velocity);
@@ -176,7 +186,7 @@ public class MecanumAuto extends LinearOpMode {
 
         moveForward(1.0, 400);
 
-        rotateTo(90);
+        rotateTo(90 * sideInt);
 
         collector.setPower(collectorSpeed);
 
@@ -189,20 +199,56 @@ public class MecanumAuto extends LinearOpMode {
 
         moveForward(0.25, 2700);
 
-        rotateTo(-30);
+        rotateTo(-30 * sideInt);
 
         moveForward(-0.25, 1500);
 
-        rotateTo(aprilTags.getBearing()-12);
+        if (redSide) { rotateTo(aprilTags.getBearing()- (12)); }
+        else { rotateTo(aprilTags.getBearing() - 4); }
 
         shootShooter(velocity);
         shootShooter(velocity);
         shootShooter(velocity);
         stopShooter();
+
+        moveForward(0.5, 800);
     }
 
     private void runFromClose() {
+        rotateTo(-130);
+        moveForward(-0.5, 1550);
 
+        shootShooter(29.0);
+        shootShooter(29.0);
+        shootShooter(29.0);
+        stopShooter();
+
+        rotateTo(-220);
+        moveForward(0.5, 570);
+
+        rotateTo(10);
+
+        collector.setPower(collectorSpeed);
+
+        moveForward(-0.2, 2850);
+
+        collectorTime.reset();
+        while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
+
+        collector.setPower(0);
+
+//        moveForward(0.25, 2550);
+//
+//        rotateTo(39);
+//
+//        shootShooter(29.0);
+//        shootShooter(29.0);
+//        shootShooter(29.0);
+//        stopShooter();
+//
+//        rotateTo(-220);
+//
+//        moveForward(0.5, 700);
     }
 
     private void moveForward(double power, double mseconds){
