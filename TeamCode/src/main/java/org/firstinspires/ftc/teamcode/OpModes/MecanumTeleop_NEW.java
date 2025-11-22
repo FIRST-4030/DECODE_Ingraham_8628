@@ -53,6 +53,7 @@ public class MecanumTeleop_NEW extends OpMode {
     Shooter shooter;
     Servo shooterHinge;
     AprilTag aprilTags;
+    Servo liftServo;
 
     IMU imu;
     ElapsedTime shotTimer = new ElapsedTime();
@@ -102,6 +103,9 @@ public class MecanumTeleop_NEW extends OpMode {
 
         shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
         shooterHinge.setPosition(0.25);
+
+        liftServo = hardwareMap.get(Servo.class, "liftServo");
+        //liftServo.setPosition(0.35);
 
         imu = hardwareMap.get(IMU.class, "imu");
 
@@ -164,6 +168,13 @@ public class MecanumTeleop_NEW extends OpMode {
         if (gamepad1.rightBumperWasReleased()) {
             driveSlower = 1;
         }
+
+//        if (gamepad1.yWasPressed()) {
+//            liftServo.setPosition(1.0);
+//        }
+//        if (gamepad1.aWasPressed()) {
+//            liftServo.setPosition(0.35);
+//        }
 
         //Gamepad 2
         if (gamepad2.start) {
