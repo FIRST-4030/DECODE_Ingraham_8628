@@ -44,20 +44,19 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 
-/*
-Documentation:
----------------------------------------------------------------
-ScanField -- Scans field for April Tags, sets boolean for visible side (red/blue) and obelisk orientation
-initAprilTag -- Builds AprilTag processor
-closeAprilTag -- Closes vision portal
-runInLoop -- Updates the bearing to goal April Tag
-getBearing -- Returns bearing of selected goal tag
-getObeliskBearing -- Returns current Obelisk bearing
-getObeliskRange -- Returns current Obelisk range
-getYaw -- Returns yaw of selected goal tag
-SetGoalTagId -- Manually sets the goal April Tag id
-getColor -- Gets string (red/green) depending on detection of the goal id
-
+/**
+ * Documentation:
+ * ---------------------------------------------------------------
+ * closeAprilTag -- Closes vision portal
+ * getBearing -- Returns bearing of selected goal tag
+ * getColor -- Gets string (red/green) depending on detection of the goal id
+ * getObeliskBearing -- Returns current Obelisk bearing
+ * getObeliskRange -- Returns current Obelisk range
+ * getYaw -- Returns yaw of selected goal tag
+ * initAprilTag -- Builds AprilTag processor
+ * runInLoop -- Updates the bearing to goal April Tag
+ * scanField -- Scans field for April Tags, sets boolean for visible side (red/blue) and obelisk orientation
+ * setGoalTagId -- Manually sets the goal April Tag id
  */
 
 public class AprilTag {
@@ -291,5 +290,4 @@ public class AprilTag {
     public String getColor(){ return ledColor; }
 
     public void SetgoalTagId(int value) { goalTagId = value; }
-
 }
