@@ -60,7 +60,7 @@ public class MecanumAuto extends LinearOpMode {
     ElapsedTime collectorTime = new ElapsedTime();
 
     double obBearing, obDist;
-    double collectorSpeed = 0.4;
+    double collectorSpeed = 0.5;
     boolean redSide, blueSide;
 
     IMU imu;
@@ -148,31 +148,61 @@ public class MecanumAuto extends LinearOpMode {
         imu.resetYaw();
 
         // run until the end of the match (driver presses STOP)
-        while (opModeIsActive() && obDist > 0) {
+        while (opModeIsActive()) {
 
             sleep(delaySeconds * 1000);
 
-            rotateTo(aprilTags.getBearing()-4);
-
-            shootShooter(35.0);
-            shootShooter(35.0);
-            shootShooter(35.0);
-            stopShooter();
-            moveForward(1.0, 400);
-
-            //rotate(1130, 1);
-
-            //collector.setPower(collectorSpeed);
-
-            //moveForward(-0.25, 2650);
-
-            //collectorTime.reset();
-            //while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
-
-            //collector.setPower(0);
+            if (obDist > 0) {
+                runFromFar();
+            }
+            else {
+                runFromClose();
+            }
 
             break;
         }
+    }
+
+    private void runFromFar() {
+        double velocity = 34.0; //(aprilTags.distanceToGoal + 202.17) / 8.92124;
+        rotateTo(aprilTags.getBearing()-4);
+
+        shootShooter(velocity);
+        shootShooter(velocity);
+        shootShooter(velocity);
+        stopShooter();
+
+        rotateTo(0);
+
+        moveForward(1.0, 400);
+
+        rotateTo(90);
+
+        collector.setPower(collectorSpeed);
+
+        moveForward(-0.25, 2700);
+
+        collectorTime.reset();
+        while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
+
+        collector.setPower(0);
+
+        moveForward(0.25, 2700);
+
+        rotateTo(-30);
+
+        moveForward(-0.25, 1500);
+
+        rotateTo(aprilTags.getBearing()-12);
+
+        shootShooter(velocity);
+        shootShooter(velocity);
+        shootShooter(velocity);
+        stopShooter();
+    }
+
+    private void runFromClose() {
+
     }
 
     private void moveForward(double power, double mseconds){
@@ -206,13 +236,13 @@ public class MecanumAuto extends LinearOpMode {
         shooterTimer.reset();
         shooterHinge.setPosition(0.55);
 
-        while (shooterTimer.seconds() < 2) {
+        while (shooterTimer.milliseconds() < 500) {
             shooter.overridePower();
         }
 
         shooterHinge.setPosition(0.25);
 
-        while (shooterTimer.seconds() < 3) {
+        while (shooterTimer.milliseconds() < 1000) {
             shooter.overridePower();
         }
     }

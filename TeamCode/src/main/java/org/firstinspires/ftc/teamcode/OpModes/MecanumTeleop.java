@@ -120,9 +120,9 @@ public class MecanumTeleop extends OpMode {
         aprilTags = new AprilTag();
         aprilTags.initAprilTag(hardwareMap);
         if ( Blackboard.alliance== Blackboard.Alliance.RED){
-            aprilTags.SetgoalTagId(24);
+            aprilTags.setGoalTagID(24);
         }else{
-            aprilTags.SetgoalTagId(20);
+            aprilTags.setGoalTagID(20);
         }
     }
 

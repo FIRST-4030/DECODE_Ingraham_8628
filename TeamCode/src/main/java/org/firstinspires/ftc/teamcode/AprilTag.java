@@ -100,8 +100,6 @@ public class AprilTag {
     private double obeliskBearing;
     private double obeliskRange;
 
-    private String ledColor;
-
     private boolean blueSide;
     private boolean redSide;
     private boolean PPG,PGP,GPP;
@@ -116,7 +114,6 @@ public class AprilTag {
 
         if(!currentDetections.isEmpty()) {
             for (AprilTagDetection detection : currentDetections) {
-                ledColor = "green";
                 if (detection.metadata != null) {
                     if (detection.id == 20){
                         blueSide = true;
@@ -169,7 +166,6 @@ public class AprilTag {
         } else {
             telemetry.addLine("No tags");
             bearing = 999;
-            ledColor = "red";
         }
     }
 
@@ -252,7 +248,6 @@ public class AprilTag {
         if(!currentDetections.isEmpty()) {
             for (AprilTagDetection detection : currentDetections) {
                 if (detection.metadata != null) {
-                    ledColor = "green";
                     if (detection.id == goalTagId) {
                         targetInView = true;
                         distanceToGoal = detection.ftcPose.y;
@@ -277,7 +272,6 @@ public class AprilTag {
         }
         else {
             bearing = 999;
-            ledColor = "red";
         }
         return targetInView;
     }
@@ -287,7 +281,5 @@ public class AprilTag {
     public double getObeliskBearing() { return obeliskBearing; }
     public double getObeliskRange() { return obeliskRange; }
 
-    public String getColor(){ return ledColor; }
-
-    public void SetgoalTagId(int value) { goalTagId = value; }
+    public void setGoalTagID(int value) { goalTagId = value; }
 }

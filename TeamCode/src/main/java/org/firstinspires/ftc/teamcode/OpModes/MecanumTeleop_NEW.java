@@ -105,7 +105,7 @@ public class MecanumTeleop_NEW extends OpMode {
         shooterHinge.setPosition(0.25);
 
         liftServo = hardwareMap.get(Servo.class, "liftServo");
-        //liftServo.setPosition(0.35);
+        liftServo.setPosition(0.0);
 
         imu = hardwareMap.get(IMU.class, "imu");
 
@@ -121,9 +121,9 @@ public class MecanumTeleop_NEW extends OpMode {
         aprilTags = new AprilTag();
         aprilTags.initAprilTag(hardwareMap);
         if ( Blackboard.alliance== Blackboard.Alliance.RED){
-            aprilTags.SetgoalTagId(24);
+            aprilTags.setGoalTagID(24);
         }else{
-            aprilTags.SetgoalTagId(20);
+            aprilTags.setGoalTagID(20);
         }
     }
 
@@ -169,12 +169,12 @@ public class MecanumTeleop_NEW extends OpMode {
             driveSlower = 1;
         }
 
-//        if (gamepad1.yWasPressed()) {
-//            liftServo.setPosition(1.0);
-//        }
-//        if (gamepad1.aWasPressed()) {
-//            liftServo.setPosition(0.35);
-//        }
+        if (gamepad1.yWasPressed()) {
+            liftServo.setPosition(1.0);
+        }
+        if (gamepad1.aWasPressed()) {
+            liftServo.setPosition(0.0);
+        }
 
         //Gamepad 2
         if (gamepad2.start) {
