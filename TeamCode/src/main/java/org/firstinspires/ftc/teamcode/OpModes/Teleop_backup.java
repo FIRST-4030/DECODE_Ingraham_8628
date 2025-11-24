@@ -43,8 +43,8 @@ import org.firstinspires.ftc.teamcode.AprilTag;
 import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Shooter;
 
-@TeleOp(name = "MecanumTeleop - OLD", group = "Robot")
-public class MecanumTeleop extends OpMode {
+@TeleOp(name = "MecanumTeleop - BACKUP", group = "Robot")
+public class Teleop_backup extends OpMode {
 
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
@@ -227,7 +227,7 @@ public class MecanumTeleop extends OpMode {
         double backLeftPower = forward - right + rotate;
 
         double maxPower = 1.0;
-          // make this slower for slower drive
+        // make this slower for slower drive
 
         // This is needed to make sure we don't pass > 1.0 to any wheel
         // It allows us to keep all of the motors in proportion to what they should

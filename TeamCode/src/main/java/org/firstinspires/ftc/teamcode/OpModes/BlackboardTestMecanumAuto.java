@@ -30,6 +30,7 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Blackboard;
@@ -50,7 +51,7 @@ import org.firstinspires.ftc.teamcode.Blackboard;
  *
  * This file is built off of the above, to test implementation of the custom blackboard class
  */
-
+@Disabled
 @Autonomous(name="Test Mecanum Auto Edson", group="Linear OpMode")
 public class BlackboardTestMecanumAuto extends LinearOpMode {
     @Override

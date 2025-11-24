@@ -173,9 +173,13 @@ public class MecanumAuto extends LinearOpMode {
     }
 
     private void runFromFar() {
-        double velocity = 34.0; //(aprilTags.distanceToGoal + 202.17) / 8.92124;
-        if (redSide) { rotateTo(aprilTags.getBearing() - 4); }
-        else { rotateTo (aprilTags.getBearing() - 2); }
+        double velocity = 34.0;
+        if (redSide) {
+            rotateTo(aprilTags.getBearing() - 2);
+        }
+        else {
+            rotateTo (aprilTags.getBearing() - 3);
+        }
 
         shootShooter(velocity);
         shootShooter(velocity);
@@ -197,14 +201,14 @@ public class MecanumAuto extends LinearOpMode {
 
         collector.setPower(0);
 
-        moveForward(0.25, 2700);
+        moveForward(0.25, 2250);
 
-        rotateTo(-30 * sideInt);
+        rotateTo(-25 * sideInt);
 
         moveForward(-0.25, 1500);
 
-        if (redSide) { rotateTo(aprilTags.getBearing()- (12)); }
-        else { rotateTo(aprilTags.getBearing() - 4); }
+        if (redSide) { rotateTo(aprilTags.getBearing() - 7); }
+        else { rotateTo(aprilTags.getBearing() + 2); }
 
         shootShooter(velocity);
         shootShooter(velocity);
@@ -215,7 +219,8 @@ public class MecanumAuto extends LinearOpMode {
     }
 
     private void runFromClose() {
-        rotateTo(-130);
+        sideInt = -sideInt;
+        rotateTo((-130 * sideInt));
         moveForward(-0.5, 1550);
 
         shootShooter(29.0);
@@ -223,10 +228,10 @@ public class MecanumAuto extends LinearOpMode {
         shootShooter(29.0);
         stopShooter();
 
-        rotateTo(-220);
+        rotateTo((-220 * sideInt));
         moveForward(0.5, 570);
 
-        rotateTo(10);
+        rotateTo((10 * sideInt));
 
         collector.setPower(collectorSpeed);
 
@@ -360,6 +365,7 @@ public class MecanumAuto extends LinearOpMode {
             telemetry.addData("Current (deg)", "%.2f", currentAngle);
             telemetry.addData("Error", "%.2f", error);
             telemetry.addData("Turn Power", "%.2f", turnPower);
+            telemetry.addData("IMU Angle", "%.2f", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
             telemetry.update();
 
             frontLeftDrive.setPower(-turnPower);
