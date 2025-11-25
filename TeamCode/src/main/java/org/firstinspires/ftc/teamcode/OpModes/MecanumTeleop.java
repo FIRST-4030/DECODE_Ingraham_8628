@@ -42,7 +42,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.AprilTag;
 import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Shooter;
-
+@Disabled
 @TeleOp(name = "MecanumTeleop - OLD", group = "Robot")
 public class MecanumTeleop extends OpMode {
 

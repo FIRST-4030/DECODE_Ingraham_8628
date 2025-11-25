@@ -63,6 +63,7 @@ public class MecanumTeleop_NEW extends OpMode {
     boolean shooterOn = false;
     boolean targetInView;
     boolean collectorOn = false;
+    boolean colorUnknown;
 
     private double driveSlower = 1;
 
@@ -120,10 +121,17 @@ public class MecanumTeleop_NEW extends OpMode {
 
         aprilTags = new AprilTag();
         aprilTags.initAprilTag(hardwareMap);
-        if ( Blackboard.alliance== Blackboard.Alliance.RED){
+
+        if (Blackboard.alliance == Blackboard.Alliance.RED) {
             aprilTags.setGoalTagID(24);
-        }else{
+            colorUnknown = false;
+        }
+        else if (Blackboard.alliance == Blackboard.Alliance.BLUE) {
             aprilTags.setGoalTagID(20);
+            colorUnknown = false;
+        }
+        else {
+            colorUnknown = true;
         }
     }
 
@@ -135,6 +143,21 @@ public class MecanumTeleop_NEW extends OpMode {
         telemetry.addData("Pad 2, Left Bumper", "Shoot");
         telemetry.addData("Pad 2, B", "Collector On/Off");
         telemetry.addData("Pad 2, X", "Collector Reverse");
+
+        if (colorUnknown) {
+            telemetry.addLine("NO COLOR DETECTED PLEASE INPUT X FOR BLUE, B FOR RED");
+
+
+            if (gamepad1.xWasPressed()) {
+                aprilTags.setGoalTagID(20);
+            }
+            if (gamepad1.bWasPressed()) {
+                aprilTags.setGoalTagID(24);
+            }
+        }
+
+        telemetry.addData("Goal Tag ID", aprilTags.getGoalTagId());
+
         telemetry.update();
     }
 

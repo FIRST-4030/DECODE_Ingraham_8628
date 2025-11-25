@@ -280,6 +280,7 @@ public class AprilTag {
     public double getYaw() { return yaw; }
     public double getObeliskBearing() { return obeliskBearing; }
     public double getObeliskRange() { return obeliskRange; }
+    public double getGoalTagId() { return goalTagId; }
 
     public void setGoalTagID(int value) { goalTagId = value; }
 }

@@ -60,10 +60,12 @@ public class MecanumAuto extends LinearOpMode {
     ElapsedTime collectorTime = new ElapsedTime();
 
     int sideInt;
+
     double obBearing, obDist;
     double collectorSpeed = 0.5;
-    boolean redSide, blueSide;
 
+    boolean redSide, blueSide;
+    boolean smallFootprint = false;
 
     IMU imu;
 
@@ -136,6 +138,10 @@ public class MecanumAuto extends LinearOpMode {
 
             if (aprilTags.getObeliskRange() > 100) telemetry.addData("Field Position", "Far");
             if (aprilTags.getObeliskRange() < 100) telemetry.addData("Field Position", "Close");
+            telemetry.addLine();
+            telemetry.addLine();
+            telemetry.addData("press a/b to toggle limited auto | Limited Auto", smallFootprint);
+
 
             if (gamepad1.xWasPressed()) {
                 delaySeconds++;
@@ -143,6 +149,14 @@ public class MecanumAuto extends LinearOpMode {
             if (gamepad1.yWasPressed()) {
                 delaySeconds--;
             }
+
+            if (gamepad1.aWasReleased() && !smallFootprint) {
+                smallFootprint = true;
+            }
+            if (gamepad1.bWasReleased() && smallFootprint) {
+                smallFootprint = false;
+            }
+
             telemetry.update();
         } while (opModeInInit());
 
@@ -161,11 +175,16 @@ public class MecanumAuto extends LinearOpMode {
 
             sleep(delaySeconds * 1000);
 
-            if (obDist > 100) {
-                runFromFar();
+            if (smallFootprint) {
+                runSmallFootprint();
             }
-            else {
-                runFromClose();
+
+            if (!smallFootprint) {
+                if (obDist > 100) {
+                    runFromFar();
+                } else {
+                    runFromClose();
+                }
             }
 
             break;
@@ -188,9 +207,13 @@ public class MecanumAuto extends LinearOpMode {
 
         rotateTo(0);
 
+        imu.resetYaw();
+
         moveForward(1.0, 400);
 
         rotateTo(90 * sideInt);
+
+        imu.resetYaw();
 
         collector.setPower(collectorSpeed);
 
@@ -203,7 +226,7 @@ public class MecanumAuto extends LinearOpMode {
 
         moveForward(0.25, 2250);
 
-        rotateTo(-25 * sideInt);
+        rotateTo(-115 * sideInt);
 
         moveForward(-0.25, 1500);
 
@@ -220,18 +243,22 @@ public class MecanumAuto extends LinearOpMode {
 
     private void runFromClose() {
         sideInt = -sideInt;
-        rotateTo((-130 * sideInt));
+        rotateTo(-130 * sideInt);
         moveForward(-0.5, 1550);
+
+        imu.resetYaw();
 
         shootShooter(29.0);
         shootShooter(29.0);
         shootShooter(29.0);
         stopShooter();
 
-        rotateTo((-220 * sideInt));
+        rotateTo(265 * sideInt);
         moveForward(0.5, 570);
 
-        rotateTo((10 * sideInt));
+        imu.resetYaw();
+
+        rotateTo(-130 * sideInt);
 
         collector.setPower(collectorSpeed);
 
@@ -241,6 +268,8 @@ public class MecanumAuto extends LinearOpMode {
         while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
 
         collector.setPower(0);
+
+        imu.resetYaw();
 
 //        moveForward(0.25, 2550);
 //
@@ -254,6 +283,22 @@ public class MecanumAuto extends LinearOpMode {
 //        rotateTo(-220);
 //
 //        moveForward(0.5, 700);
+    }
+
+    private void runSmallFootprint() {
+        double velocity = 34.0;
+
+        if (redSide) { rotateTo(aprilTags.getBearing() - 2); }
+        else { rotateTo(aprilTags.getBearing() - 3); }
+
+        shootShooter(velocity);
+        shootShooter(velocity);
+        shootShooter(velocity);
+        stopShooter();
+
+        rotateTo(0);
+
+        moveForward(0.5, 500);
     }
 
     private void moveForward(double power, double mseconds){
@@ -300,7 +345,7 @@ public class MecanumAuto extends LinearOpMode {
 
     public void stopShooter() {
         shooter.targetVelocity = 0;
-        shooter.overridePower();
+        //shooter.overridePower();
     }
 
     private void rotate (double milliseconds, int reverse) {
