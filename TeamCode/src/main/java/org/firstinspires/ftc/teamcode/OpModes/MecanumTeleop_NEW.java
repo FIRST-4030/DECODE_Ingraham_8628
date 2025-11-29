@@ -106,7 +106,7 @@ public class MecanumTeleop_NEW extends OpMode {
         shooterHinge.setPosition(0.25);
 
         liftServo = hardwareMap.get(Servo.class, "liftServo");
-        liftServo.setPosition(0.0);
+        liftServo.setPosition(1.0);  // Up with Axon Max is 1.0,  was 0.0 with Savox
 
         imu = hardwareMap.get(IMU.class, "imu");
 
