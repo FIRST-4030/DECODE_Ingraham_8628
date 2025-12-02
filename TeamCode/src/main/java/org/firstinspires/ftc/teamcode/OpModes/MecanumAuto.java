@@ -56,6 +56,8 @@ public class MecanumAuto extends LinearOpMode {
     ElapsedTime runtime = new ElapsedTime();
 
     AprilTag aprilTags;
+
+    Servo liftServo;
     
     ElapsedTime collectorTime = new ElapsedTime();
 
@@ -99,6 +101,9 @@ public class MecanumAuto extends LinearOpMode {
 
         shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
         shooterHinge.setPosition(0.25);
+
+        liftServo = hardwareMap.get(Servo.class, "liftServo");
+        liftServo.setPosition(1.0);
 
         imu = hardwareMap.get(IMU.class, "imu");
         // This needs to be changed to match the orientation on your robot
