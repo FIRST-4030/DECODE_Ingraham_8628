@@ -63,8 +63,6 @@ public class MecanumTeleop_NEW extends OpMode {
     boolean shooterOn = false;
     boolean targetInView;
     boolean collectorOn = false;
-    boolean colorUnknown;
-
     private double driveSlower = 1;
 
     @Override
@@ -121,22 +119,23 @@ public class MecanumTeleop_NEW extends OpMode {
 
         aprilTags = new AprilTag();
         aprilTags.initAprilTag(hardwareMap);
-
-        if (Blackboard.alliance == Blackboard.Alliance.RED) {
-            aprilTags.setGoalTagID(24);
-            colorUnknown = false;
-        }
-        else if (Blackboard.alliance == Blackboard.Alliance.BLUE) {
-            aprilTags.setGoalTagID(20);
-            colorUnknown = false;
-        }
-        else {
-            colorUnknown = true;
-        }
     }
 
     @Override
     public void init_loop() {
+        if (gamepad1.xWasPressed() && gamepad1.right_bumper) {
+            Blackboard.alliance = Blackboard.Alliance.BLUE;
+        } else if (gamepad1.bWasPressed() && gamepad1.right_bumper) {
+            Blackboard.alliance = Blackboard.Alliance.RED;
+        }
+
+        if (Blackboard.alliance == Blackboard.Alliance.RED) {
+            aprilTags.setGoalTagID(24);
+        }
+        else if (Blackboard.alliance == Blackboard.Alliance.BLUE) {
+            aprilTags.setGoalTagID(20);
+        }
+
         telemetry.addData("Pad 1, Left Bumper", "Slow Drive");
         telemetry.addData("Pad 1, Right Bumper", "Very Slow Drive");
         telemetry.addData("--", "--");
@@ -144,17 +143,9 @@ public class MecanumTeleop_NEW extends OpMode {
         telemetry.addData("Pad 2, B", "Collector On/Off");
         telemetry.addData("Pad 2, X", "Collector Reverse");
 
-        if (colorUnknown) {
-            telemetry.addLine("NO COLOR DETECTED PLEASE INPUT X FOR BLUE, B FOR RED");
-
-
-            if (gamepad1.xWasPressed()) {
-                aprilTags.setGoalTagID(20);
-            }
-            if (gamepad1.bWasPressed()) {
-                aprilTags.setGoalTagID(24);
-            }
-        }
+        telemetry.addData("Alliance", Blackboard.getAllianceAsString());
+        telemetry.addLine("HOLD RB AND Press X to override alliance to BLUE");
+        telemetry.addLine("HOLD RB AND Press B to override alliance to RED");
 
         telemetry.addData("Goal Tag ID", aprilTags.getGoalTagId());
 
