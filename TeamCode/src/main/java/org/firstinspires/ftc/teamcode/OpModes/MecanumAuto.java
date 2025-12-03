@@ -197,7 +197,6 @@ public class MecanumAuto extends LinearOpMode {
     }
 
     private void runFromFar() {
-        double velocity = 34.0;
         if (redSide) {
             rotateTo(aprilTags.getBearing() - 2);
         }
@@ -205,9 +204,9 @@ public class MecanumAuto extends LinearOpMode {
             rotateTo (aprilTags.getBearing() - 3);
         }
 
-        shootShooter(velocity);
-        shootShooter(velocity);
-        shootShooter(velocity);
+        shootShooter();
+        shootShooter();
+        shootShooter();
         stopShooter();
 
         rotateTo(0);
@@ -238,9 +237,9 @@ public class MecanumAuto extends LinearOpMode {
         if (redSide) { rotateTo(aprilTags.getBearing() - 7); }
         else { rotateTo(aprilTags.getBearing() + 2); }
 
-        shootShooter(velocity);
-        shootShooter(velocity);
-        shootShooter(velocity);
+        shootShooter();
+        shootShooter();
+        shootShooter();
         stopShooter();
 
         moveForward(0.5, 800);
@@ -253,9 +252,9 @@ public class MecanumAuto extends LinearOpMode {
 
         imu.resetYaw();
 
-        shootShooter(29.0);
-        shootShooter(29.0);
-        shootShooter(29.0);
+        shootShooter(); //29.0
+        shootShooter();
+        shootShooter();
         stopShooter();
 
         rotateTo(265 * sideInt);
@@ -280,9 +279,9 @@ public class MecanumAuto extends LinearOpMode {
 //
 //        rotateTo(39);
 //
-//        shootShooter(29.0);
-//        shootShooter(29.0);
-//        shootShooter(29.0);
+//        shootShooter();
+//        shootShooter();
+//        shootShooter();
 //        stopShooter();
 //
 //        rotateTo(-220);
@@ -296,9 +295,9 @@ public class MecanumAuto extends LinearOpMode {
         if (redSide) { rotateTo(aprilTags.getBearing() - 2); }
         else { rotateTo(aprilTags.getBearing() - 3); }
 
-        shootShooter(velocity);
-        shootShooter(velocity);
-        shootShooter(velocity);
+        shootShooter();
+        shootShooter();
+        shootShooter();
         stopShooter();
 
         rotateTo(0);
@@ -326,8 +325,8 @@ public class MecanumAuto extends LinearOpMode {
         backRightDrive.setPower(0);
     }
 
-    public void shootShooter(double velocity) {
-        shooter.targetVelocity = velocity;
+    public void shootShooter() {
+        shooter.targetVelocity = (aprilTags.distanceToGoal + 202.17) / 8.92124;
         ElapsedTime shooterTimer = new ElapsedTime();
 
         while (!shooter.atSpeed()) {
@@ -350,7 +349,6 @@ public class MecanumAuto extends LinearOpMode {
 
     public void stopShooter() {
         shooter.targetVelocity = 0;
-        //shooter.overridePower();
     }
 
     private void rotate (double milliseconds, int reverse) {
