@@ -40,7 +40,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.AprilTag;
-import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Shooter;
 
 @Autonomous(name="Mecanum Auto", group="Linear OpMode")
@@ -132,13 +131,11 @@ public class MecanumAuto extends LinearOpMode {
                 telemetry.addData("SIDE ", "RED");
                 redSide = true;
                 blueSide = false;
-                Blackboard.alliance = Blackboard.Alliance.RED;
             }
             if (obBearing < 0 && obBearing > -30) {
                 telemetry.addData("SIDE ", "BLUE");
                 redSide = false;
                 blueSide = true;
-                Blackboard.alliance = Blackboard.Alliance.BLUE;
             }
             telemetry.addData("press x to add 1 sec to delay",delaySeconds);
             telemetry.addData("press y to remove 1 sec from delay",delaySeconds);
