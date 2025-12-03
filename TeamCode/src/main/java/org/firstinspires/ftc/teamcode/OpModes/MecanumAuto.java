@@ -29,6 +29,8 @@
 
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import android.provider.ContactsContract;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -40,6 +42,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.AprilTag;
+import org.firstinspires.ftc.teamcode.Datalogger;
 import org.firstinspires.ftc.teamcode.Shooter;
 
 @Autonomous(name="Mecanum Auto", group="Linear OpMode")
@@ -70,6 +73,9 @@ public class MecanumAuto extends LinearOpMode {
     boolean smallFootprint = false;
 
     IMU imu;
+
+    Datalog datalog = new Datalog("MecanumAutoLog");
+    boolean logData = true;
 
     @Override
     public void runOpMode() {
@@ -420,7 +426,59 @@ public class MecanumAuto extends LinearOpMode {
             backLeftDrive.setPower(-turnPower);
             frontRightDrive.setPower(turnPower);
             backRightDrive.setPower(turnPower);
+
+            if (logData) {
+                datalog.runTime.set(runtime.seconds());
+                datalog.bearing.set(aprilTags.getBearing());
+                datalog.targetAngle.set(targetAngle);
+                datalog.currentAngle.set(currentAngle);
+                datalog.error.set(error);
+                datalog.turnPower.set(turnPower);
+                datalog.IMUAngle.set(imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
+            }
         }
         stopMotors();
+    }
+
+    public static class Datalog {
+
+        /*
+         * The underlying datalogger object - it cares only about an array of loggable fields
+         */
+        private final Datalogger datalogger;
+        /*
+         * These are all of the fields that we want in the datalog.
+         * Note: Order here is NOT important. The order is important
+         *       in the setFields() call below
+         */
+        public Datalogger.GenericField runTime = new Datalogger.GenericField("runTime");
+        public Datalogger.GenericField bearing = new Datalogger.GenericField("bearing");
+        public Datalogger.GenericField currentAngle = new Datalogger.GenericField("currentAngle");
+        public Datalogger.GenericField targetAngle = new Datalogger.GenericField("targetAngle");
+        public Datalogger.GenericField error = new Datalogger.GenericField("error");
+        public Datalogger.GenericField IMUAngle = new Datalogger.GenericField("IMUAngle");
+        public Datalogger.GenericField turnPower = new Datalogger.GenericField("turnPower");
+
+
+        public Datalog(String name) {
+            datalogger = new Datalogger.Builder()
+                    .setFilename(name)
+                    .setAutoTimestamp(Datalogger.AutoTimestamp.DECIMAL_SECONDS)
+                    /*
+                     * Tell it about the fields we care to log.
+                     * Note: Order *IS* important here! The order in which we list the
+                     *       fields is the order in which they will appear in the log.
+                     */
+                    .setFields(
+                        runTime, bearing, currentAngle, targetAngle, error, IMUAngle, turnPower
+                    )
+                    .build();
+        }
+
+        // Tell the datalogger to gather the values of the fields
+        // and write a new line in the log.
+        public void writeLine() {
+            datalogger.writeLine();
+        }
     }
 }
