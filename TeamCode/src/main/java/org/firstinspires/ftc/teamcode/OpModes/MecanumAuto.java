@@ -42,6 +42,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.AprilTag;
+import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Datalogger;
 import org.firstinspires.ftc.teamcode.Shooter;
 
@@ -135,11 +136,13 @@ public class MecanumAuto extends LinearOpMode {
             telemetry.addData("Obelisk Range ", obDist);
             if (obBearing > 0) {
                 telemetry.addData("SIDE ", "RED");
+                Blackboard.alliance = Blackboard.Alliance.RED;
                 redSide = true;
                 blueSide = false;
             }
             if (obBearing < 0 && obBearing > -30) {
                 telemetry.addData("SIDE ", "BLUE");
+                Blackboard.alliance = Blackboard.Alliance.RED;
                 redSide = false;
                 blueSide = true;
             }
