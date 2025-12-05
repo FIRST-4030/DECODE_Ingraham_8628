@@ -228,11 +228,11 @@ public class MecanumAuto extends LinearOpMode {
 
         rotateTo(90 * sideInt);
 
-        imu.resetYaw();
+//        imu.resetYaw();
 
         collector.setPower(collectorSpeed);
 
-        moveForward(-0.25, 2700);
+        moveForward(-0.25, 3000);
 
         collectorTime.reset();
         while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
@@ -241,7 +241,7 @@ public class MecanumAuto extends LinearOpMode {
 
         moveForward(0.25, 2250);
 
-        rotateTo(-115 * sideInt);
+        rotateTo(0);
 
         moveForward(-0.25, 1500);
 
@@ -414,7 +414,12 @@ public class MecanumAuto extends LinearOpMode {
 
             if (Math.abs(error) < tolerance) break;
 
-            turnPower = Kp * error + Kd * derivative;
+            float turnPowerFactor = 1;
+            if (Math.abs(error) < 10) {
+                turnPowerFactor = 0.5f;
+            }
+
+            turnPower = Kp * error + Kd * derivative * turnPowerFactor;
 
             // Enforce minimum power
             if (Math.abs(turnPower) < minPower) {
