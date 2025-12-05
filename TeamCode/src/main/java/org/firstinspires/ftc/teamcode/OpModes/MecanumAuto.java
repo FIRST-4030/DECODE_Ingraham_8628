@@ -210,9 +210,11 @@ public class MecanumAuto extends LinearOpMode {
             rotateTo (aprilTags.getBearing() - 3);
         }
 
-        shootShooter();
-        shootShooter();
-        shootShooter();
+        double velocity = 34.0;
+
+        shootShooter(velocity);
+        shootShooter(velocity);
+        shootShooter(velocity);
         stopShooter();
 
         rotateTo(0);
@@ -243,24 +245,26 @@ public class MecanumAuto extends LinearOpMode {
         if (redSide) { rotateTo(aprilTags.getBearing() - 7); }
         else { rotateTo(aprilTags.getBearing() + 2); }
 
-        shootShooter();
-        shootShooter();
-        shootShooter();
+        shootShooter(velocity);
+        shootShooter(velocity);
+        shootShooter(velocity);
         stopShooter();
 
         moveForward(0.5, 800);
     }
 
     private void runFromClose() {
+        double velocity = 29.0;
+
         sideInt = -sideInt;
         rotateTo(-130 * sideInt);
         moveForward(-0.5, 1550);
 
         imu.resetYaw();
 
-        shootShooter(); //29.0
-        shootShooter();
-        shootShooter();
+        shootShooter(velocity);
+        shootShooter(velocity);
+        shootShooter(velocity);
         stopShooter();
 
         rotateTo(265 * sideInt);
@@ -301,9 +305,9 @@ public class MecanumAuto extends LinearOpMode {
         if (redSide) { rotateTo(aprilTags.getBearing() - 2); }
         else { rotateTo(aprilTags.getBearing() - 3); }
 
-        shootShooter();
-        shootShooter();
-        shootShooter();
+        shootShooter(velocity);
+        shootShooter(velocity);
+        shootShooter(velocity);
         stopShooter();
 
         rotateTo(0);
@@ -331,8 +335,9 @@ public class MecanumAuto extends LinearOpMode {
         backRightDrive.setPower(0);
     }
 
-    public void shootShooter() {
-        shooter.targetVelocity = (aprilTags.distanceToGoal + 202.17) / 8.92124;
+    public void shootShooter(double velocity) {
+        // shooter.targetVelocity = (aprilTags.distanceToGoal + 202.17) / 8.92124;
+        shooter.targetVelocity = velocity;
         ElapsedTime shooterTimer = new ElapsedTime();
 
         while (!shooter.atSpeed()) {
