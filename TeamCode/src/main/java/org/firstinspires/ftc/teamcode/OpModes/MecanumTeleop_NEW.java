@@ -184,9 +184,17 @@ public class MecanumTeleop_NEW extends OpMode {
         }
 
         if (gamepad1.yWasPressed()) {
+            shooter.targetVelocity = 0;
+            shooterOn = false;
+            collector.setPower(0.0);
+            collectorOn = false;
             liftServo.setPosition(1.0);
         }
         if (gamepad1.aWasPressed()) {
+            shooter.targetVelocity = 0;
+            shooterOn = false;
+            collector.setPower(0.0);
+            collectorOn = false;
             liftServo.setPosition(0.0);
         }
 
