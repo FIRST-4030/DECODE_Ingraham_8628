@@ -206,6 +206,9 @@ public class MecanumAuto extends LinearOpMode {
     }
 
     private void runFromFar() {
+        imu.resetYaw();
+        moveForward(0.5, 250);
+
         if (redSide) {
             rotateTo(aprilTags.getBearing() - 2);
         }
@@ -224,7 +227,7 @@ public class MecanumAuto extends LinearOpMode {
 
         imu.resetYaw();
 
-        moveForward(1.0, 400);
+        moveForward(0.5, 450);
 
         rotateTo(90 * sideInt);
 
@@ -232,7 +235,7 @@ public class MecanumAuto extends LinearOpMode {
 
         collector.setPower(collectorSpeed);
 
-        moveForward(-0.25, 3000);
+        moveForward(-0.2, 4375);
 
         collectorTime.reset();
         while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
@@ -246,7 +249,7 @@ public class MecanumAuto extends LinearOpMode {
         moveForward(-0.25, 1500);
 
         if (redSide) { rotateTo(aprilTags.getBearing() - 7); }
-        else { rotateTo(aprilTags.getBearing() + 2); }
+        else { rotateTo(aprilTags.getBearing() - 5); }
 
         shootShooter(velocity);
         shootShooter(velocity);
@@ -448,6 +451,9 @@ public class MecanumAuto extends LinearOpMode {
                 datalog.error.set(error);
                 datalog.turnPower.set(turnPower);
                 datalog.IMUAngle.set(imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
+                datalog.turnPowerFactor.set(turnPowerFactor);
+
+                datalog.writeLine();
             }
         }
         stopMotors();
@@ -471,7 +477,7 @@ public class MecanumAuto extends LinearOpMode {
         public Datalogger.GenericField error = new Datalogger.GenericField("error");
         public Datalogger.GenericField IMUAngle = new Datalogger.GenericField("IMUAngle");
         public Datalogger.GenericField turnPower = new Datalogger.GenericField("turnPower");
-
+        public Datalogger.GenericField turnPowerFactor = new Datalogger.GenericField("turnPowerFactor");
 
         public Datalog(String name) {
             datalogger = new Datalogger.Builder()
@@ -483,7 +489,7 @@ public class MecanumAuto extends LinearOpMode {
                      *       fields is the order in which they will appear in the log.
                      */
                     .setFields(
-                        runTime, bearing, currentAngle, targetAngle, error, IMUAngle, turnPower
+                        runTime, bearing, currentAngle, targetAngle, error, IMUAngle, turnPower, turnPowerFactor
                     )
                     .build();
         }
