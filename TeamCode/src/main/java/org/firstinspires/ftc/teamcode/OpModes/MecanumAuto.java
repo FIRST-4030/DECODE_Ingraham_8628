@@ -136,13 +136,23 @@ public class MecanumAuto extends LinearOpMode {
             telemetry.addData("Obelisk Range ", obDist);
             if (obBearing > 0) {
                 telemetry.addData("SIDE ", "RED");
-                Blackboard.alliance = Blackboard.Alliance.RED;
+                if (aprilTags.getObeliskRange() > 100) {
+                    Blackboard.alliance = Blackboard.Alliance.RED;
+                }
+                else {
+                    Blackboard.alliance = Blackboard.Alliance.BLUE;
+                }
                 redSide = true;
                 blueSide = false;
             }
             if (obBearing < 0 && obBearing > -30) {
                 telemetry.addData("SIDE ", "BLUE");
-                Blackboard.alliance = Blackboard.Alliance.RED;
+                if (aprilTags.getObeliskRange() > 100) {
+                    Blackboard.alliance = Blackboard.Alliance.BLUE;
+                }
+                else {
+                    Blackboard.alliance = Blackboard.Alliance.RED;
+                }
                 redSide = false;
                 blueSide = true;
             }
@@ -155,7 +165,7 @@ public class MecanumAuto extends LinearOpMode {
             telemetry.addLine();
             telemetry.addLine();
             telemetry.addData("press a/b to toggle limited auto | Limited Auto", smallFootprint);
-
+            telemetry.addData("Alliance", Blackboard.getAllianceAsString());
 
             if (gamepad1.xWasPressed()) {
                 delaySeconds++;
@@ -262,23 +272,21 @@ public class MecanumAuto extends LinearOpMode {
     private void runFromClose() {
         double velocity = 29.0;
 
+        imu.resetYaw();
+
         sideInt = -sideInt;
         rotateTo(-130 * sideInt);
         moveForward(-0.5, 1550);
-
-        imu.resetYaw();
 
         shootShooter(velocity);
         shootShooter(velocity);
         shootShooter(velocity);
         stopShooter();
 
-        rotateTo(265 * sideInt);
+        rotateTo(135 * sideInt);
         moveForward(0.5, 570);
 
-        imu.resetYaw();
-
-        rotateTo(-130 * sideInt);
+        rotateTo(0);
 
         collector.setPower(collectorSpeed);
 
