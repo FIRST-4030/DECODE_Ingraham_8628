@@ -28,7 +28,6 @@
  */
 package org.firstinspires.ftc.teamcode.OpModes;
 
-
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -138,6 +137,8 @@ public class MecanumTeleop_NEW extends OpMode {
 
         telemetry.addData("Pad 1, Left Bumper", "Slow Drive");
         telemetry.addData("Pad 1, Right Bumper", "Very Slow Drive");
+        telemetry.addData("Pad 1, A", "Raise Robot");
+        telemetry.addData("Pad 1, Y", "Lower Robot");
         telemetry.addData("--", "--");
         telemetry.addData("Pad 2, Left Bumper", "Shoot");
         telemetry.addData("Pad 2, B", "Collector On/Off");

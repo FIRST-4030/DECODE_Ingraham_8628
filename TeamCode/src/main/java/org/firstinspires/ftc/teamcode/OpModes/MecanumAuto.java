@@ -29,8 +29,6 @@
 
 package org.firstinspires.ftc.teamcode.OpModes;
 
-import android.provider.ContactsContract;
-
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -156,15 +154,15 @@ public class MecanumAuto extends LinearOpMode {
                 redSide = false;
                 blueSide = true;
             }
-            telemetry.addData("press x to add 1 sec to delay",delaySeconds);
-            telemetry.addData("press y to remove 1 sec from delay",delaySeconds);
+            telemetry.addData("Press X to add 1 sec to delay",delaySeconds);
+            telemetry.addData("Press Y to remove 1 sec from delay",delaySeconds);
             telemetry.addData("Range to Obelisk AprilTag", aprilTags.getObeliskRange());
 
             if (aprilTags.getObeliskRange() > 100) telemetry.addData("Field Position", "Far");
             if (aprilTags.getObeliskRange() < 100) telemetry.addData("Field Position", "Close");
             telemetry.addLine();
             telemetry.addLine();
-            telemetry.addData("press a/b to toggle limited auto | Limited Auto", smallFootprint);
+            telemetry.addData("Press A/B to toggle limited auto | Limited Auto", smallFootprint);
             telemetry.addData("Alliance", Blackboard.getAllianceAsString());
 
             if (gamepad1.xWasPressed()) {
