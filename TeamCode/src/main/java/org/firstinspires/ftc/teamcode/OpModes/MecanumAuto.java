@@ -217,56 +217,94 @@ public class MecanumAuto extends LinearOpMode {
 
     private void runFromFar() {
         imu.resetYaw();
-        moveForward(0.5, 250);
-
-        if (redSide) {
-            rotateTo(aprilTags.getBearing() - 2);
-        }
-        else {
-            rotateTo (aprilTags.getBearing() - 3);
-        }
-
         double velocity = 34.0;
 
-        shootShooter(velocity);
-        shootShooter(velocity);
-        shootShooter(velocity);
-        stopShooter();
+        if (redSide) {
+            moveForward(0.5, 75);
 
-        rotateTo(0);
+            rotateTo(aprilTags.getBearing() + 5);
+            shootShooter(velocity);
+            shootShooter(velocity);
+            shootShooter(velocity);
+            stopShooter();
 
-        imu.resetYaw();
+            rotateTo(10);
 
-        moveForward(0.5, 450);
+            imu.resetYaw();
 
-        rotateTo(90 * sideInt);
+            moveForward(0.5, 715);
 
-//        imu.resetYaw();
+            rotateTo(80 * sideInt);
 
-        collector.setPower(collectorSpeed);
+            collector.setPower(collectorSpeed);
 
-        moveForward(-0.2, 4375);
+            moveForward(-0.2, 4000);
 
-        collectorTime.reset();
-        while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
+            collectorTime.reset();
+            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
 
-        collector.setPower(0);
+            collector.setPower(0);
 
-        moveForward(0.25, 2250);
+            moveForward(0.25, 2750);
 
-        rotateTo(0);
+            rotateTo(0);
 
-        moveForward(-0.25, 1500);
+            moveForward(-0.25, 1500);
 
-        if (redSide) { rotateTo(aprilTags.getBearing() - 7); }
-        else { rotateTo(aprilTags.getBearing() - 5); }
+            rotateTo(-10);
 
-        shootShooter(velocity);
-        shootShooter(velocity);
-        shootShooter(velocity);
-        stopShooter();
+            rotateTo(aprilTags.getBearing() - 8);
 
-        moveForward(0.5, 800);
+            shootShooter(velocity);
+            shootShooter(velocity);
+            shootShooter(velocity);
+            stopShooter();
+
+            moveForward(0.5, 800);
+        }
+
+        else {
+            moveForward(0.5, 250);
+
+            rotateTo (aprilTags.getBearing() - 3);
+
+            shootShooter(velocity);
+            shootShooter(velocity);
+            shootShooter(velocity);
+            stopShooter();
+
+            rotateTo(0);
+
+            imu.resetYaw();
+
+            moveForward(0.5, 450);
+
+            rotateTo(90 * sideInt);
+
+            collector.setPower(collectorSpeed);
+
+            moveForward(-0.2, 4375);
+
+            collectorTime.reset();
+            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
+
+            collector.setPower(0);
+
+            moveForward(0.25, 2250);
+
+            rotateTo(0);
+
+            moveForward(-0.25, 1500);
+
+            rotateTo(aprilTags.getBearing() - 5);
+
+            shootShooter(velocity);
+            shootShooter(velocity);
+            shootShooter(velocity);
+            stopShooter();
+
+            moveForward(0.5, 800);
+        }
     }
 
     private void runFromClose() {
