@@ -188,14 +188,12 @@ public class MecanumAuto extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
-            //Want to purge sideInt b/c of new auto system
-            //blueSide can additionally be removed, it does not have any function
-            if (redSide) {
-                sideInt = 1;
-            }
-            else {
-                sideInt = -1;
-            }
+//            if (redSide) {
+//                sideInt = 1;
+//            }
+//            else {
+//                sideInt = -1;
+//            }
 
             sleep(delaySeconds * 1000);
 
@@ -219,7 +217,8 @@ public class MecanumAuto extends LinearOpMode {
         imu.resetYaw();
         double velocity = 34.0;
 
-        if (redSide) { //sideInt = 1
+        //if (redSide) {
+        if (Blackboard.alliance == Blackboard.Alliance.RED) {
             moveForward(0.5, 75);
 
             rotateTo(aprilTags.getBearing() + 5);
@@ -234,7 +233,7 @@ public class MecanumAuto extends LinearOpMode {
 
             moveForward(0.5, 915);
 
-            rotateTo(80); //* sideInt
+            rotateTo(80);
 
             collector.setPower(collectorSpeed);
 
@@ -263,7 +262,7 @@ public class MecanumAuto extends LinearOpMode {
             moveForward(0.5, 800);
         }
 
-        else { //sideInt = -1
+        else {
             moveForward(0.5, 250);
 
             rotateTo (aprilTags.getBearing() - 3);
@@ -279,7 +278,7 @@ public class MecanumAuto extends LinearOpMode {
 
             moveForward(0.5, 450);
 
-            rotateTo(-90); //- * sideInt
+            rotateTo(-90);
 
             collector.setPower(collectorSpeed);
 
@@ -310,10 +309,10 @@ public class MecanumAuto extends LinearOpMode {
     private void runFromClose() {
         double velocity = 29.0;
         imu.resetYaw();
-        sideInt = -sideInt;
+        //sideInt = -sideInt;
 
-        if (redSide) { //sideInt = -1 //BLUE SIDE
-            rotateTo(130); // - * sideInt
+        if (Blackboard.alliance == Blackboard.Alliance.BLUE) {
+            rotateTo(130);
             moveForward(-0.5, 1550);
 
             shootShooter(velocity);
@@ -321,7 +320,7 @@ public class MecanumAuto extends LinearOpMode {
             shootShooter(velocity);
             stopShooter();
 
-            rotateTo(-135); // - * sideInt
+            rotateTo(-135);
             moveForward(0.5, 570);
 
             rotateTo(0);
@@ -338,8 +337,8 @@ public class MecanumAuto extends LinearOpMode {
             imu.resetYaw();
         }
 
-        else { //sideInt = 1
-            rotateTo(-130); //* sideInt
+        else {
+            rotateTo(-130);
             moveForward(-0.5, 1550);
 
             shootShooter(velocity);
@@ -347,7 +346,7 @@ public class MecanumAuto extends LinearOpMode {
             shootShooter(velocity);
             stopShooter();
 
-            rotateTo(135); //* sideInt
+            rotateTo(135);
             moveForward(0.5, 570);
 
             rotateTo(0);
@@ -363,31 +362,6 @@ public class MecanumAuto extends LinearOpMode {
 
             imu.resetYaw();
         }
-
-//        rotateTo(-130 * sideInt);
-//        moveForward(-0.5, 1550);
-//
-//        shootShooter(velocity);
-//        shootShooter(velocity);
-//        shootShooter(velocity);
-//        stopShooter();
-//
-//        rotateTo(135 * sideInt);
-//        moveForward(0.5, 570);
-//
-//        rotateTo(0);
-//
-//        collector.setPower(collectorSpeed);
-//
-//        moveForward(-0.2, 2850);
-//
-//        collectorTime.reset();
-//        while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
-//
-//        collector.setPower(0);
-//
-//        imu.resetYaw();
-//
 
         //unused auto bits
 //        moveForward(0.25, 2550);
@@ -407,8 +381,11 @@ public class MecanumAuto extends LinearOpMode {
     private void runSmallFootprint() {
         double velocity = 34.0;
 
-        if (redSide) { rotateTo(aprilTags.getBearing() + 5); }
-        else { rotateTo(aprilTags.getBearing() - 3); }
+        if (Blackboard.alliance == Blackboard.Alliance.RED) {
+            rotateTo(aprilTags.getBearing() + 5);
+        } else {
+            rotateTo(aprilTags.getBearing() - 3);
+        }
 
         shootShooter(velocity);
         shootShooter(velocity);
