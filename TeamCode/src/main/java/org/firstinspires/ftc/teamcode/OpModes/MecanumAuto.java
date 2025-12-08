@@ -130,7 +130,7 @@ public class MecanumAuto extends LinearOpMode {
             obBearing = aprilTags.getObeliskBearing();
             obDist = aprilTags.getObeliskRange();
 
-            telemetry.addData("Obelisk Bearing ", obBearing);
+            telemetry.addData("!!! Obelisk Bearing ", obBearing);
             telemetry.addData("Obelisk Range ", obDist);
             if (obBearing > 0) {
                 telemetry.addData("SIDE ", "RED");
@@ -162,7 +162,7 @@ public class MecanumAuto extends LinearOpMode {
             if (aprilTags.getObeliskRange() < 100) telemetry.addData("Field Position", "Close");
             telemetry.addLine();
             telemetry.addLine();
-            telemetry.addData("Press A/B to toggle limited auto | Limited Auto", smallFootprint);
+            telemetry.addData("Press Right/Left bumper to toggle limited auto | Limited Auto", smallFootprint);
             telemetry.addData("Alliance", Blackboard.getAllianceAsString());
 
             if (gamepad1.xWasPressed()) {
@@ -172,10 +172,10 @@ public class MecanumAuto extends LinearOpMode {
                 delaySeconds--;
             }
 
-            if (gamepad1.aWasReleased() && !smallFootprint) {
+            if (gamepad1.rightBumperWasReleased() && !smallFootprint) {
                 smallFootprint = true;
             }
-            if (gamepad1.bWasReleased() && smallFootprint) {
+            if (gamepad1.leftBumperWasReleased() && smallFootprint) {
                 smallFootprint = false;
             }
 
@@ -188,6 +188,8 @@ public class MecanumAuto extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
+            //Want to purge sideInt b/c of new auto system
+            //blueSide can additionally be removed, it does not have any function
             if (redSide) {
                 sideInt = 1;
             }
@@ -217,7 +219,7 @@ public class MecanumAuto extends LinearOpMode {
         imu.resetYaw();
         double velocity = 34.0;
 
-        if (redSide) {
+        if (redSide) { //sideInt = 1
             moveForward(0.5, 75);
 
             rotateTo(aprilTags.getBearing() + 5);
@@ -230,9 +232,9 @@ public class MecanumAuto extends LinearOpMode {
 
             imu.resetYaw();
 
-            moveForward(0.5, 715);
+            moveForward(0.5, 915);
 
-            rotateTo(80 * sideInt);
+            rotateTo(80); //* sideInt
 
             collector.setPower(collectorSpeed);
 
@@ -261,7 +263,7 @@ public class MecanumAuto extends LinearOpMode {
             moveForward(0.5, 800);
         }
 
-        else {
+        else { //sideInt = -1
             moveForward(0.5, 250);
 
             rotateTo (aprilTags.getBearing() - 3);
@@ -277,7 +279,7 @@ public class MecanumAuto extends LinearOpMode {
 
             moveForward(0.5, 450);
 
-            rotateTo(90 * sideInt);
+            rotateTo(-90); //- * sideInt
 
             collector.setPower(collectorSpeed);
 
@@ -307,34 +309,87 @@ public class MecanumAuto extends LinearOpMode {
 
     private void runFromClose() {
         double velocity = 29.0;
-
         imu.resetYaw();
-
         sideInt = -sideInt;
-        rotateTo(-130 * sideInt);
-        moveForward(-0.5, 1550);
 
-        shootShooter(velocity);
-        shootShooter(velocity);
-        shootShooter(velocity);
-        stopShooter();
+        if (redSide) { //sideInt = -1 //BLUE SIDE
+            rotateTo(130); // - * sideInt
+            moveForward(-0.5, 1550);
 
-        rotateTo(135 * sideInt);
-        moveForward(0.5, 570);
+            shootShooter(velocity);
+            shootShooter(velocity);
+            shootShooter(velocity);
+            stopShooter();
 
-        rotateTo(0);
+            rotateTo(-135); // - * sideInt
+            moveForward(0.5, 570);
 
-        collector.setPower(collectorSpeed);
+            rotateTo(0);
 
-        moveForward(-0.2, 2850);
+            collector.setPower(collectorSpeed);
 
-        collectorTime.reset();
-        while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
+            moveForward(-0.2, 2850);
 
-        collector.setPower(0);
+            collectorTime.reset();
+            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
 
-        imu.resetYaw();
+            collector.setPower(0);
 
+            imu.resetYaw();
+        }
+
+        else { //sideInt = 1
+            rotateTo(-130); //* sideInt
+            moveForward(-0.5, 1550);
+
+            shootShooter(velocity);
+            shootShooter(velocity);
+            shootShooter(velocity);
+            stopShooter();
+
+            rotateTo(135); //* sideInt
+            moveForward(0.5, 570);
+
+            rotateTo(0);
+
+            collector.setPower(collectorSpeed);
+
+            moveForward(-0.2, 2850);
+
+            collectorTime.reset();
+            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
+
+            collector.setPower(0);
+
+            imu.resetYaw();
+        }
+
+//        rotateTo(-130 * sideInt);
+//        moveForward(-0.5, 1550);
+//
+//        shootShooter(velocity);
+//        shootShooter(velocity);
+//        shootShooter(velocity);
+//        stopShooter();
+//
+//        rotateTo(135 * sideInt);
+//        moveForward(0.5, 570);
+//
+//        rotateTo(0);
+//
+//        collector.setPower(collectorSpeed);
+//
+//        moveForward(-0.2, 2850);
+//
+//        collectorTime.reset();
+//        while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
+//
+//        collector.setPower(0);
+//
+//        imu.resetYaw();
+//
+
+        //unused auto bits
 //        moveForward(0.25, 2550);
 //
 //        rotateTo(39);
@@ -352,7 +407,7 @@ public class MecanumAuto extends LinearOpMode {
     private void runSmallFootprint() {
         double velocity = 34.0;
 
-        if (redSide) { rotateTo(aprilTags.getBearing() - 2); }
+        if (redSide) { rotateTo(aprilTags.getBearing() + 5); }
         else { rotateTo(aprilTags.getBearing() - 3); }
 
         shootShooter(velocity);
@@ -362,7 +417,7 @@ public class MecanumAuto extends LinearOpMode {
 
         rotateTo(0);
 
-        moveForward(0.5, 500);
+        moveForward(0.5, 700);
     }
 
     private void moveForward(double power, double mseconds){
