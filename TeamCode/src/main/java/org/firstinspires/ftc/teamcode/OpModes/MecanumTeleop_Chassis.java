@@ -42,14 +42,10 @@ import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.Chassis;
 
-@TeleOp(name = "MecanumTeleop - NEW", group = "Robot")
+@TeleOp(name = "MecanumTeleop - Chassis", group = "Robot")
 public class MecanumTeleop_Chassis extends OpMode {
 
-    Chassis chassis = new Chassis(hardwareMap);
-    DcMotor frontLeftDrive;
-    DcMotor frontRightDrive;
-    DcMotor backLeftDrive;
-    DcMotor backRightDrive;
+    Chassis chassis;
     DcMotorEx collector;
     Shooter shooter;
     Servo shooterHinge;
@@ -68,10 +64,7 @@ public class MecanumTeleop_Chassis extends OpMode {
     @Override
     public void init() {
 
-        frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        chassis = new Chassis(hardwareMap);
 
         shooter=new Shooter(hardwareMap,"shooter",true);
 
