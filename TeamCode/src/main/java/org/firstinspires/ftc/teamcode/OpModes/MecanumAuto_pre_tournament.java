@@ -31,6 +31,7 @@ package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -44,8 +45,9 @@ import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Datalogger;
 import org.firstinspires.ftc.teamcode.Shooter;
 
-@Autonomous(name="Mecanum Auto", group="Linear OpMode")
-public class MecanumAuto extends LinearOpMode {
+@Disabled
+@Autonomous(name="Mecanum Auto - Pre-tournament", group="Linear OpMode")
+public class MecanumAuto_pre_tournament extends LinearOpMode {
 
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
