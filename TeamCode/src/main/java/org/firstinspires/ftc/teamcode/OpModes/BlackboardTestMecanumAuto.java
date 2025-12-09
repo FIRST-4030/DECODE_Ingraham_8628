@@ -52,7 +52,7 @@ import org.firstinspires.ftc.teamcode.Blackboard;
  * This file is built off of the above, to test implementation of the custom blackboard class
  */
 @Disabled
-@Autonomous(name="Test Mecanum Auto Edson", group="Linear OpMode")
+@Autonomous(name="Blackboard Test Mecanum Auto", group="Linear OpMode")
 public class BlackboardTestMecanumAuto extends LinearOpMode {
     @Override
     public void runOpMode() {

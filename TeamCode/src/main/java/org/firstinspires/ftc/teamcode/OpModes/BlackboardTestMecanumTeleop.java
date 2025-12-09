@@ -49,7 +49,7 @@ import org.firstinspires.ftc.teamcode.Blackboard;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 @Disabled
-@TeleOp(name="Test Mecanum Teleop Edson", group="Iterative OpMode")
+@TeleOp(name="Blackboard Test Mecanum Teleop", group="Iterative OpMode")
 public class BlackboardTestMecanumTeleop extends OpMode
 {
     @Override
