@@ -4,11 +4,14 @@ import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.BuildConfig;
 import org.firstinspires.ftc.teamcode.Chassis;
+import org.firstinspires.ftc.teamcode.Datalogger;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 /*
@@ -27,8 +30,15 @@ public class PedroPathingDemo extends LinearOpMode {
 
     Follower follower;
 
+    Datalog datalog;
+
+    String compiledDate = BuildConfig.COMPILATION_DATE;
+
+    int heightX = 10, widthY = 30;
+    boolean logData = false;
+
     // The order of values listed in Options is irrelevant
-    enum Options { STOP, MOVE_LEFT, MOVE_FORWARD, FALL_BACK, MOVE_RIGHT }
+    enum Options { STOP, MOVE_LEFT, MOVE_FORWARD, MOVE_BACK, MOVE_RIGHT }
     Options option;
 
     boolean doAutonomous = false;
@@ -37,30 +47,29 @@ public class PedroPathingDemo extends LinearOpMode {
      *       x and y axes, with (0, 0) defined as the bottom-left corner of the field.
      *
      * The following code is an attempt to show how to define a set of paths to
-     * move the root in a square. As of the writing of this opMode I do not have
-     * a tuned robot to see if it works.
+     * move in a rectangle.
      *
-     * Start 20" from the left-hand corner of the field and against the audience wall
+     * Start at lower left-hand corner (0,0)
      */
-    private final Pose startPose = new Pose(0, 20, Math.toRadians(0));
+    private final Pose startPose = new Pose(0, 0, Math.toRadians(0));
     /*
-     * Move forward 20"
+     * Move to upper left-hand corner (heightX,0)
      */
-    private final Pose forwardPose = new Pose(20, 20, Math.toRadians(0));
+    private final Pose forwardPose = new Pose(heightX, 0, Math.toRadians(0));
     /*
-     * Move right 20" and rotate the robot so that it is facing right
+     * Move to upper right-hand corner (heightX, widthY) and rotate the robot so that it is facing right
      */
-    private final Pose rightPose = new Pose(20, -90, Math.toRadians(-90));
+    private final Pose rightPose = new Pose(heightX, -widthY, Math.toRadians(0));
     /*
-     * Rotate the robot another 90 degrees and drive 15"
+     * Move to lower right-hand corner (0, widthY) and rotate the robot so that is facing backwards
      */
-    private final Pose backPose = new Pose(20, 5, Math.toRadians(-180));
-    /*
-     * Rotate the robot so that it is forward facing and return back to its start
-     */
-    private final Pose returnHomePose = new Pose(0, 20, Math.toRadians(0));
+    private final Pose backPose = new Pose(0, -widthY, Math.toRadians(0));
+//    /*
+//     * Move back to the origin (0,0) and rotate the robot so that is facing forward
+//     */
+//    private final Pose leftPose = new Pose(0, 0, Math.toRadians(0));
 
-    PathChain moveLeft, moveForward, fallBack, moveRight, returnHome;
+    PathChain moveLeft, moveForward, fallBack, moveRight;
 
     @Override
     public void runOpMode() {
@@ -69,16 +78,33 @@ public class PedroPathingDemo extends LinearOpMode {
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);   //set your starting pose
+        follower.setMaxPower(0.5);
 
         buildPaths();
-
-        runtime.reset();
 
         doAutonomous = true;
         option = Options.MOVE_FORWARD;   // Define the first action in the path
 
+        do {
+            telemetry.addLine(String.format("Compiled on: %s",compiledDate));
+            telemetry.addLine(String.format("Log Data (Y=Yes, A=No): %b",logData));
+            telemetry.update();
+
+            if (gamepad1.yWasReleased()) {
+                logData = true;
+            } else if (gamepad1.aWasReleased()) {
+                logData = false;
+            }
+        } while (opModeInInit());
+
+        // Initialize the datalog
+        if (logData) {
+            datalog = new Datalog("PedroPathingDemo");
+        }
+
+        runtime.reset();
+
         while (opModeIsActive()) {
-            follower.update();
 
             if (doAutonomous) {   //Step thru each path until they are exhausted
                 autonomousPaths();
@@ -86,7 +112,7 @@ public class PedroPathingDemo extends LinearOpMode {
         }
     }
 
-    public void buildPaths() {
+    void buildPaths() {
 
         moveForward = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, forwardPose))
@@ -103,19 +129,21 @@ public class PedroPathingDemo extends LinearOpMode {
                 .setLinearHeadingInterpolation(forwardPose.getHeading(), rightPose.getHeading())
                 .build();
 
-        returnHome = follower.pathBuilder()
-                .addPath(new BezierLine(rightPose, returnHomePose))
+        moveLeft = follower.pathBuilder()
+                .addPath(new BezierLine(rightPose, startPose))
                 .setLinearHeadingInterpolation(rightPose.getHeading(), startPose.getHeading())
                 .build();
     }
 
     void autonomousPaths() {
+        follower.update();
+
         switch (option) {
             case MOVE_LEFT:
                 if (!follower.isBusy()) {
                     follower.followPath(moveLeft,true);
+                    option = Options.STOP;
                 }
-                option = Options.STOP;
                 break;
             case MOVE_FORWARD:
                 if (!follower.isBusy()) {
@@ -123,7 +151,7 @@ public class PedroPathingDemo extends LinearOpMode {
                     option = Options.MOVE_RIGHT;
                 }
                 break;
-            case FALL_BACK:
+            case MOVE_BACK:
                 if (!follower.isBusy()) {
                     follower.followPath(fallBack,true);
                     option = Options.MOVE_LEFT;
@@ -132,7 +160,7 @@ public class PedroPathingDemo extends LinearOpMode {
             case MOVE_RIGHT:
                 if (!follower.isBusy()) {
                     follower.followPath(moveRight,true);
-                    option = Options.FALL_BACK;
+                    option = Options.MOVE_BACK;
                 }
                 break;
             case STOP:
@@ -140,6 +168,49 @@ public class PedroPathingDemo extends LinearOpMode {
                     doAutonomous = false;
                 }
                 break;
+        }
+        if (logData) { logOneSample(follower.getPose()); }
+    }
+
+    private void logOneSample(Pose pose) {
+        datalog.xPose.set(pose.getX());
+        datalog.yPose.set(pose.getY());
+        datalog.heading.set(pose.getHeading());
+        datalog.writeLine();
+    }
+
+    public static class Datalog {
+        /*
+         * The underlying datalogger object - it cares only about an array of loggable fields
+         */
+        private final Datalogger datalogger;
+        /*
+         * These are all of the fields that we want in the datalog.
+         * Note: Order here is NOT important. The order is important
+         *       in the setFields() call below
+         */
+        public Datalogger.GenericField runTime = new Datalogger.GenericField("runTime");
+        public Datalogger.GenericField xPose   = new Datalogger.GenericField("X");
+        public Datalogger.GenericField yPose   = new Datalogger.GenericField("Y");
+        public Datalogger.GenericField heading = new Datalogger.GenericField("Heading");
+
+        public Datalog(String name) {
+            datalogger = new Datalogger.Builder()
+                    .setFilename(name)
+                    .setAutoTimestamp(Datalogger.AutoTimestamp.DECIMAL_SECONDS)
+                    /*
+                     * Tell it about the fields we care to log.
+                     * Note: Order *IS* important here! The order in which we list the
+                     *       fields is the order in which they will appear in the log.
+                     */
+                    .setFields( runTime, xPose, yPose, heading )
+                    .build();
+        }
+
+        // Tell the datalogger to gather the values of the fields
+        // and write a new line in the log.
+        public void writeLine() {
+            datalogger.writeLine();
         }
     }
 }
