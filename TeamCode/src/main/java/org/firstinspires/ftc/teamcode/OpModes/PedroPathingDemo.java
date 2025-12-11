@@ -69,7 +69,7 @@ public class PedroPathingDemo extends LinearOpMode {
 //     */
 //    private final Pose leftPose = new Pose(0, 0, Math.toRadians(0));
 
-    PathChain moveLeft, moveForward, fallBack, moveRight;
+    PathChain moveLeft, moveForward, moveBack, moveRight;
 
     @Override
     public void runOpMode() {
@@ -119,7 +119,7 @@ public class PedroPathingDemo extends LinearOpMode {
                 .setLinearHeadingInterpolation(startPose.getHeading(), forwardPose.getHeading())
                 .build();
 
-        fallBack = follower.pathBuilder()
+        moveBack = follower.pathBuilder()
                 .addPath(new BezierLine(rightPose, backPose))
                 .setLinearHeadingInterpolation(rightPose.getHeading(), backPose.getHeading())
                 .build();
@@ -153,7 +153,7 @@ public class PedroPathingDemo extends LinearOpMode {
                 break;
             case MOVE_BACK:
                 if (!follower.isBusy()) {
-                    follower.followPath(fallBack,true);
+                    follower.followPath(moveBack,true);
                     option = Options.MOVE_LEFT;
                 }
                 break;
@@ -173,6 +173,7 @@ public class PedroPathingDemo extends LinearOpMode {
     }
 
     private void logOneSample(Pose pose) {
+        datalog.runTime.set(runtime.seconds());
         datalog.xPose.set(pose.getX());
         datalog.yPose.set(pose.getY());
         datalog.heading.set(pose.getHeading());
