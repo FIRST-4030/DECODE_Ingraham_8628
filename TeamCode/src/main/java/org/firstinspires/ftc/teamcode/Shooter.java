@@ -8,10 +8,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 public class Shooter {
     private DcMotorEx shooter;
-    public double Kvelo = 0.0243; // power multiplier for rotations per second
+    public static double Kvelo = 0.0243; // power multiplier for rotations per second
     // FeedBack term is Kp (proportional term)
     // Set Kp to zero when tuning the Kvelo term!!
-    public double Kp = 0.3;  // no gain in improvement when increasing beyond this
+    public static double Kp = 0.3;  // no gain in improvement when increasing beyond this
 
     static final double   COUNTS_PER_REV = 28 ;  // REV HD Hex 1:1 Motor Encoder
 
