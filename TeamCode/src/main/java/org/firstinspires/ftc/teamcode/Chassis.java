@@ -2,25 +2,19 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-/**
- * Description of Chassis.
- *
- * @author Dennis O'Brien
- * @date 11/13/2025
- */
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 public class Chassis {
+
+    //    private double maxPower = 1.0;
+    private double maxSpeed = 1.0;  // make this slower for outreaches
+
     public DcMotor frontLeftDrive, frontRightDrive, backLeftDrive, backRightDrive;
 
-    private double maxPower;
-    private double maxSpeed;  // make this slower for outreaches
-
     public Chassis(HardwareMap hardwareMap) {
-
-        maxPower = 1.0;
-        maxSpeed = 1.0;
-
-        frontLeftDrive = hardwareMap.get(DcMotor .class, "leftFront");
+        frontLeftDrive = hardwareMap.get(DcMotor.class, "leftFront");
         frontRightDrive = hardwareMap.get(DcMotor.class, "rightFront");
         backLeftDrive = hardwareMap.get(DcMotor.class, "leftBack");
         backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
@@ -31,11 +25,6 @@ public class Chassis {
         frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
         backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         backRightDrive.setDirection(DcMotor.Direction.FORWARD);
-
-        frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         // This uses RUN_USING_ENCODER to be more accurate.   If you don't have the encoder
         // wires, you should remove these
@@ -62,32 +51,30 @@ public class Chassis {
         // This is needed to make sure we don't pass > 1.0 to any wheel
         // It allows us to keep all of the motors in proportion to what they should
         // be and not get clipped
-        maxPower = Math.max(maxPower, Math.abs(frontLeftPower));
-        maxPower = Math.max(maxPower, Math.abs(frontRightPower));
-        maxPower = Math.max(maxPower, Math.abs(backRightPower));
-        maxPower = Math.max(maxPower, Math.abs(backLeftPower));
+//        maxPower = Math.max(maxPower, Math.abs(frontLeftPower));
+//        maxPower = Math.max(maxPower, Math.abs(frontRightPower));
+//        maxPower = Math.max(maxPower, Math.abs(backRightPower));
+//        maxPower = Math.max(maxPower, Math.abs(backLeftPower));
 
         // We multiply by maxSpeed so that it can be set lower for outreaches
         // When a young child is driving the robot, we may not want to allow full
         // speed.
-        frontLeftDrive.setPower(maxSpeed * (frontLeftPower / maxPower));
-        frontRightDrive.setPower(maxSpeed * (frontRightPower / maxPower));
-        backLeftDrive.setPower(maxSpeed * (backLeftPower / maxPower));
-        backRightDrive.setPower(maxSpeed * (backRightPower / maxPower));
+        frontLeftDrive.setPower(maxSpeed * frontLeftPower);
+        frontRightDrive.setPower(maxSpeed * frontRightPower);
+        backLeftDrive.setPower(maxSpeed * backLeftPower);
+        backRightDrive.setPower(maxSpeed * backRightPower);
+//        frontLeftDrive.setPower(frontLeftPower);
+//        frontRightDrive.setPower(frontRightPower);
+//        backLeftDrive.setPower(backLeftPower);
+//        backRightDrive.setPower(backRightPower);
     }
 
-    /**
-     * @param power Power of the motors (Default: 1.0)
-     */
-    public void setMaxPower( double power) {
-        maxPower = power;
-    }
+//    public void setMaxPower(double maxPower) {
+//        this.maxPower = maxPower;
+//    }
 
-    /**
-     * @param speed Speed of the motors (Lower values are good for outreach)
-     */
-    public void setMaxSpeed( double speed) {  // make this slower for outreaches
-        maxSpeed = speed;
+    public void setMaxSpeed(double maxSpeed) {
+        this.maxSpeed = maxSpeed;
     }
 
     public void stopMotors() {
@@ -95,5 +82,47 @@ public class Chassis {
         frontRightDrive.setPower(0);
         backLeftDrive.setPower(0);
         backRightDrive.setPower(0);
+    }
+
+    public void moveAllMotors(double frontleftpower, double frontrightpower, double backleftpower, double backrightpower) {
+        frontLeftDrive.setPower(frontleftpower);
+        frontRightDrive.setPower(frontrightpower);
+        backLeftDrive.setPower(backleftpower);
+        backRightDrive.setPower(backrightpower);
+    }
+
+    public void turn(double power, double mseconds) {
+        ElapsedTime timer = new ElapsedTime();
+        timer.reset();
+
+        while (timer.milliseconds() < mseconds) {
+            frontLeftDrive.setPower(power);
+            backLeftDrive.setPower(power);
+            frontRightDrive.setPower(-power);
+            backRightDrive.setPower(-power);
+        }
+
+        stopMotors();
+    }
+
+    public void moveForward(double power, double mseconds) {
+        ElapsedTime timer = new ElapsedTime();
+        timer.reset();
+
+        while (timer.milliseconds() < mseconds) {
+            frontLeftDrive.setPower(power);
+            backLeftDrive.setPower(power);
+            frontRightDrive.setPower(power);
+            backRightDrive.setPower(power);
+        }
+
+        stopMotors();
+    }
+
+    public void getMotorSpeed(Telemetry telemetry) {
+        telemetry.addData("fleft", frontLeftDrive.getPower());
+        telemetry.addData("fright", frontRightDrive.getPower());
+        telemetry.addData("lback", backLeftDrive.getPower());
+        telemetry.addData("lRIGHT", backRightDrive.getPower());
     }
 }

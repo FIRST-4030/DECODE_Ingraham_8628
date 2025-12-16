@@ -13,16 +13,14 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.AprilTag;
 import org.firstinspires.ftc.teamcode.Blackboard;
+import org.firstinspires.ftc.teamcode.Chassis;
 import org.firstinspires.ftc.teamcode.Datalogger;
 import org.firstinspires.ftc.teamcode.Shooter;
 
 @Autonomous(name="Mecanum Auto Edson (REFACTORING)", group="Linear OpMode")
 public class MecanumAuto_Edson extends LinearOpMode {
 
-    DcMotor frontLeftDrive;
-    DcMotor frontRightDrive;
-    DcMotor backLeftDrive;
-    DcMotor backRightDrive;
+    Chassis chassis = new Chassis(hardwareMap);
     DcMotorEx collector;
     Shooter shooter;
     Servo shooterHinge;
@@ -47,27 +45,7 @@ public class MecanumAuto_Edson extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        frontLeftDrive = hardwareMap.get(DcMotor.class, "leftFront");
-        frontRightDrive = hardwareMap.get(DcMotor.class, "rightFront");
-        backLeftDrive = hardwareMap.get(DcMotor.class, "leftBack");
-        backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
-
         shooter = new Shooter(hardwareMap, "shooter", true);
-
-        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
-        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
-
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         collector = hardwareMap.get(DcMotorEx.class, "collector");
         collector.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -349,20 +327,20 @@ public class MecanumAuto_Edson extends LinearOpMode {
         ElapsedTime timer = new ElapsedTime();
         timer.reset();
         while (timer.milliseconds() < mseconds) {
-            frontLeftDrive.setPower(power);
-            backLeftDrive.setPower(power);
-            frontRightDrive.setPower(power);
-            backRightDrive.setPower(power);
+            chassis.frontLeftDrive.setPower(power);
+            chassis.backLeftDrive.setPower(power);
+            chassis.frontRightDrive.setPower(power);
+            chassis.backRightDrive.setPower(power);
         }
 
         stopMotors();
     }
 
     private void stopMotors() {
-        frontLeftDrive.setPower(0);
-        backLeftDrive.setPower(0);
-        frontRightDrive.setPower(0);
-        backRightDrive.setPower(0);
+        chassis.frontLeftDrive.setPower(0);
+        chassis.backLeftDrive.setPower(0);
+        chassis.frontRightDrive.setPower(0);
+        chassis.backRightDrive.setPower(0);
     }
 
     public void shootShooter(double velocity) {
@@ -462,10 +440,10 @@ public class MecanumAuto_Edson extends LinearOpMode {
             telemetry.addData("IMU Angle", "%.2f", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
             telemetry.update();
 
-            frontLeftDrive.setPower(-turnPower);
-            backLeftDrive.setPower(-turnPower);
-            frontRightDrive.setPower(turnPower);
-            backRightDrive.setPower(turnPower);
+            chassis.frontLeftDrive.setPower(-turnPower);
+            chassis.backLeftDrive.setPower(-turnPower);
+            chassis.frontRightDrive.setPower(turnPower);
+            chassis.backRightDrive.setPower(turnPower);
 
             if (logData) {
                 datalog.runTime.set(runtime.seconds());
