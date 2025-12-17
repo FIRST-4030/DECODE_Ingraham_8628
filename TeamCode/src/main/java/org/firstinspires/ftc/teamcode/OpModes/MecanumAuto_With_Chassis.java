@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.Shooter;
 @Autonomous(name="Mecanum Auto with Chassis (REFACTORING)", group="Linear OpMode")
 public class MecanumAuto_With_Chassis extends LinearOpMode {
 
-    Chassis chassis = new Chassis(hardwareMap);
+    Chassis chassis;
     DcMotorEx collector;
     Shooter shooter;
     Servo shooterHinge;
@@ -45,6 +45,8 @@ public class MecanumAuto_With_Chassis extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+        chassis = new Chassis(hardwareMap);
+
         shooter = new Shooter(hardwareMap, "shooter", true);
 
         collector = hardwareMap.get(DcMotorEx.class, "collector");
