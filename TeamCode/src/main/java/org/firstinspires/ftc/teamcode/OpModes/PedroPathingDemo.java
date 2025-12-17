@@ -34,7 +34,7 @@ public class PedroPathingDemo extends LinearOpMode {
 
     String compiledDate = BuildConfig.COMPILATION_DATE;
 
-    int heightX = 10, widthY = 30;
+    int heightX = 20, widthY = 20;
     boolean logData = false;
 
     // The order of values listed in Options is irrelevant
@@ -130,8 +130,8 @@ public class PedroPathingDemo extends LinearOpMode {
                 .build();
 
         moveLeft = follower.pathBuilder()
-                .addPath(new BezierLine(rightPose, startPose))
-                .setLinearHeadingInterpolation(rightPose.getHeading(), startPose.getHeading())
+                .addPath(new BezierLine(backPose, startPose))
+                .setLinearHeadingInterpolation(backPose.getHeading(), startPose.getHeading())
                 .build();
     }
 
