@@ -17,8 +17,8 @@ import org.firstinspires.ftc.teamcode.Chassis;
 import org.firstinspires.ftc.teamcode.Datalogger;
 import org.firstinspires.ftc.teamcode.Shooter;
 
-@Autonomous(name="Mecanum Auto Edson (REFACTORING)", group="Linear OpMode")
-public class MecanumAuto_Edson extends LinearOpMode {
+@Autonomous(name="Mecanum Auto with Chassis (REFACTORING)", group="Linear OpMode")
+public class MecanumAuto_With_Chassis extends LinearOpMode {
 
     Chassis chassis = new Chassis(hardwareMap);
     DcMotorEx collector;
