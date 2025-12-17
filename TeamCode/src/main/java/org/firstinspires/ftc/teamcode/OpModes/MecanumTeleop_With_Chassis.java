@@ -42,8 +42,8 @@ import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.Chassis;
 
-@TeleOp(name = "MecanumTeleop - Chassis", group = "Robot")
-public class MecanumTeleop_Chassis extends OpMode {
+@TeleOp(name = "MecanumTeleop With Chassis", group = "Robot")
+public class MecanumTeleop_With_Chassis extends OpMode {
 
     Chassis chassis;
     DcMotorEx collector;
