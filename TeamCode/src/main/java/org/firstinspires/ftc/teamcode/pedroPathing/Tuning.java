@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.changes;
-import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.draw;
 import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.drawOnlyCurrent;
+import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.draw;
 import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
 import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.stopRobot;
 import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.telemetryM;
@@ -15,18 +15,17 @@ import com.bylazar.field.PanelsField;
 import com.bylazar.field.Style;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
+import com.pedropathing.ErrorCalculator;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierCurve;
-import com.pedropathing.geometry.BezierLine;
-import com.pedropathing.geometry.Pose;
-import com.pedropathing.math.Vector;
-import com.pedropathing.paths.HeadingInterpolator;
-import com.pedropathing.paths.Path;
-import com.pedropathing.paths.PathChain;
+import com.pedropathing.geometry.*;
+import com.pedropathing.math.*;
+import com.pedropathing.paths.*;
 import com.pedropathing.telemetry.SelectableOpMode;
-import com.pedropathing.util.PoseHistory;
+import com.pedropathing.util.*;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+import org.firstinspires.ftc.teamcode.ControlHub;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +49,8 @@ public class Tuning extends SelectableOpMode {
 
     @IgnoreConfigurable
     static ArrayList<String> changes = new ArrayList<>();
+
+    public static ControlHub controlHub = new ControlHub();
 
     public Tuning() {
         super("Select a Tuning OpMode", s -> {
@@ -82,11 +83,20 @@ public class Tuning extends SelectableOpMode {
 
     @Override
     public void onSelect() {
-        if (follower == null) {
-            follower = Constants.createFollower(hardwareMap);
-            PanelsConfigurables.INSTANCE.refreshClass(this);
-        } else {
-            follower = Constants.createFollower(hardwareMap);
+        if (controlHub.getMacAddress().equals(Constants.PRIMARY_BOT)) {
+            if (follower == null) {
+                follower = ConstantsCompetition.createFollower(hardwareMap);
+                PanelsConfigurables.INSTANCE.refreshClass(this);
+            } else {
+                follower = ConstantsCompetition.createFollower(hardwareMap);
+            }
+        } else if (controlHub.getMacAddress().equals(Constants.SECONDARY_BOT)) {
+             if (follower == null) {
+                follower = ConstantsDemo.createFollower(hardwareMap);
+                PanelsConfigurables.INSTANCE.refreshClass(this);
+            } else {
+                follower = ConstantsDemo.createFollower(hardwareMap);
+            }
         }
 
         follower.setStartingPose(new Pose());
@@ -143,6 +153,8 @@ class LocalizationTest extends OpMode {
                 + "allowing robot control through a basic mecanum drive on gamepad 1.");
         telemetryM.update(telemetry);
         follower.update();
+        telemetry.addData("Mass3",follower.getConstants().getMass());
+        telemetry.update();
         drawOnlyCurrent();
     }
 
