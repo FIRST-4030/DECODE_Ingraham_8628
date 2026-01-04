@@ -51,6 +51,9 @@ public class Tuning extends SelectableOpMode {
     static ArrayList<String> changes = new ArrayList<>();
 
     public static ControlHub controlHub = new ControlHub();
+    private Class<Constants>     constants;
+    ConstantsCompetition competition = new ConstantsCompetition();
+    ConstantsDemo        demo = new ConstantsDemo();
 
     public Tuning() {
         super("Select a Tuning OpMode", s -> {
@@ -83,6 +86,7 @@ public class Tuning extends SelectableOpMode {
 
     @Override
     public void onSelect() {
+        Constants robotConstants;
         if (controlHub.getMacAddress().equals(Constants.PRIMARY_BOT)) {
             if (follower == null) {
                 follower = ConstantsCompetition.createFollower(hardwareMap);
@@ -99,6 +103,12 @@ public class Tuning extends SelectableOpMode {
             }
         }
 
+//        if (controlHub.getMacAddress().equals(Constants.PRIMARY_BOT)) {
+//            defineConstants(competition);
+//        } else if (controlHub.getMacAddress().equals(Constants.SECONDARY_BOT)) {
+//            defineConstants(demo);
+//        }
+
         follower.setStartingPose(new Pose());
 
         poseHistory = follower.getPoseHistory();
@@ -107,6 +117,15 @@ public class Tuning extends SelectableOpMode {
 
         Drawing.init();
     }
+
+//    private void defineConstants(Constants constants) {
+//        if (follower == null) {
+//            follower = constants.createFollower(hardwareMap);
+//            PanelsConfigurables.INSTANCE.refreshClass(this);
+//        } else {
+//            follower = constants.createFollower(hardwareMap);
+//        }
+//    }
 
     @Override
     public void onLog(List<String> lines) {}
@@ -153,7 +172,7 @@ class LocalizationTest extends OpMode {
                 + "allowing robot control through a basic mecanum drive on gamepad 1.");
         telemetryM.update(telemetry);
         follower.update();
-        telemetry.addData("Mass3",follower.getConstants().getMass());
+        telemetry.addData("Mass",follower.getConstants().getMass());
         telemetry.update();
         drawOnlyCurrent();
     }
