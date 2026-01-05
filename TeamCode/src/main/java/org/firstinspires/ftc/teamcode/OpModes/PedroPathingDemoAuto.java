@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -20,8 +21,15 @@ import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
  * link on how to go about proper tuning
  *     https://pedropathing.com/docs/pathing/tuning
  */
+@Configurable
 @Autonomous(name="PedroPathingDemoAuto")
 public class PedroPathingDemoAuto extends LinearOpMode {
+
+    public static double start_x = 56, start_y = 8, start_angle = 90;
+    public static double inFrontOfBalls1_x = 40, inFrontOfBalls1_y = 35,inFrontOfBalls1_angle = 0;
+    public static double behindBalls1_x = 13, behindBalls1_y = 35, behindBalls1_angle = 0;
+    public static double moveToFreeSpace_x = 50, moveToFreeSpace_y = 35,moveToFreeSpace_angle = 0;
+    public static double moveToFarShoot_x = 60, moveToFarShoot_y = 11,moveToFarShoot_angle = 110;
 
     Chassis chassis;
 
@@ -94,23 +102,23 @@ public class PedroPathingDemoAuto extends LinearOpMode {
 
     void buildPaths() {
         InFrontOfBalls1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(56., 8.), new Pose(40., 35.)))
-                .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(0))
+                .addPath(new BezierLine(new Pose(start_x, start_y), new Pose(inFrontOfBalls1_x, inFrontOfBalls1_y)))
+                .setLinearHeadingInterpolation(Math.toRadians(start_angle), Math.toRadians(inFrontOfBalls1_angle))
                 .build();
 
         BehindBalls1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(40., 35.), new Pose(13., 35.)))
-                .setTangentHeadingInterpolation()
+                .addPath(new BezierLine(new Pose(inFrontOfBalls1_x, inFrontOfBalls1_y), new Pose(behindBalls1_x, behindBalls1_y)))
+                .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls1_angle), Math.toRadians(behindBalls1_angle))
                 .build();
 
         MoveToFreeSpace = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(13., 35.), new Pose(50., 35.)))
-                .setTangentHeadingInterpolation()
+                .addPath(new BezierLine(new Pose(behindBalls1_x, behindBalls1_y), new Pose(50., 35.)))
+                .setLinearHeadingInterpolation(Math.toRadians(behindBalls1_angle), Math.toRadians(moveToFreeSpace_angle))
                 .build();
 
         MoveToFarShoot = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(50., 35.), new Pose(60., 11.)))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(110))
+                .addPath(new BezierLine(new Pose(moveToFreeSpace_x, moveToFreeSpace_y), new Pose(moveToFarShoot_x, moveToFarShoot_y)))
+                .setLinearHeadingInterpolation(Math.toRadians(moveToFreeSpace_angle), Math.toRadians(moveToFarShoot_angle))
                 .build();
     }
 
