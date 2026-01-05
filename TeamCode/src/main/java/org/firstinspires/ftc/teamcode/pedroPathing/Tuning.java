@@ -15,7 +15,6 @@ import com.bylazar.field.PanelsField;
 import com.bylazar.field.Style;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
-import com.pedropathing.ErrorCalculator;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.*;
 import com.pedropathing.math.*;
@@ -51,9 +50,6 @@ public class Tuning extends SelectableOpMode {
     static ArrayList<String> changes = new ArrayList<>();
 
     public static ControlHub controlHub = new ControlHub();
-    private Class<Constants>     constants;
-    ConstantsCompetition competition = new ConstantsCompetition();
-    ConstantsDemo        demo = new ConstantsDemo();
 
     public Tuning() {
         super("Select a Tuning OpMode", s -> {
@@ -86,28 +82,21 @@ public class Tuning extends SelectableOpMode {
 
     @Override
     public void onSelect() {
-        Constants robotConstants;
+        Constants constants;
         if (controlHub.getMacAddress().equals(Constants.PRIMARY_BOT)) {
-            if (follower == null) {
-                follower = ConstantsCompetition.createFollower(hardwareMap);
-                PanelsConfigurables.INSTANCE.refreshClass(this);
-            } else {
-                follower = ConstantsCompetition.createFollower(hardwareMap);
-            }
+            constants = new ConstantsCompetition();
         } else if (controlHub.getMacAddress().equals(Constants.SECONDARY_BOT)) {
-             if (follower == null) {
-                follower = ConstantsDemo.createFollower(hardwareMap);
-                PanelsConfigurables.INSTANCE.refreshClass(this);
-            } else {
-                follower = ConstantsDemo.createFollower(hardwareMap);
-            }
+             constants = new ConstantsDemo();
+        } else {
+            throw new RuntimeException("ControlHub MAC address did not match primary or secondary");
         }
 
-//        if (controlHub.getMacAddress().equals(Constants.PRIMARY_BOT)) {
-//            defineConstants(competition);
-//        } else if (controlHub.getMacAddress().equals(Constants.SECONDARY_BOT)) {
-//            defineConstants(demo);
-//        }
+        if (follower == null) {
+            follower =  constants.createFollower(hardwareMap);
+            PanelsConfigurables.INSTANCE.refreshClass(this);
+        } else {
+            follower = constants.createFollower(hardwareMap);
+        }
 
         follower.setStartingPose(new Pose());
 
@@ -117,15 +106,6 @@ public class Tuning extends SelectableOpMode {
 
         Drawing.init();
     }
-
-//    private void defineConstants(Constants constants) {
-//        if (follower == null) {
-//            follower = constants.createFollower(hardwareMap);
-//            PanelsConfigurables.INSTANCE.refreshClass(this);
-//        } else {
-//            follower = constants.createFollower(hardwareMap);
-//        }
-//    }
 
     @Override
     public void onLog(List<String> lines) {}

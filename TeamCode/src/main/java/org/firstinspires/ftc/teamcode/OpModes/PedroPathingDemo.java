@@ -76,7 +76,7 @@ public class PedroPathingDemo extends LinearOpMode {
 
         chassis = new Chassis(hardwareMap);
 
-        follower = ConstantsDemo.createFollower(hardwareMap);
+        follower = new ConstantsDemo().createFollower(hardwareMap);
         follower.setStartingPose(startPose);   //set your starting pose
 
         buildPaths();

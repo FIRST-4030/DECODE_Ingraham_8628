@@ -20,11 +20,11 @@ public class Constants {
     public static final String PRIMARY_BOT = ControlHub.getBotAddress(0);
     public static final String SECONDARY_BOT = ControlHub.getBotAddress(1);
 
-    public static FollowerConstants followerConstants = new FollowerConstants();
+    protected FollowerConstants followerConstants = new FollowerConstants();
 
-    public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
+    protected PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
-    public static Follower createFollower(HardwareMap hardwareMap) {
+    public Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
                 .pathConstraints(pathConstraints)
                 .build();

@@ -57,7 +57,7 @@ public class PedroPathingDemoAuto extends LinearOpMode {
         chassis = new Chassis(hardwareMap);
         Pose startPose = new Pose(56, 8, Math.toRadians(90));
 
-        follower = ConstantsCompetition.createFollower(hardwareMap);
+        follower = new ConstantsCompetition().createFollower(hardwareMap);
         follower.setStartingPose(startPose);   //set your starting pose
 
         buildPaths();
@@ -94,22 +94,22 @@ public class PedroPathingDemoAuto extends LinearOpMode {
 
     void buildPaths() {
         InFrontOfBalls1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(56.000, 8.000), new Pose(40.000, 35.000)))
+                .addPath(new BezierLine(new Pose(56., 8.), new Pose(40., 35.)))
                 .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(0))
                 .build();
 
         BehindBalls1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(40.000, 35.000), new Pose(13.000, 35.000)))
+                .addPath(new BezierLine(new Pose(40., 35.), new Pose(13., 35.)))
                 .setTangentHeadingInterpolation()
                 .build();
 
         MoveToFreeSpace = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(13.000, 35.000), new Pose(50.000, 35.000)))
+                .addPath(new BezierLine(new Pose(13., 35.), new Pose(50., 35.)))
                 .setTangentHeadingInterpolation()
                 .build();
 
         MoveToFarShoot = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(50.000, 35.000), new Pose(59.837, 11.009)))
+                .addPath(new BezierLine(new Pose(50., 35.), new Pose(60., 11.)))
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(110))
                 .build();
     }

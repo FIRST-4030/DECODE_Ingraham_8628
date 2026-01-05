@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class ConstantsCompetition extends Constants {
-    public static FollowerConstants followerConstants = new FollowerConstants()
+    protected FollowerConstants followerConstants = new FollowerConstants()
             .mass(9.976)  // Kg
             .forwardZeroPowerAcceleration(-33.283483666739514)
             .lateralZeroPowerAcceleration(-60.30465072724906)
@@ -23,9 +23,9 @@ public class ConstantsCompetition extends Constants {
             .headingPIDFCoefficients(new PIDFCoefficients(2,0,0,0.035))
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.02, 0, 0.00001, 0.6, 0.01)); //p = 0.01
 
-    public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
+    protected PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
-    public static MecanumConstants driveConstants = new MecanumConstants()
+    protected MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
             .rightFrontMotorName("rightFront")
             .rightRearMotorName("rightBack")
@@ -38,7 +38,7 @@ public class ConstantsCompetition extends Constants {
             .xVelocity(57.44290521576647)
             .yVelocity(45.753937969057574);
 
-    public static PinpointConstants localizerConstants = new PinpointConstants()
+    protected PinpointConstants localizerConstants = new PinpointConstants()
             .forwardPodY(0.5)
             .strafePodX(3.5)
             .distanceUnit(DistanceUnit.INCH)
@@ -47,7 +47,7 @@ public class ConstantsCompetition extends Constants {
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
             .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
-    public static Follower createFollower(HardwareMap hardwareMap) {
+    public Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
                 .pathConstraints(pathConstraints)
                 .mecanumDrivetrain(driveConstants)

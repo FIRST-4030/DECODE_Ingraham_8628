@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class ConstantsDemo extends Constants {
-    public static FollowerConstants followerConstants = new FollowerConstants()
+    protected FollowerConstants followerConstants = new FollowerConstants()
             .mass(5.604)  // Kg
 //            .forwardZeroPowerAcceleration(-33.283483666739514)
 //            .lateralZeroPowerAcceleration(-60.30465072724906)
@@ -24,9 +24,9 @@ public class ConstantsDemo extends Constants {
 //            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.02, 0, 0.00001, 0.6, 0.01))
             ;
 
-    public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
+    protected PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
-    public static MecanumConstants driveConstants = new MecanumConstants()
+    protected MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
             .rightFrontMotorName("rightFront")
             .rightRearMotorName("rightBack")
@@ -39,7 +39,7 @@ public class ConstantsDemo extends Constants {
             .xVelocity(57.44290521576647)
 //            .yVelocity(45.753937969057574);
 ;
-    public static PinpointConstants localizerConstants = new PinpointConstants()
+    protected PinpointConstants localizerConstants = new PinpointConstants()
             .forwardPodY(-5.5)
             .strafePodX(5.0)
             .distanceUnit(DistanceUnit.INCH)
@@ -48,7 +48,7 @@ public class ConstantsDemo extends Constants {
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
             .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
-    public static Follower createFollower(HardwareMap hardwareMap) {
+    public Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
                 .pathConstraints(pathConstraints)
                 .mecanumDrivetrain(driveConstants)
