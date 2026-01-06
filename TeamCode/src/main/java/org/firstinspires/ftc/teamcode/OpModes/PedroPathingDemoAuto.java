@@ -49,15 +49,6 @@ public class PedroPathingDemoAuto extends LinearOpMode {
     Options option;
 
     boolean doAutonomous = false;
-    /*
-     * Note: Pedro’s coordinate system spans an interval of [0, 144] on both the
-     *       x and y axes, with (0, 0) defined as the bottom-left corner of the field.
-     *
-     * The following code is an attempt to show how to define a set of paths to
-     * move in a rectangle.
-     *
-     * Start at lower left-hand corner (0,0)
-     */
 
     @Override
     public void runOpMode() {
