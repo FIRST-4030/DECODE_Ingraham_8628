@@ -1,11 +1,12 @@
-
 package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.bylazar.configurables.annotations.Configurable;
+
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -21,12 +22,11 @@ import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Chassis;
 import org.firstinspires.ftc.teamcode.Datalogger;
 import org.firstinspires.ftc.teamcode.Shooter;
-import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 
 @Configurable
-@Autonomous(name="Mecanum Auto PEDROPATHING YIPPEE", group="Linear OpMode")
-public class MecanumAutoPedropathing extends LinearOpMode {
+@Autonomous(name="Mecanum Auto PedroPathing", group="Linear OpMode")
+public class MecanumAutoPedroPathing extends LinearOpMode {
 
     // Pedro pathing constants (editable in panels)
     public static double start_x = 56, start_y = 8, start_angle = 90;
@@ -60,7 +60,7 @@ public class MecanumAutoPedropathing extends LinearOpMode {
 
     // The order of values listed in Options is irrelevant
     enum Options { STOP, Do_InFrontOfBalls1, Do_BehindBalls1, Do_MoveToFreeSpace, Do_MoveToFarShoot }
-    PedroPathingDemoAuto.Options option;
+    Options option;
 
     boolean doAutonomous = false;
 
@@ -80,7 +80,7 @@ public class MecanumAutoPedropathing extends LinearOpMode {
         buildPaths();
 
         doAutonomous = true;
-        Options option = Options.Do_InFrontOfBalls1;   // Define the first action in the path
+        option = Options.Do_InFrontOfBalls1;   // Define the first action in the path
 
         shooter = new Shooter(hardwareMap, "shooter", true);
 
@@ -174,11 +174,11 @@ public class MecanumAutoPedropathing extends LinearOpMode {
                     runLimitedAuto();
                 }
                 else {
-                    if (obeliskDistance > 100) {
+//                    if (obeliskDistance > 100) {
                         runFromFar();
-                    } else {
-                        runFromClose();
-                    }
+//                    } else {
+//                        runFromClose();
+//                    }
                 }
             }
             else {
@@ -219,25 +219,25 @@ public class MecanumAutoPedropathing extends LinearOpMode {
             case Do_InFrontOfBalls1:
                 if (!follower.isBusy()) {
                     follower.followPath(InFrontOfBalls1);
-                    option = PedroPathingDemoAuto.Options.Do_BehindBalls1;
+                    option = Options.Do_BehindBalls1;
                 }
                 break;
             case Do_BehindBalls1:
                 if (!follower.isBusy()) {
                     follower.followPath(BehindBalls1);
-                    option = PedroPathingDemoAuto.Options.Do_MoveToFreeSpace;
+                    option = Options.Do_MoveToFreeSpace;
                 }
                 break;
             case Do_MoveToFreeSpace:
                 if (!follower.isBusy()) {
                     follower.followPath(MoveToFreeSpace);
-                    option = PedroPathingDemoAuto.Options.Do_MoveToFarShoot;
+                    option = Options.Do_MoveToFarShoot;
                 }
                 break;
             case Do_MoveToFarShoot:
                 if (!follower.isBusy()) {
                     follower.followPath(MoveToFarShoot);
-                    option = PedroPathingDemoAuto.Options.STOP;
+                    option = Options.STOP;
                 }
                 break;
             case STOP:
@@ -246,8 +246,6 @@ public class MecanumAutoPedropathing extends LinearOpMode {
                 }
                 break;
         }
-
-
 
         //if (redSide) {
         if (Blackboard.alliance == Blackboard.Alliance.RED) {

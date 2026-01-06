@@ -26,7 +26,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firstinspires.ftc.teamcode.OpModes;
+package org.firstinspires.ftc.teamcode.Archive;
 
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -43,8 +43,8 @@ import org.firstinspires.ftc.teamcode.AprilTag;
 import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Shooter;
 @Disabled
-@TeleOp(name = "MecanumTeleop - OLD", group = "Robot")
-public class MecanumTeleop extends OpMode {
+@TeleOp(name = "MecanumTeleop - BACKUP", group = "Robot")
+public class Teleop_backup extends OpMode {
 
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
@@ -227,7 +227,7 @@ public class MecanumTeleop extends OpMode {
         double backLeftPower = forward - right + rotate;
 
         double maxPower = 1.0;
-          // make this slower for slower drive
+        // make this slower for slower drive
 
         // This is needed to make sure we don't pass > 1.0 to any wheel
         // It allows us to keep all of the motors in proportion to what they should

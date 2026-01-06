@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.BuildConfig;
 import org.firstinspires.ftc.teamcode.Chassis;
 import org.firstinspires.ftc.teamcode.Datalogger;
-import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
+import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 
 /*
  * This opMode is provided to show how to introduce PedroPathing into a project.
@@ -54,9 +54,9 @@ public class PedroPathingDemoAuto extends LinearOpMode {
     public void runOpMode() {
 
         chassis = new Chassis(hardwareMap);
-        Pose startPose = new Pose(56, 8, Math.toRadians(90));
+        Pose startPose = new Pose(start_x, start_y, Math.toRadians(start_angle));
 
-        follower = new ConstantsCompetition().createFollower(hardwareMap);
+        follower = new ConstantsDemo().createFollower(hardwareMap);
         follower.setStartingPose(startPose);   //set your starting pose
 
         buildPaths();
