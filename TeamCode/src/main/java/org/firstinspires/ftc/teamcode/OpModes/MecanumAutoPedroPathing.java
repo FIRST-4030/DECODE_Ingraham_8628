@@ -22,6 +22,7 @@ import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Chassis;
 import org.firstinspires.ftc.teamcode.Datalogger;
 import org.firstinspires.ftc.teamcode.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 
 @Configurable
@@ -31,7 +32,10 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
     // Pedro pathing constants (editable in panels)
     public static double start_x = 56, start_y = 8, start_angle = 90;
     public static double inFrontOfBalls1_x = 40, inFrontOfBalls1_y = 35,inFrontOfBalls1_angle = 0;
+
+    public static double inFrontOfBalls2_x = 40, inFrontOfBalls2_y = 59 ,inFrontOfBalls2_angle = 0;
     public static double behindBalls1_x = 13, behindBalls1_y = 35, behindBalls1_angle = 0;
+    public static double behindBalls2_x = 13, behindBalls2_y = 59, behindBalls2_angle = 0;
     public static double moveToFreeSpace_x = 50, moveToFreeSpace_y = 35,moveToFreeSpace_angle = 0;
     public static double moveToFarShoot_x = 60, moveToFarShoot_y = 11,moveToFarShoot_angle = 110;
 
@@ -56,11 +60,13 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
     IMU imu;
 
     Follower follower;
-    PathChain InFrontOfBalls1, BehindBalls1, MoveToFreeSpace, MoveToFarShoot;
+    PathChain InFrontOfBalls1, BehindBalls1, InFrontOfBalls2, BehindBalls2, MoveToFreeSpace, MoveToFarShoot;
 
     // The order of values listed in Options is irrelevant
     enum Options { STOP, Do_InFrontOfBalls1, Do_BehindBalls1, Do_MoveToFreeSpace, Do_MoveToFarShoot }
     Options option;
+
+    int pathsStep = 0;
 
     boolean doAutonomous = false;
 
@@ -74,13 +80,13 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
         // Pedro pathing init
         Pose startPose = new Pose(56, 8, Math.toRadians(90));
 
-        follower = new ConstantsDemo().createFollower(hardwareMap);
+        follower = new ConstantsCompetition().createFollower(hardwareMap);
         follower.setStartingPose(startPose);   //set your starting pose
 
         buildPaths();
 
         doAutonomous = true;
-        option = Options.Do_InFrontOfBalls1;   // Define the first action in the path
+//        option = Options.Do_InFrontOfBalls1;   // Define the first action in the path
 
         shooter = new Shooter(hardwareMap, "shooter", true);
 
@@ -198,6 +204,16 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
                 .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls1_angle), Math.toRadians(behindBalls1_angle))
                 .build();
 
+        InFrontOfBalls2 = follower.pathBuilder()
+                .addPath(new BezierLine(new Pose(start_x, start_y), new Pose(inFrontOfBalls2_x, inFrontOfBalls2_y)))
+                .setLinearHeadingInterpolation(Math.toRadians(start_angle), Math.toRadians(inFrontOfBalls2_angle))
+                .build();
+
+        BehindBalls2 = follower.pathBuilder()
+                .addPath(new BezierLine(new Pose(inFrontOfBalls2_x, inFrontOfBalls2_y), new Pose(behindBalls2_x, behindBalls2_y)))
+                .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls2_angle), Math.toRadians(behindBalls2_angle))
+                .build();
+
         MoveToFreeSpace = follower.pathBuilder()
                 .addPath(new BezierLine(new Pose(behindBalls1_x, behindBalls1_y), new Pose(50., 35.)))
                 .setLinearHeadingInterpolation(Math.toRadians(behindBalls1_angle), Math.toRadians(moveToFreeSpace_angle))
@@ -215,32 +231,69 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
 
         follower.update();
 
-        switch (option) {
-            case Do_InFrontOfBalls1:
+        switch (pathsStep) {
+            case 0:
                 if (!follower.isBusy()) {
+                    rotateTo (aprilTags.getBearing() - 3);
+                    pathsStep = 1;
+                }
+            case 1:
+                if (!follower.isBusy()) {
+                    collector.setPower(collectorSpeed);
                     follower.followPath(InFrontOfBalls1);
-                    option = Options.Do_BehindBalls1;
+                    pathsStep = 2;
                 }
                 break;
-            case Do_BehindBalls1:
+            case 2:
                 if (!follower.isBusy()) {
                     follower.followPath(BehindBalls1);
-                    option = Options.Do_MoveToFreeSpace;
+                    pathsStep = 3;
                 }
                 break;
-            case Do_MoveToFreeSpace:
+            case 3:
+                if (!follower.isBusy()) {
+                    collector.setPower(0);
+                    follower.followPath(MoveToFarShoot);
+                    pathsStep = 4;
+                }
+                break;
+            case 4:
+                if (!follower.isBusy()) {
+                    rotateTo (aprilTags.getBearing() - 3);
+                    shootShooter(shootingVelocity);
+                    shootShooter(shootingVelocity);
+                    shootShooter(shootingVelocity);
+                    pathsStep = 5;
+                }
+                break;
+            case 5:
+                if (!follower.isBusy()) {
+                    follower.followPath(BehindBalls2);
+                    pathsStep = 6;
+                }
+                break;
+            case 6:
+                if (!follower.isBusy()) {
+                    collector.setPower(0);
+                    follower.followPath(MoveToFarShoot);
+                    pathsStep = 7;
+                }
+                break;
+            case 7:
+                if (!follower.isBusy()) {
+                    rotateTo (aprilTags.getBearing() - 3);
+                    shootShooter(shootingVelocity);
+                    shootShooter(shootingVelocity);
+                    shootShooter(shootingVelocity);
+                    pathsStep = 8;
+                }
+                break;
+            case 8:
                 if (!follower.isBusy()) {
                     follower.followPath(MoveToFreeSpace);
-                    option = Options.Do_MoveToFarShoot;
+                    pathsStep = -1;
                 }
-                break;
-            case Do_MoveToFarShoot:
-                if (!follower.isBusy()) {
-                    follower.followPath(MoveToFarShoot);
-                    option = Options.STOP;
-                }
-                break;
-            case STOP:
+            case -1:
                 if (!follower.isBusy()) {
                     doAutonomous = false;
                 }
