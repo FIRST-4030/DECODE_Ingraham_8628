@@ -23,7 +23,6 @@ import org.firstinspires.ftc.teamcode.Chassis;
 import org.firstinspires.ftc.teamcode.Datalogger;
 import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
-import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 
 @Configurable
 @Autonomous(name="Mecanum Auto PedroPathing", group="Linear OpMode")
@@ -426,7 +425,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
         }
     }
 
-    private void runFromClose() {
+    private void oldRunFromClose() {
         double shootingVelocity = 29.0;
 
         // Remember this for close auto; our "home base" angle of zero is parallel to the goals:
@@ -492,7 +491,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
 //        moveForward(0.5, 700);
     }
 
-    private void runLimitedAuto() {
+    private void oldRunLimitedAuto() {
         double shootingVelocity = 34.0;
 
         // Aim and shoot three artifacts
