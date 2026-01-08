@@ -298,85 +298,85 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
         //if (redSide) {
         if (Blackboard.alliance == Blackboard.Alliance.RED) {
 
-//            // Aim and shoot the three initial artifacts
-//            moveForward(0.5, 75);
-//
-//            rotateTo(aprilTags.getBearing() + 5);
-//            shootShooter(shootingVelocity);
-//            shootShooter(shootingVelocity);
-//            shootShooter(shootingVelocity);
-//            stopShooter();
-//
-//            // Because this is RED AUTO, rotate back to face straight forward and reset yaw
-//            rotateTo(10);
-//            imu.resetYaw();
-//
-//            // Move and collect three artifacts in a line
-//            moveForward(0.5, 915);
-//            rotateTo(90);
-//
-//            collector.setPower(collectorSpeed);
-//            moveForward(-0.2, 4000);
-//            collectorTime.reset();
-//            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
-//            collector.setPower(0);
-//
-//            // Move back to line up and shoot
-//            moveForward(0.25, 2750);
-//
-//            rotateTo(0);
-//            moveForward(-0.25, 1500);
-//
-//            rotateTo(-10); // ?????
-//
-//            // Aim and shoot the three artifacts we collected!
-//            rotateTo(aprilTags.getBearing() - 8);
-//            shootShooter(shootingVelocity);
-//            shootShooter(shootingVelocity);
-//            shootShooter(shootingVelocity);
-//            stopShooter();
-//
-//            // Move off the white line
-//            moveForward(0.5, 800);
+            // Aim and shoot the three initial artifacts
+            moveForward(0.5, 75);
+
+            rotateTo(aprilTags.getBearing() + 5);
+            shootShooter(shootingVelocity);
+            shootShooter(shootingVelocity);
+            shootShooter(shootingVelocity);
+            stopShooter();
+
+            // Because this is RED AUTO, rotate back to face straight forward and reset yaw
+            rotateTo(10);
+            imu.resetYaw();
+
+            // Move and collect three artifacts in a line
+            moveForward(0.5, 915);
+            rotateTo(90);
+
+            collector.setPower(collectorSpeed);
+            moveForward(-0.2, 4000);
+            collectorTime.reset();
+            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
+            collector.setPower(0);
+
+            // Move back to line up and shoot
+            moveForward(0.25, 2750);
+
+            rotateTo(0);
+            moveForward(-0.25, 1500);
+
+            rotateTo(-10); // ?????
+
+            // Aim and shoot the three artifacts we collected!
+            rotateTo(aprilTags.getBearing() - 8);
+            shootShooter(shootingVelocity);
+            shootShooter(shootingVelocity);
+            shootShooter(shootingVelocity);
+            stopShooter();
+
+            // Move off the white line
+            moveForward(0.5, 800);
         }
-        else if(Blackboard.alliance == Blackboard.Alliance.BLUE) {
-//            // Aim and shoot the three initial artifacts
-//            moveForward(0.5, 250);
-//
-//            rotateTo (aprilTags.getBearing() - 3);
-//
-//            shootShooter(shootingVelocity);
-//            shootShooter(shootingVelocity);
-//            shootShooter(shootingVelocity);
-//            stopShooter();
-//
-//            // Move and collect three artifacts in a line
-//            rotateTo(0);
-//            moveForward(0.5, 450);
-//            rotateTo(-90);
-//
-//            collector.setPower(collectorSpeed);
-//            moveForward(-0.2, 4375);
-//            collectorTime.reset();
-//            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
-//            collector.setPower(0);
-//
-//            // Move back to line up and shoot
-//            moveForward(0.25, 2250);
-//
-//            rotateTo(0);
-//            moveForward(-0.25, 1500);
-//
-//
-//            // Aim and shoot the three artifacts we collected!
-//            rotateTo(aprilTags.getBearing() - 5);
-//            shootShooter(shootingVelocity);
-//            shootShooter(shootingVelocity);
-//            shootShooter(shootingVelocity);
-//            stopShooter();
-//
-//            // Move off the white line
-//            moveForward(0.5, 800);
+        else if (Blackboard.alliance == Blackboard.Alliance.BLUE) {
+            // Aim and shoot the three initial artifacts
+            moveForward(0.5, 250);
+
+            rotateTo (aprilTags.getBearing() - 3);
+
+            shootShooter(shootingVelocity);
+            shootShooter(shootingVelocity);
+            shootShooter(shootingVelocity);
+            stopShooter();
+
+            // Move and collect three artifacts in a line
+            rotateTo(0);
+            moveForward(0.5, 450);
+            rotateTo(-90);
+
+            collector.setPower(collectorSpeed);
+            moveForward(-0.2, 4375);
+            collectorTime.reset();
+            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
+            collector.setPower(0);
+
+            // Move back to line up and shoot
+            moveForward(0.25, 2250);
+
+            rotateTo(0);
+            moveForward(-0.25, 1500);
+
+
+            // Aim and shoot the three artifacts we collected!
+            rotateTo(aprilTags.getBearing() - 5);
+            shootShooter(shootingVelocity);
+            shootShooter(shootingVelocity);
+            shootShooter(shootingVelocity);
+            stopShooter();
+
+            // Move off the white line
+            moveForward(0.5, 800);
         }
     }
 
