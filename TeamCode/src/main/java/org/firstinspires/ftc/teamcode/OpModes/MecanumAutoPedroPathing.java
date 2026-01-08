@@ -249,7 +249,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
 
         doPathChainLinear(MoveToFarShoot);
 
-        sleep(100);
+        sleep(250);
         rotateTo(aprilTags.getBearing() + 5);
         shootShooter(shootingVelocity);
         shootShooter(shootingVelocity);
@@ -265,7 +265,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
 
         doPathChainLinear(MoveToFarShoot);
 
-        sleep(100);
+        sleep(250);
         rotateTo(aprilTags.getBearing() + 5);
         shootShooter(shootingVelocity);
         shootShooter(shootingVelocity);
@@ -281,7 +281,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
 
         doPathChainLinear(MoveToFarShoot);
 
-        sleep(100);
+        sleep(250);
         rotateTo(aprilTags.getBearing() + 5);
         shootShooter(shootingVelocity);
         shootShooter(shootingVelocity);
