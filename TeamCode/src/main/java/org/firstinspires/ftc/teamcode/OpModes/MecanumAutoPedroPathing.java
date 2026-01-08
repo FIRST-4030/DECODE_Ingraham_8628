@@ -110,7 +110,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
 
         aprilTags = new AprilTag();
         aprilTags.initAprilTag(hardwareMap);
-        long delaySeconds=0;
+        long delaySeconds = 0;
 
         // Init
         do {
@@ -118,7 +118,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
             obeliskBearing = aprilTags.getObeliskBearing();
             obeliskDistance = aprilTags.getObeliskRange();
 
-            telemetry.addData("!!! Obelisk Bearing ", obeliskBearing);
+            telemetry.addData("Obelisk Bearing ", obeliskBearing);
             telemetry.addData("Obelisk Range ", obeliskDistance);
 
             if (aprilTags.getObeliskRange() > 100) telemetry.addData("Field Position", "Far");
