@@ -63,8 +63,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
     PathChain InFrontOfBalls1, BehindBalls1, InFrontOfBalls2, BehindBalls2, MoveToFreeSpace, MoveToFarShoot;
 
     // The order of values listed in Options is irrelevant
-    enum Options { STOP, Do_InFrontOfBalls1, Do_BehindBalls1, Do_MoveToFreeSpace, Do_MoveToFarShoot }
-    Options option;
+    enum PathOption { STOP, Do_InFrontOfBalls1, Do_BehindBalls1, Do_MoveToFreeSpace, Do_MoveToFarShoot }
 
     int pathsStep = 0;
 
@@ -86,8 +85,6 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
         buildPaths();
 
         doAutonomous = true;
-//        option = Options.Do_InFrontOfBalls1;   // Define the first action in the path
-
         shooter = new Shooter(hardwareMap, "shooter", true);
 
         collector = hardwareMap.get(DcMotorEx.class, "collector");
@@ -607,6 +604,17 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
             }
         }
         stopMotors();
+    }
+
+    private void doPathChainLinear(PathChain pathChain) {
+        // This function is useful for going along a pedro pathing pathChain in
+        // a non-iterative fashion in a larger set of steps.
+
+        follower.followPath(pathChain);
+
+        while (!follower.isBusy()) {
+            follower.update();
+        }
     }
 
     public static class Datalog {
