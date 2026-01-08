@@ -172,20 +172,16 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            if (doAutonomous) {
-                if (limitedAutoEnabled) {
-                    runLimitedAuto();
-                }
-                else {
-//                    if (obeliskDistance > 100) {
-                        runFromFar();
-//                    } else {
-//                        runFromClose();
-//                    }
-                }
-            }
-            else {
-                break;
+            if (limitedAutoEnabled) {
+//                runLimitedAuto();
+            } else {
+                doFarAuto();
+
+//                if (obeliskDistance > 100) {
+//                    runFromFar();
+//                } else {
+//                    runFromClose();
+//                }
             }
         }
     }
@@ -222,7 +218,55 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
                 .build();
     }
 
-    private void runFromFar() {
+    private void doFarAuto() {
+        imu.resetYaw();
+        double shootingVelocity = 34.0;
+
+        doPathChainLinear(MoveToFarShoot);
+
+        sleep(100);
+        rotateTo(aprilTags.getBearing() + 5);
+        shootShooter(shootingVelocity);
+        shootShooter(shootingVelocity);
+        shootShooter(shootingVelocity);
+        stopShooter();
+
+        collector.setPower(collectorSpeed);
+
+        doPathChainLinear(InFrontOfBalls1);
+        doPathChainLinear(BehindBalls1);
+
+        collector.setPower(0);
+
+        doPathChainLinear(MoveToFarShoot);
+
+        sleep(100);
+        rotateTo(aprilTags.getBearing() + 5);
+        shootShooter(shootingVelocity);
+        shootShooter(shootingVelocity);
+        shootShooter(shootingVelocity);
+        stopShooter();
+
+        collector.setPower(collectorSpeed);
+
+        doPathChainLinear(InFrontOfBalls2);
+        doPathChainLinear(BehindBalls2);
+
+        collector.setPower(0);
+
+        doPathChainLinear(MoveToFarShoot);
+
+        sleep(100);
+        rotateTo(aprilTags.getBearing() + 5);
+        shootShooter(shootingVelocity);
+        shootShooter(shootingVelocity);
+        shootShooter(shootingVelocity);
+        stopShooter();
+
+        doPathChainLinear(MoveToFreeSpace);
+    }
+
+    private void oldRunFromFar() {
         imu.resetYaw();
         double shootingVelocity = 34.0;
 
