@@ -212,7 +212,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
                 .build();
 
         MoveToFreeSpace = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(behindBalls1_x, behindBalls1_y), new Pose(50., 35.)))
+                .addPath(new BezierLine(new Pose(behindBalls1_x, behindBalls1_y), new Pose(50., 50.)))
                 .setLinearHeadingInterpolation(Math.toRadians(behindBalls1_angle), Math.toRadians(moveToFreeSpace_angle))
                 .build();
 
