@@ -81,8 +81,6 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
         follower = new ConstantsCompetition().createFollower(hardwareMap);
         follower.setStartingPose(startPose);   //set your starting pose
 
-        buildPaths();
-
         doAutonomous = true;
         shooter = new Shooter(hardwareMap, "shooter", true);
 
@@ -166,6 +164,8 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
             telemetry.update();
         } while (opModeInInit());
 
+        buildPaths(Blackboard.alliance); // Only build the paths once we know the alliance
+
         runtime.reset();
         imu.resetYaw();
 
@@ -185,35 +185,61 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
         }
     }
 
-    void buildPaths() {
+    void buildPaths(Blackboard.Alliance alliance) {
+        // Blue alliance by default, unless it's proved that the alliance is red
+        int sign = 1;
+        if (alliance == Blackboard.Alliance.RED) {
+            sign = -1;
+        }
+
+        // All poses are initially written as if we are on BLUE alliance; necessary values
+        // are multiplied by horizontalSign to account for field symmetry
         InFrontOfBalls1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(start_x, start_y), new Pose(inFrontOfBalls1_x, inFrontOfBalls1_y)))
-                .setLinearHeadingInterpolation(Math.toRadians(start_angle), Math.toRadians(inFrontOfBalls1_angle))
+                .addPath(new BezierLine(
+                        new Pose((start_x - 72) * sign + 72, start_y),
+                        new Pose((inFrontOfBalls1_x - 72) * sign + 72, inFrontOfBalls1_y)
+                ))
+                .setLinearHeadingInterpolation(Math.toRadians(start_angle * sign), Math.toRadians(inFrontOfBalls1_angle * sign))
                 .build();
 
         BehindBalls1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(inFrontOfBalls1_x, inFrontOfBalls1_y), new Pose(behindBalls1_x, behindBalls1_y)))
-                .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls1_angle), Math.toRadians(behindBalls1_angle))
+                .addPath(new BezierLine(
+                        new Pose((inFrontOfBalls1_x - 72) * sign + 72, inFrontOfBalls1_y),
+                        new Pose((behindBalls1_x - 72) * sign + 72, behindBalls1_y)
+                ))
+                .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls1_angle * sign), Math.toRadians(behindBalls1_angle * sign))
                 .build();
 
         InFrontOfBalls2 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(start_x, start_y), new Pose(inFrontOfBalls2_x, inFrontOfBalls2_y)))
-                .setLinearHeadingInterpolation(Math.toRadians(start_angle), Math.toRadians(inFrontOfBalls2_angle))
+                .addPath(new BezierLine(
+                        new Pose((start_x - 72) * sign + 72, start_y),
+                        new Pose((inFrontOfBalls2_x - 72) * sign + 72, inFrontOfBalls2_y)
+                ))
+                .setLinearHeadingInterpolation(Math.toRadians(start_angle * sign), Math.toRadians(inFrontOfBalls2_angle * sign))
                 .build();
 
         BehindBalls2 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(inFrontOfBalls2_x, inFrontOfBalls2_y), new Pose(behindBalls2_x, behindBalls2_y)))
-                .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls2_angle), Math.toRadians(behindBalls2_angle))
+                .addPath(new BezierLine(
+                        new Pose((inFrontOfBalls2_x - 72) * sign + 72, inFrontOfBalls2_y),
+                        new Pose((behindBalls2_x - 72) * sign + 72, behindBalls2_y)
+                ))
+                .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls2_angle * sign), Math.toRadians(behindBalls2_angle * sign))
                 .build();
 
         MoveToFreeSpace = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(behindBalls1_x, behindBalls1_y), new Pose(50., 50.)))
-                .setLinearHeadingInterpolation(Math.toRadians(behindBalls1_angle), Math.toRadians(moveToFreeSpace_angle))
+                .addPath(new BezierLine(
+                        new Pose((behindBalls1_x - 72) * sign + 72, behindBalls1_y),
+                        new Pose((50. - 72) * sign + 72, 50.)
+                ))
+                .setLinearHeadingInterpolation(Math.toRadians(behindBalls1_angle * sign), Math.toRadians(moveToFreeSpace_angle * sign))
                 .build();
 
         MoveToFarShoot = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(moveToFreeSpace_x, moveToFreeSpace_y), new Pose(moveToFarShoot_x, moveToFarShoot_y)))
-                .setLinearHeadingInterpolation(Math.toRadians(moveToFreeSpace_angle), Math.toRadians(moveToFarShoot_angle))
+                .addPath(new BezierLine(
+                        new Pose((moveToFreeSpace_x - 72) * sign + 72, moveToFreeSpace_y),
+                        new Pose((moveToFarShoot_x - 72) * sign + 72, moveToFarShoot_y)
+                ))
+                .setLinearHeadingInterpolation(Math.toRadians(moveToFreeSpace_angle * sign), Math.toRadians(moveToFarShoot_angle * sign))
                 .build();
     }
 
