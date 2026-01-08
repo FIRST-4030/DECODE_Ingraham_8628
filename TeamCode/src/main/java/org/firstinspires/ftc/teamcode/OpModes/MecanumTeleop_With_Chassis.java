@@ -110,6 +110,8 @@ public class MecanumTeleop_With_Chassis extends OpMode {
             aprilTags.setGoalTagID(20);
         }
 
+        double currentCoordinate = 72 - Math.sqrt((aprilTags.getObeliskRange() * aprilTags.getObeliskRange()) - 18567.25);
+
         telemetry.addData("Pad 1, Left Bumper", "Slow Drive");
         telemetry.addData("Pad 1, Right Bumper", "Very Slow Drive");
         telemetry.addData("Pad 1, A", "Raise Robot");
@@ -124,6 +126,8 @@ public class MecanumTeleop_With_Chassis extends OpMode {
         telemetry.addLine("HOLD RB AND Press B to override alliance to RED");
 
         telemetry.addData("Goal Tag ID", aprilTags.getGoalTagId());
+        telemetry.addData("Obelisk Range", aprilTags.getObeliskRange());
+        telemetry.addData("Current Coordinate", currentCoordinate);
 
         telemetry.update();
     }
