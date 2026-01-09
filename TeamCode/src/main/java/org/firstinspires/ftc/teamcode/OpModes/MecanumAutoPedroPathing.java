@@ -35,8 +35,11 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
     public static double inFrontOfBalls2_x = 40, inFrontOfBalls2_y = 59 ,inFrontOfBalls2_angle = 0;
     public static double behindBalls1_x = 13, behindBalls1_y = 35, behindBalls1_angle = 0;
     public static double behindBalls2_x = 13, behindBalls2_y = 59, behindBalls2_angle = 0;
-    public static double moveToFreeSpace_x = 50, moveToFreeSpace_y = 35,moveToFreeSpace_angle = 0;
-    public static double moveToFarShoot_x = 60, moveToFarShoot_y = 11,moveToFarShoot_angle = 110;
+    public static double moveToFreeSpace_x = 50, moveToFreeSpace_y = 35, moveToFreeSpace_angle = 0;
+
+    // The angle of moveToFarShoot is manually passed to buildPaths()
+    public static double moveToFarShoot_x = 60, moveToFarShoot_y = 11;
+    Pose startPose = new Pose(56, 8, Math.toRadians(90));
 
     Chassis chassis;
     DcMotorEx collector;
@@ -76,8 +79,6 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
         chassis = new Chassis(hardwareMap);
 
         // Pedro pathing init
-        Pose startPose = new Pose(56, 8, Math.toRadians(90));
-
         follower = new ConstantsCompetition().createFollower(hardwareMap);
         follower.setStartingPose(startPose);   //set your starting pose
 
@@ -164,7 +165,13 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
             telemetry.update();
         } while (opModeInInit());
 
-        buildPaths(Blackboard.alliance); // Only build the paths once we know the alliance
+        buildPaths(Blackboard.alliance, 0); // Build the paths once we know the alliance
+
+        if (Blackboard.alliance == Blackboard.Alliance.RED) {
+            startPose = new Pose(-start_x, 8, Math.toRadians(90));
+            follower.setStartingPose(startPose);   //set your starting pose
+        }
+
 
         runtime.reset();
         imu.resetYaw();
@@ -174,7 +181,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
             if (limitedAutoEnabled) {
 //                runLimitedAuto();
             } else {
-                doFarAuto();
+                doFarAuto(Blackboard.alliance);
 
 //                if (obeliskDistance > 100) {
 //                    runFromFar();
@@ -185,7 +192,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
         }
     }
 
-    void buildPaths(Blackboard.Alliance alliance) {
+    void buildPaths(Blackboard.Alliance alliance, double shootingBearing) {
         // Blue alliance by default, unless it's proved that the alliance is red
         int sign = 1;
         if (alliance == Blackboard.Alliance.RED) {
@@ -199,7 +206,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
                         new Pose((start_x - 72) * sign + 72, start_y),
                         new Pose((inFrontOfBalls1_x - 72) * sign + 72, inFrontOfBalls1_y)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians(start_angle * sign), Math.toRadians(inFrontOfBalls1_angle * sign))
+                .setLinearHeadingInterpolation(Math.toRadians(start_angle * sign), Math.toRadians((inFrontOfBalls1_angle - 90) * sign + 90))
                 .build();
 
         BehindBalls1 = follower.pathBuilder()
@@ -207,7 +214,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
                         new Pose((inFrontOfBalls1_x - 72) * sign + 72, inFrontOfBalls1_y),
                         new Pose((behindBalls1_x - 72) * sign + 72, behindBalls1_y)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls1_angle * sign), Math.toRadians(behindBalls1_angle * sign))
+                .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls1_angle * sign), Math.toRadians((behindBalls1_angle - 90) * sign + 90))
                 .build();
 
         InFrontOfBalls2 = follower.pathBuilder()
@@ -215,7 +222,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
                         new Pose((start_x - 72) * sign + 72, start_y),
                         new Pose((inFrontOfBalls2_x - 72) * sign + 72, inFrontOfBalls2_y)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians(start_angle * sign), Math.toRadians(inFrontOfBalls2_angle * sign))
+                .setLinearHeadingInterpolation(Math.toRadians(start_angle * sign), Math.toRadians((inFrontOfBalls2_angle - 90) * sign + 90))
                 .build();
 
         BehindBalls2 = follower.pathBuilder()
@@ -223,7 +230,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
                         new Pose((inFrontOfBalls2_x - 72) * sign + 72, inFrontOfBalls2_y),
                         new Pose((behindBalls2_x - 72) * sign + 72, behindBalls2_y)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls2_angle * sign), Math.toRadians(behindBalls2_angle * sign))
+                .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls2_angle * sign), Math.toRadians((behindBalls2_angle - 90) * sign + 90))
                 .build();
 
         MoveToFreeSpace = follower.pathBuilder()
@@ -231,7 +238,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
                         new Pose((behindBalls1_x - 72) * sign + 72, behindBalls1_y),
                         new Pose((50. - 72) * sign + 72, 50.)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians(behindBalls1_angle * sign), Math.toRadians(moveToFreeSpace_angle * sign))
+                .setLinearHeadingInterpolation(Math.toRadians(behindBalls1_angle * sign), Math.toRadians((moveToFreeSpace_angle - 90) * sign + 90))
                 .build();
 
         MoveToFarShoot = follower.pathBuilder()
@@ -239,18 +246,26 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
                         new Pose((moveToFreeSpace_x - 72) * sign + 72, moveToFreeSpace_y),
                         new Pose((moveToFarShoot_x - 72) * sign + 72, moveToFarShoot_y)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians(moveToFreeSpace_angle * sign), Math.toRadians(moveToFarShoot_angle * sign))
+                .setLinearHeadingInterpolation(Math.toRadians(moveToFreeSpace_angle * sign), Math.toRadians(90))
                 .build();
     }
 
-    private void doFarAuto() {
+    private void doFarAuto(Blackboard.Alliance alliance) {
+        // Store the bearing of the goal
+        double goalBearing = 0;
+
         imu.resetYaw();
         double shootingVelocity = 34.0;
 
+//        goalBearing = aprilTags.getBearing() - 3;
+//        if (alliance == Blackboard.Alliance.RED) {
+//            goalBearing = aprilTags.getBearing() + 5;
+//        }
+
         doPathChainLinear(MoveToFarShoot);
 
-        sleep(250);
-        rotateTo(aprilTags.getBearing() + 5);
+//        imu.resetYaw();
+        rotateTo(follower.getHeading() - 3);
         shootShooter(shootingVelocity);
         shootShooter(shootingVelocity);
         shootShooter(shootingVelocity);
@@ -265,8 +280,9 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
 
         doPathChainLinear(MoveToFarShoot);
 
-        sleep(250);
-        rotateTo(aprilTags.getBearing() + 5);
+        sleep(1000);
+//        imu.resetYaw();
+        rotateTo(follower.getHeading() - 3);
         shootShooter(shootingVelocity);
         shootShooter(shootingVelocity);
         shootShooter(shootingVelocity);
@@ -281,14 +297,18 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
 
         doPathChainLinear(MoveToFarShoot);
 
-        sleep(250);
-        rotateTo(aprilTags.getBearing() + 5);
+//        imu.resetYaw();
+        rotateTo(goalBearing);
         shootShooter(shootingVelocity);
         shootShooter(shootingVelocity);
         shootShooter(shootingVelocity);
         stopShooter();
 
         doPathChainLinear(MoveToFreeSpace);
+    }
+
+    private void doNearAuto() {
+
     }
 
     private void oldRunFromFar() {
@@ -610,7 +630,8 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
 
         follower.followPath(pathChain);
 
-        while (!follower.isBusy()) {
+        follower.update();
+        while (follower.isBusy()) {
             follower.update();
         }
     }
