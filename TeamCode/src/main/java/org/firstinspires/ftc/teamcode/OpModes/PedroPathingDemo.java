@@ -13,6 +13,7 @@ import org.firstinspires.ftc.teamcode.BuildConfig;
 import org.firstinspires.ftc.teamcode.Chassis;
 import org.firstinspires.ftc.teamcode.Datalogger;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
+import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
 
 /*
  * This opMode is provided to show how to introduce PedroPathing into a project.
@@ -76,7 +77,7 @@ public class PedroPathingDemo extends LinearOpMode {
 
         chassis = new Chassis(hardwareMap);
 
-        follower = new ConstantsDemo().createFollower(hardwareMap);
+        follower = new ConstantsCompetition().createFollower(hardwareMap);
         follower.setStartingPose(startPose);   //set your starting pose
 
         buildPaths();
