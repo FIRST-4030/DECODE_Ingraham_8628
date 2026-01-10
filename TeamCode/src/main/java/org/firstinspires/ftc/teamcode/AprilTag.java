@@ -119,12 +119,14 @@ public class AprilTag {
                         blueSide = true;
                         redSide = false;
                         goalBearingBlue = detection.ftcPose.bearing;
+                        distanceToGoal = detection.ftcPose.range;
                         goalTagId = detection.id;
                     }
                     if (detection.id == 24){
                         blueSide = false;
                         redSide = true;
                         goalBearingRed = detection.ftcPose.bearing;
+                        distanceToGoal = detection.ftcPose.range;
                         goalTagId = detection.id;
                     }
                     if (detection.id == 22){ //PGP
