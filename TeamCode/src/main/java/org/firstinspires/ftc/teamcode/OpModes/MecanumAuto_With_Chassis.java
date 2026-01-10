@@ -77,6 +77,7 @@ public class MecanumAuto_With_Chassis extends LinearOpMode {
         // Init
         do {
             aprilTags.scanField(telemetry);
+            //boolean targetInView = aprilTags.runInLoop(telemetry, true);
             obeliskBearing = aprilTags.getObeliskBearing();
             obeliskDistance = aprilTags.getObeliskRange();
 
@@ -125,6 +126,11 @@ public class MecanumAuto_With_Chassis extends LinearOpMode {
             }
 
             telemetry.addData("Alliance", Blackboard.getAllianceAsString());
+
+            double distanceFromWall = ((aprilTags.distanceToGoal * Math.abs(Math.sin(aprilTags.getBearing()))) + 20);
+            telemetry.addData("Distance From Wall (Inches):", distanceFromWall);
+            telemetry.addData("getBearing", aprilTags.getBearing());
+            telemetry.addData("distanceToGoal", aprilTags.distanceToGoal);
 
             telemetry.update();
         } while (opModeInInit());
