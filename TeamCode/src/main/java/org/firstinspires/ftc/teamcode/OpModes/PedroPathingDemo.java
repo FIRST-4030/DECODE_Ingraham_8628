@@ -11,7 +11,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.BuildConfig;
 import org.firstinspires.ftc.teamcode.Chassis;
+import org.firstinspires.ftc.teamcode.ControlHub;
 import org.firstinspires.ftc.teamcode.Datalogger;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
 
@@ -26,6 +28,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
 public class PedroPathingDemo extends LinearOpMode {
 
     Chassis chassis;
+
+    Constants constants;
 
     ElapsedTime runtime = new ElapsedTime();
 
@@ -53,22 +57,11 @@ public class PedroPathingDemo extends LinearOpMode {
      * Start at lower left-hand corner (0,0)
      */
     private final Pose startPose = new Pose(0, 0, Math.toRadians(0));
-    /*
-     * Move to upper left-hand corner (heightX,0)
-     */
     private final Pose forwardPose = new Pose(heightX, 0, Math.toRadians(0));
-    /*
-     * Move to upper right-hand corner (heightX, widthY) and rotate the robot so that it is facing right
-     */
     private final Pose rightPose = new Pose(heightX, -widthY, Math.toRadians(0));
-    /*
-     * Move to lower right-hand corner (0, widthY) and rotate the robot so that is facing backwards
-     */
     private final Pose backPose = new Pose(0, -widthY, Math.toRadians(0));
-//    /*
-//     * Move back to the origin (0,0) and rotate the robot so that is facing forward
-//     */
-//    private final Pose leftPose = new Pose(0, 0, Math.toRadians(0));
+
+    public static ControlHub controlHub = new ControlHub();
 
     PathChain moveLeft, moveForward, moveBack, moveRight;
 
@@ -77,7 +70,15 @@ public class PedroPathingDemo extends LinearOpMode {
 
         chassis = new Chassis(hardwareMap);
 
-        follower = new ConstantsCompetition().createFollower(hardwareMap);
+        if (controlHub.getMacAddress().equals(Constants.PRIMARY_BOT)) {
+            constants = new ConstantsCompetition();
+        } else if (controlHub.getMacAddress().equals(Constants.SECONDARY_BOT)) {
+            constants = new ConstantsDemo();
+        } else {
+            throw new RuntimeException("ControlHub MAC address did not match primary or secondary");
+        }
+
+        follower = constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);   //set your starting pose
 
         buildPaths();

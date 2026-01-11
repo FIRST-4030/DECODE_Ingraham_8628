@@ -11,7 +11,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.BuildConfig;
 import org.firstinspires.ftc.teamcode.Chassis;
+import org.firstinspires.ftc.teamcode.ControlHub;
 import org.firstinspires.ftc.teamcode.Datalogger;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 
 /*
@@ -31,7 +34,11 @@ public class PedroPathingDemoAuto extends LinearOpMode {
     public static double moveToFreeSpace_x = 50, moveToFreeSpace_y = 35,moveToFreeSpace_angle = 0;
     public static double moveToFarShoot_x = 60, moveToFarShoot_y = 11,moveToFarShoot_angle = 110;
 
+    public static ControlHub controlHub = new ControlHub();
+
     Chassis chassis;
+
+    Constants constants;
 
     ElapsedTime runtime = new ElapsedTime();
 
@@ -56,7 +63,15 @@ public class PedroPathingDemoAuto extends LinearOpMode {
         chassis = new Chassis(hardwareMap);
         Pose startPose = new Pose(start_x, start_y, Math.toRadians(start_angle));
 
-        follower = new ConstantsDemo().createFollower(hardwareMap);
+        if (controlHub.getMacAddress().equals(Constants.PRIMARY_BOT)) {
+            constants = new ConstantsCompetition();
+        } else if (controlHub.getMacAddress().equals(Constants.SECONDARY_BOT)) {
+            constants = new ConstantsDemo();
+        } else {
+            throw new RuntimeException("ControlHub MAC address did not match primary or secondary");
+        }
+
+        follower = constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);   //set your starting pose
 
         buildPaths();
