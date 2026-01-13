@@ -9,7 +9,6 @@ import com.pedropathing.paths.PathChain;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -21,14 +20,18 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.AprilTag;
 import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Chassis;
+import org.firstinspires.ftc.teamcode.ControlHub;
 import org.firstinspires.ftc.teamcode.Datalogger;
+import org.firstinspires.ftc.teamcode.IterativeAutoStep;
+import org.firstinspires.ftc.teamcode.IterativeAutoStepChain;
 import org.firstinspires.ftc.teamcode.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
+import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 
 @Configurable
-@Disabled
-@Autonomous(name="Mecanum Auto PedroPathing", group="Linear OpMode")
-public class MecanumAutoPedroPathing extends LinearOpMode {
+@Autonomous(name="Mecanum Auto ITERATIVE PedroPathing", group="Linear OpMode")
+public class MecanumAutoIterativePedroPathing extends LinearOpMode {
 
     // Pedro pathing constants (editable in panels)
     public static double start_x = 56, start_y = 8, start_angle = 90;
@@ -42,6 +45,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
     Pose startPose = new Pose(56, 8, Math.toRadians(90));
 
     Chassis chassis;
+    Constants constants;
     DcMotorEx collector;
     Shooter shooter;
     Servo shooterHinge;
@@ -62,27 +66,33 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
     IMU imu;
 
     Follower follower;
-    PathChain InFrontOfBalls1, BehindBalls1, InFrontOfBalls2, BehindBalls2, MoveToFreeSpace, MoveToFarShoot;
+    PathChain inFrontOfBalls1, behindBalls1, inFrontOfBalls2, behindBalls2, moveToFreeSpace, moveToFarShoot;
+    IterativeAutoStepChain farAutoStepChain;
 
-    // The order of values listed in Options is irrelevant
-    enum PathOption { STOP, Do_InFrontOfBalls1, Do_BehindBalls1, Do_MoveToFreeSpace, Do_MoveToFarShoot }
-
-    int pathsStep = 0;
-
-    boolean doAutonomous = false;
 
     Datalog datalog = new Datalog("MecanumAutoLog");
     boolean logData = true;
+    public static ControlHub controlHub = new ControlHub();
 
     @Override
     public void runOpMode() {
         chassis = new Chassis(hardwareMap);
 
         // Pedro pathing init
-        follower = new ConstantsCompetition().createFollower(hardwareMap);
+        if (controlHub.getMacAddress().equals(Constants.PRIMARY_BOT)) {
+            constants = new ConstantsCompetition();
+        } else if (controlHub.getMacAddress().equals(Constants.SECONDARY_BOT)) {
+            constants = new ConstantsDemo();
+        } else {
+            throw new RuntimeException("ControlHub MAC address did not match primary or secondary");
+        }
+
+        follower = constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);   //set your starting pose
 
-        doAutonomous = true;
+        buildPaths(Blackboard.alliance); // Build the paths once we know the alliance
+        buildAutoStepChains();
+
         shooter = new Shooter(hardwareMap, "shooter", true);
 
         collector = hardwareMap.get(DcMotorEx.class, "collector");
@@ -144,28 +154,38 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
             telemetry.addLine("--------------");
             telemetry.addLine();
 
-            telemetry.addData("Press X (increase delay), Y (decrease delay) | Delay", delaySeconds);
-            if (gamepad1.xWasReleased()) {
+            telemetry.addData("Press Y (increase delay), A (decrease delay) | Delay", delaySeconds);
+            if (gamepad1.yWasReleased()) {
                 delaySeconds++;
             }
-            if (gamepad1.yWasReleased()) {
+            if (gamepad1.aWasReleased()) {
                 delaySeconds--;
             }
 
-            telemetry.addData("Press Right/Left bumper to toggle limited auto | Limited Auto", limitedAutoEnabled);
-            if (gamepad1.rightBumperWasReleased() && !limitedAutoEnabled) {
+            telemetry.addData("Press Right/Left dpad to toggle limited auto | Limited Auto", limitedAutoEnabled);
+            if (gamepad1.dpadRightWasReleased() && !limitedAutoEnabled) {
                 limitedAutoEnabled = true;
             }
-            if (gamepad1.leftBumperWasReleased() && limitedAutoEnabled) {
+            if (gamepad1.dpadLeftWasReleased() && limitedAutoEnabled) {
                 limitedAutoEnabled = false;
             }
 
+            if (gamepad1.xWasPressed() && gamepad1.right_bumper) {
+                Blackboard.alliance = Blackboard.Alliance.BLUE;
+            } else if (gamepad1.bWasPressed() && gamepad1.right_bumper) {
+                Blackboard.alliance = Blackboard.Alliance.RED;
+            }
+
             telemetry.addData("Alliance", Blackboard.getAllianceAsString());
+            telemetry.addLine();
+            telemetry.addLine("--- IF NO ALLIANCE IS DETECTED (FOR SOME REASON) ---");
+            telemetry.addLine("HOLD RB AND Press X to override alliance to BLUE");
+            telemetry.addLine("HOLD RB AND Press B to override alliance to RED");
 
             telemetry.update();
         } while (opModeInInit());
 
-        buildPaths(Blackboard.alliance); // Build the paths once we know the alliance
+        farAutoStepChain.init(follower);
 
         if (Blackboard.alliance == Blackboard.Alliance.RED) {
             startPose = new Pose(-start_x, 8, Math.toRadians(90));
@@ -178,19 +198,8 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            if (limitedAutoEnabled) {
-//                runLimitedAuto();
-            } else {
-                doFarAuto(Blackboard.alliance);
-//                doTest();
-                break;
-
-//                if (obeliskDistance > 100) {
-//                    runFromFar();
-//                } else {
-//                    runFromClose();
-//                }
-            }
+            farAutoStepChain.update(follower, collector, telemetry);
+//            doFarAutoLinear(Blackboard.alliance);
         }
     }
 
@@ -203,7 +212,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
 
         // All poses are initially written as if we are on BLUE alliance; necessary values
         // are multiplied by horizontalSign to account for field symmetry
-        InFrontOfBalls1 = follower.pathBuilder()
+        inFrontOfBalls1 = follower.pathBuilder()
                 .addPath(new BezierLine(
                         new Pose((start_x - 72) * sign + 72, start_y),
                         new Pose((inFrontOfBalls1_x - 72) * sign + 72, inFrontOfBalls1_y)
@@ -211,7 +220,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
                 .setLinearHeadingInterpolation(Math.toRadians(start_angle * sign), Math.toRadians((inFrontOfBalls1_angle - 90) * sign + 90))
                 .build();
 
-        BehindBalls1 = follower.pathBuilder()
+        behindBalls1 = follower.pathBuilder()
                 .addPath(new BezierLine(
                         new Pose((inFrontOfBalls1_x - 72) * sign + 72, inFrontOfBalls1_y),
                         new Pose((behindBalls1_x - 72) * sign + 72, behindBalls1_y)
@@ -219,7 +228,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
                 .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls1_angle * sign), Math.toRadians((behindBalls1_angle - 90) * sign + 90))
                 .build();
 
-        InFrontOfBalls2 = follower.pathBuilder()
+        inFrontOfBalls2 = follower.pathBuilder()
                 .addPath(new BezierLine(
                         new Pose((start_x - 72) * sign + 72, start_y),
                         new Pose((inFrontOfBalls2_x - 72) * sign + 72, inFrontOfBalls2_y)
@@ -227,7 +236,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
                 .setLinearHeadingInterpolation(Math.toRadians(start_angle * sign), Math.toRadians((inFrontOfBalls2_angle - 90) * sign + 90))
                 .build();
 
-        BehindBalls2 = follower.pathBuilder()
+        behindBalls2 = follower.pathBuilder()
                 .addPath(new BezierLine(
                         new Pose((inFrontOfBalls2_x - 72) * sign + 72, inFrontOfBalls2_y),
                         new Pose((behindBalls2_x - 72) * sign + 72, behindBalls2_y)
@@ -235,7 +244,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
                 .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls2_angle * sign), Math.toRadians((behindBalls2_angle - 90) * sign + 90))
                 .build();
 
-        MoveToFreeSpace = follower.pathBuilder()
+        moveToFreeSpace = follower.pathBuilder()
                 .addPath(new BezierLine(
                         new Pose((behindBalls1_x - 72) * sign + 72, behindBalls1_y),
                         new Pose((50. - 72) * sign + 72, 50.)
@@ -243,7 +252,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
                 .setLinearHeadingInterpolation(Math.toRadians(behindBalls1_angle * sign), Math.toRadians((moveToFreeSpace_angle - 90) * sign + 90))
                 .build();
 
-        MoveToFarShoot = follower.pathBuilder()
+        moveToFarShoot = follower.pathBuilder()
                 .addPath(new BezierLine(
                         new Pose((moveToFreeSpace_x - 72) * sign + 72, moveToFreeSpace_y),
                         new Pose((moveToFarShoot_x - 72) * sign + 72, moveToFarShoot_y)
@@ -252,223 +261,65 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
                 .build();
     }
 
-    private void doFarAuto(Blackboard.Alliance alliance) {
+    void buildAutoStepChains() {
+        IterativeAutoStep moveToFarShootAutoStep = new IterativeAutoStep.Builder()
+                .setStepType(IterativeAutoStep.StepType.MOVE)
+                .setPathChain(moveToFarShoot)
+                .setStartDelayMS(50)
+                .build();
 
-        imu.resetYaw();
-        double shootingVelocity = 34.0;
+        IterativeAutoStep moveToFreeSpaceAutoStep = new IterativeAutoStep.Builder()
+                .setStepType(IterativeAutoStep.StepType.MOVE)
+                .setPathChain(moveToFreeSpace)
+                .build();
 
-        doPathChainLinear(MoveToFarShoot);
-        shootShooter(shootingVelocity);
-        shootShooter(shootingVelocity);
-        shootShooter(shootingVelocity);
-        stopShooter();
+        IterativeAutoStep moveToInFrontOfBalls1AutoStep = new IterativeAutoStep.Builder()
+                .setStepType(IterativeAutoStep.StepType.MOVE)
+                .setPathChain(inFrontOfBalls1)
+                .setStartDelayMS(700)
+                .build();
 
-        collector.setPower(collectorSpeed);
+        IterativeAutoStep moveToBehindBalls1AutoStep = new IterativeAutoStep.Builder()
+                .setStepType(IterativeAutoStep.StepType.MOVE)
+                .setPathChain(behindBalls1)
+                .setStartDelayMS(50)
+                .build();
 
-        doPathChainLinear(InFrontOfBalls1);
-        doPathChainLinear(BehindBalls1);
+        IterativeAutoStep moveToInFrontOfBalls2AutoStep = new IterativeAutoStep.Builder()
+                .setStepType(IterativeAutoStep.StepType.MOVE)
+                .setPathChain(inFrontOfBalls2)
+                .setStartDelayMS(700)
+                .build();
 
-        collector.setPower(0);
+        IterativeAutoStep moveToBehindBalls2AutoStep = new IterativeAutoStep.Builder()
+                .setStepType(IterativeAutoStep.StepType.MOVE)
+                .setPathChain(behindBalls2)
+                .setStartDelayMS(50)
+                .build();
 
-        doPathChainLinear(MoveToFarShoot);
-        shootShooter(shootingVelocity);
-        shootShooter(shootingVelocity);
-        shootShooter(shootingVelocity);
-        stopShooter();
-
-        collector.setPower(collectorSpeed);
-
-        doPathChainLinear(InFrontOfBalls2);
-        doPathChainLinear(BehindBalls2);
-
-        collector.setPower(0);
-
-        doPathChainLinear(MoveToFarShoot);
-        shootShooter(shootingVelocity);
-        shootShooter(shootingVelocity);
-        shootShooter(shootingVelocity);
-        stopShooter();
-
-        doPathChainLinear(MoveToFreeSpace);
-    }
-
-    private void doNearAuto() {
-
-    }
-
-    private void oldRunFromFar() {
-        imu.resetYaw();
-        double shootingVelocity = 34.0;
-
-        //if (redSide) {
-        if (Blackboard.alliance == Blackboard.Alliance.RED) {
-
-            // Aim and shoot the three initial artifacts
-            moveForward(0.5, 75);
-
-            rotateTo(aprilTags.getBearing() + 5);
-            shootShooter(shootingVelocity);
-            shootShooter(shootingVelocity);
-            shootShooter(shootingVelocity);
-            stopShooter();
-
-            // Because this is RED AUTO, rotate back to face straight forward and reset yaw
-            rotateTo(10);
-            imu.resetYaw();
-
-            // Move and collect three artifacts in a line
-            moveForward(0.5, 915);
-            rotateTo(90);
-
-            collector.setPower(collectorSpeed);
-            moveForward(-0.2, 4000);
-            collectorTime.reset();
-            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
-            collector.setPower(0);
-
-            // Move back to line up and shoot
-            moveForward(0.25, 2750);
-
-            rotateTo(0);
-            moveForward(-0.25, 1500);
-
-            rotateTo(-10); // ?????
-
-            // Aim and shoot the three artifacts we collected!
-            rotateTo(aprilTags.getBearing() - 8);
-            shootShooter(shootingVelocity);
-            shootShooter(shootingVelocity);
-            shootShooter(shootingVelocity);
-            stopShooter();
-
-            // Move off the white line
-            moveForward(0.5, 800);
-        }
-        else if (Blackboard.alliance == Blackboard.Alliance.BLUE) {
-            // Aim and shoot the three initial artifacts
-            moveForward(0.5, 250);
-
-            rotateTo (aprilTags.getBearing() - 3);
-
-            shootShooter(shootingVelocity);
-            shootShooter(shootingVelocity);
-            shootShooter(shootingVelocity);
-            stopShooter();
-
-            // Move and collect three artifacts in a line
-            rotateTo(0);
-            moveForward(0.5, 450);
-            rotateTo(-90);
-
-            collector.setPower(collectorSpeed);
-            moveForward(-0.2, 4375);
-            collectorTime.reset();
-            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
-            collector.setPower(0);
-
-            // Move back to line up and shoot
-            moveForward(0.25, 2250);
-
-            rotateTo(0);
-            moveForward(-0.25, 1500);
+        moveToFreeSpaceAutoStep = new IterativeAutoStep.Builder()
+                .setStepType(IterativeAutoStep.StepType.MOVE)
+                .setPathChain(moveToFreeSpace)
+                .build();
 
 
-            // Aim and shoot the three artifacts we collected!
-            rotateTo(aprilTags.getBearing() - 5);
-            shootShooter(shootingVelocity);
-            shootShooter(shootingVelocity);
-            shootShooter(shootingVelocity);
-            stopShooter();
+        // This is where you define the sequence of steps to be executed for each given auto
+        farAutoStepChain = new IterativeAutoStepChain(
+                34.0,
+                new IterativeAutoStep[] {
+                        moveToFarShootAutoStep,
 
-            // Move off the white line
-            moveForward(0.5, 800);
-        }
-    }
+                        moveToInFrontOfBalls1AutoStep,
+                        moveToBehindBalls1AutoStep,
 
-    private void oldRunFromClose() {
-        double shootingVelocity = 29.0;
+                        moveToFarShootAutoStep,
 
-        // Remember this for close auto; our "home base" angle of zero is parallel to the goals:
-        imu.resetYaw();
+                        moveToInFrontOfBalls2AutoStep,
+                        moveToBehindBalls2AutoStep,
 
-        if (Blackboard.alliance == Blackboard.Alliance.BLUE) {
-            // Move to be in front of the goal we're next to
-            rotateTo(130);
-            moveForward(-0.5, 1550);
-
-            // SHOOT!
-            shootShooter(shootingVelocity);
-            shootShooter(shootingVelocity);
-            shootShooter(shootingVelocity);
-            stopShooter();
-
-            // Line up and collect three artifacts in a line
-            rotateTo(-135);
-            moveForward(0.5, 570);
-            rotateTo(0);
-
-            collector.setPower(collectorSpeed);
-            moveForward(-0.2, 2850);
-            collectorTime.reset();
-            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
-            collector.setPower(0);
-        }
-        else {
-            // Move to be in front of the goal we're next to
-            rotateTo(-130);
-            moveForward(-0.5, 1550);
-
-            // SHOOT!
-            shootShooter(shootingVelocity);
-            shootShooter(shootingVelocity);
-            shootShooter(shootingVelocity);
-            stopShooter();
-
-            // Line up and collect three artifacts in a line
-            rotateTo(135);
-            moveForward(0.5, 570);
-            rotateTo(0);
-
-            collector.setPower(collectorSpeed);
-            moveForward(-0.2, 2850);
-            collectorTime.reset();
-            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
-            collector.setPower(0);
-        }
-
-        //unused auto bits
-//        moveForward(0.25, 2550);
-//
-//        rotateTo(39);
-//
-//        shootShooter();
-//        shootShooter();
-//        shootShooter();
-//        stopShooter();
-//
-//        rotateTo(-220);
-//
-//        moveForward(0.5, 700);
-    }
-
-    private void oldRunLimitedAuto() {
-        double shootingVelocity = 34.0;
-
-        // Aim and shoot three artifacts
-        if (Blackboard.alliance == Blackboard.Alliance.RED) {
-            rotateTo(aprilTags.getBearing() + 5);
-        } else {
-            rotateTo(aprilTags.getBearing() - 3);
-        }
-
-        shootShooter(shootingVelocity);
-        shootShooter(shootingVelocity);
-        shootShooter(shootingVelocity);
-        stopShooter();
-
-        // Move off the white line, that's it!
-        rotateTo(0);
-        moveForward(0.5, 700);
+                        moveToFarShootAutoStep,
+                }
+        );
     }
 
     private void moveForward(double power, double mseconds){
@@ -517,28 +368,6 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
     public void stopShooter() {
         shooter.targetVelocity = 0;
     }
-
-//    private void rotate (double milliseconds, int reverse) {
-//        ElapsedTime turnTimer = new ElapsedTime();
-//        turnTimer.reset();
-//        int leftSidepos;
-//
-//        if (blueSide) {
-//            leftSidepos = reverse;
-//        }
-//        else {
-//            leftSidepos = -reverse;
-//        }
-//
-//        while (turnTimer.milliseconds() < milliseconds) {
-//            frontLeftDrive.setPower(leftSidepos * -0.5);
-//            backLeftDrive.setPower(leftSidepos * -0.5);
-//            frontRightDrive.setPower(leftSidepos * 0.5);
-//            backRightDrive.setPower(leftSidepos * 0.5);
-//        }
-//
-//        stopMotors();
-//    }
 
     private void rotateTo(double targetAngle) {
         double Kp = 0.2;  // Proportional gain (tune this)
@@ -607,23 +436,6 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
             }
         }
         stopMotors();
-    }
-
-    private void doPathChainLinear(PathChain pathChain) {
-        // This function is useful for going along a pedro pathing pathChain in
-        // a non-iterative fashion in a larger set of steps.
-
-        follower.followPath(pathChain);
-
-        follower.update();
-        while (follower.isBusy()) {
-            follower.update();
-        }
-        runtime.reset();
-
-        while (runtime.milliseconds() < 500) {
-            follower.update();
-        }
     }
 
     public static class Datalog {
