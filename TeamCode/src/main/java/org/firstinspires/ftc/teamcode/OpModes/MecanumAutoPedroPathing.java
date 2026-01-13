@@ -9,6 +9,7 @@ import com.pedropathing.paths.PathChain;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -25,6 +26,7 @@ import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
 
 @Configurable
+@Disabled
 @Autonomous(name="Mecanum Auto PedroPathing", group="Linear OpMode")
 public class MecanumAutoPedroPathing extends LinearOpMode {
 
