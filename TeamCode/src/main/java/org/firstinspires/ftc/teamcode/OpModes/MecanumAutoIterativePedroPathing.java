@@ -258,7 +258,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                         new Pose((farStartX - 72) * sign + 72, farStartY),
                         new Pose((inFrontOfBalls1_x - 72) * sign + 72, inFrontOfBalls1_y)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians(farStartAngle * sign), Math.toRadians((inFrontOfBalls1_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(Math.toRadians((farStartAngle - 90) * sign + 90), Math.toRadians((inFrontOfBalls1_angle - 90) * sign + 90))
                 .build();
 
         behindBalls1 = follower.pathBuilder()
@@ -266,7 +266,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                         new Pose((inFrontOfBalls1_x - 72) * sign + 72, inFrontOfBalls1_y),
                         new Pose((behindBalls1_x - 72) * sign + 72, behindBalls1_y)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls1_angle * sign), Math.toRadians((behindBalls1_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(Math.toRadians((inFrontOfBalls1_angle - 90) * sign + 90), Math.toRadians((behindBalls1_angle - 90) * sign + 90))
                 .build();
 
         inFrontOfBalls2 = follower.pathBuilder()
@@ -274,7 +274,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                         new Pose((farStartX - 72) * sign + 72, farStartY),
                         new Pose((inFrontOfBalls2_x - 72) * sign + 72, inFrontOfBalls2_y)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians(farStartAngle * sign), Math.toRadians((inFrontOfBalls2_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(Math.toRadians((farStartAngle - 90) * sign + 90), Math.toRadians((inFrontOfBalls2_angle - 90) * sign + 90))
                 .build();
 
         behindBalls2 = follower.pathBuilder()
@@ -282,7 +282,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                         new Pose((inFrontOfBalls2_x - 72) * sign + 72, inFrontOfBalls2_y),
                         new Pose((behindBalls2_x - 72) * sign + 72, behindBalls2_y)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls2_angle * sign), Math.toRadians((behindBalls2_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(Math.toRadians((inFrontOfBalls2_angle - 90) * sign + 90), Math.toRadians((behindBalls2_angle - 90) * sign + 90))
                 .build();
 
         inFrontOfBalls3 = follower.pathBuilder()
@@ -290,7 +290,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                         new Pose((farStartX - 72) * sign + 72, farStartY),
                         new Pose((inFrontOfBalls3_x - 72) * sign + 72, inFrontOfBalls3_y)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians(farStartAngle * sign), Math.toRadians((inFrontOfBalls3_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(Math.toRadians((farStartAngle - 90) * sign + 90), Math.toRadians((inFrontOfBalls3_angle - 90) * sign + 90))
                 .build();
 
         behindBalls3 = follower.pathBuilder()
@@ -298,15 +298,15 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                         new Pose((inFrontOfBalls3_x - 72) * sign + 72, inFrontOfBalls3_y),
                         new Pose((behindBalls3_x - 72) * sign + 72, behindBalls3_y)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls2_angle * sign), Math.toRadians((behindBalls3_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(Math.toRadians((inFrontOfBalls2_angle - 90) * sign + 90), Math.toRadians((behindBalls3_angle - 90) * sign + 90))
                 .build();
 
         moveToFreeSpace = follower.pathBuilder()
                 .addPath(new BezierLine(
                         new Pose((behindBalls1_x - 72) * sign + 72, behindBalls1_y),
-                        new Pose((50. - 72) * sign + 72, 50.)
+                        new Pose((moveToFreeSpace_x - 72) * sign + 72, moveToFreeSpace_y)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians(behindBalls1_angle * sign), Math.toRadians((moveToFreeSpace_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(Math.toRadians((behindBalls1_angle - 90) * sign + 90), Math.toRadians((moveToFreeSpace_angle - 90) * sign + 90))
                 .build();
 
         moveToFarShoot = follower.pathBuilder()
@@ -314,7 +314,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                         new Pose((moveToFreeSpace_x - 72) * sign + 72, moveToFreeSpace_y),
                         new Pose((moveToFarShoot_x - 72) * sign + 72, moveToFarShoot_y)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians(moveToFreeSpace_angle * sign), Math.toRadians((moveToFarShoot_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(Math.toRadians((moveToFreeSpace_angle - 90) * sign + 90), Math.toRadians((moveToFarShoot_angle - 90) * sign + 90))
                 .build();
 
         moveToNearShoot = follower.pathBuilder()
@@ -389,7 +389,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                 .setMaxPower(0.4f)
                 .build();
 
-        IterativeAutoStep shootThreeBalls = new IterativeAutoStep.Builder()
+        IterativeAutoStep shootThreeBallsAutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.SHOOT)
                 .setTargetShootCount(3)
                 .setStartDelayMS(shootThreeBallsDelayMS)
@@ -403,25 +403,27 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                 0.5,
                 new IterativeAutoStep[] {
                         moveToFarShootAutoStep,
-                        shootThreeBalls,
+                        shootThreeBallsAutoStep,
 
                         moveToInFrontOfBalls1AutoStep,
                         moveToBehindBalls1AutoStep,
 
                         moveToFarShootAutoStep,
-                        shootThreeBalls,
+                        shootThreeBallsAutoStep,
 
                         moveToInFrontOfBalls2AutoStep,
                         moveToBehindBalls2AutoStep,
 
                         moveToFarShootAutoStep,
-                        shootThreeBalls,
+                        shootThreeBallsAutoStep,
 
                         moveToInFrontOfBalls3AutoStep,
                         moveToBehindBalls3AutoStep,
 
                         moveToFarShootAutoStep,
-                        shootThreeBalls,
+                        shootThreeBallsAutoStep,
+
+                        moveToFreeSpaceAutoStep,
                 }
         );
 
