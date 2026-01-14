@@ -34,7 +34,7 @@ public class IterativeAutoStepChain {
         iterativeAutoSteps = iterativeAutoStepsValue;
     }
 
-    public void update(Follower follower, DcMotorEx collector, Shooter shooter, Servo shooterHinge, Telemetry telemetry) {
+    public void update(Follower follower, DcMotorEx collector, Shooter shooter, Telemetry telemetry) {
         telemetry.update();
 
         if (done) {
@@ -74,7 +74,7 @@ public class IterativeAutoStepChain {
         switch (activeIterativeAutoStep.getStepType()) {
             case MOVE:
                 if (!follower.isBusy()) {
-                    nextStep(follower, collector, shooter, shooterHinge);
+                    nextStep(follower, collector, shooter);
                 }
                 break;
             case SHOOT:
@@ -97,10 +97,10 @@ public class IterativeAutoStepChain {
                     }
 
                     if (currentShotTime.milliseconds() < SHOOTER_HINGE_LIFT_DURATION_MS) {
-                        shooterHinge.setPosition(0.25);
+                        shooter.putHingeDown();
                         telemetry.addLine("KEEP IT DOWN!");
                     } else if (currentShotTime.milliseconds() < SHOT_DURATION_MS) {
-                        shooterHinge.setPosition(0.55);
+                        shooter.putHingeUp();
                         telemetry.addLine("SHOOTTT!!!");
                     } else {
                         currentShootCount ++;
@@ -109,7 +109,7 @@ public class IterativeAutoStepChain {
                 }
 
                 if (currentShootCount == targetShootCount) {
-                    nextStep(follower, collector, shooter, shooterHinge);
+                    nextStep(follower, collector, shooter);
                 }
                 break;
         }
@@ -128,7 +128,7 @@ public class IterativeAutoStepChain {
         IterativeAutoStep activeIterativeAutoStep = iterativeAutoSteps[activeStepIndex];
     }
 
-    public void nextStep(Follower follower, DcMotorEx collector, Shooter shooter, Servo shooterHinge) {
+    public void nextStep(Follower follower, DcMotorEx collector, Shooter shooter) {
         currentShootCount = 0;
         currentWaitTime.reset();
         currentShotTime.reset();
@@ -136,7 +136,7 @@ public class IterativeAutoStepChain {
         shooterReachedSpeed = false;
 
         shooter.targetVelocity = 0;
-        shooterHinge.setPosition(0.25);
+        shooter.putHingeDown();
 
         int lastActiveStepIndex = activeStepIndex;
 

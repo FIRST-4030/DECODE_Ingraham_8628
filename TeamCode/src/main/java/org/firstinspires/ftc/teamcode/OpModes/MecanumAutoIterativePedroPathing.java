@@ -239,7 +239,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             if (!activeIterativeAutoStepChain.done) {
-                activeIterativeAutoStepChain.update(follower, collector, shooter, shooterHinge, telemetry);
+                activeIterativeAutoStepChain.update(follower, collector, shooter, telemetry);
             }
         }
     }
