@@ -213,9 +213,9 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
         Pose correctedStartPose;
         if (Blackboard.alliance == Blackboard.Alliance.RED) {
             if (nearAutoEnabled) {
-                correctedStartPose = new Pose(144 - nearStartX, nearStartY, Math.toRadians(180 - nearStartAngle));
+                correctedStartPose = new Pose(144 - nearStartX, nearStartY, Math.toRadians((nearStartAngle - 90) * -1 + 90));
             } else {
-                correctedStartPose = new Pose(144 - farStartX, farStartY, Math.toRadians(180 - farStartAngle));
+                correctedStartPose = new Pose(144 - farStartX, farStartY, Math.toRadians((nearStartAngle - 90) * -1 + 90));
             }
         } else {
             if (nearAutoEnabled) {
