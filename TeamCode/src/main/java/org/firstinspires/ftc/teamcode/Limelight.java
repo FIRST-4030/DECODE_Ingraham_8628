@@ -38,7 +38,7 @@ public class Limelight {
 
     private final double camera_height = 16.75; // in
     private final double target_height = 29.5; // in
-    public double camera_angle = 0.032;    //0.0523599
+    private double camera_angle = 0.032;    //0.0523599
 
     IMU imu;
 //
@@ -209,11 +209,14 @@ public class Limelight {
         }
     }
 
+    public void setCameraAngle(double angle) {
+        this.camera_angle = angle;
+    }
+
     public int getPipeline() { return limelight.getStatus().getPipelineIndex(); }
-
     public int getTeam() { return teamID; }
-    public int getID() {   return teamID; }
 
+    public double getCameraAngle() { return camera_angle; }
     public double getX() { return x; }
     public double getY() { return y; }
     public double getYaw() { return goalYaw; }

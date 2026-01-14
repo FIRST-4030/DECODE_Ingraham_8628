@@ -1,28 +1,26 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.Limelight_anglesetter;
+import org.firstinspires.ftc.teamcode.Limelight;
 
 @TeleOp(name = "Limelight Angle Setter")
 public class LimelightAngleSetter extends OpMode {
 
-    Limelight_anglesetter limelight;
+    Limelight limelight;
     IMU imu;
 
-    double cameraAngle = 0.032;
+    double cameraAngle;
 
     @Override
     public void init() {
         imu = hardwareMap.get(IMU.class, "imu");
-        limelight = hardwareMap.get(Limelight_anglesetter.class, "limelight");
+        limelight = hardwareMap.get(Limelight.class, "limelight");
 
+        cameraAngle = limelight.getCameraAngle();
     }
 
     @Override
@@ -40,8 +38,8 @@ public class LimelightAngleSetter extends OpMode {
 
     @Override
     public void loop() {
-        telemetry.addLine("ADJUST CAMERA ANGLE USING DPAD LEFT AND RIGHT");
-        telemetry.addLine("TO GET THE CORRECT COMPUTED RANGE");
+        telemetry.addLine("Adjust camera angle using DPAD Left and Right");
+        telemetry.addLine("to get the correct computed range");
 
         if (gamepad1.dpadLeftWasPressed()) {
             limelight.setCameraAngle(cameraAngle += 0.002);
