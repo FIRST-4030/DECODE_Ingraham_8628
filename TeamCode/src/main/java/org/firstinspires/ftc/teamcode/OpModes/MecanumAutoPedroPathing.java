@@ -21,9 +21,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.AprilTag;
 import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Chassis;
+import org.firstinspires.ftc.teamcode.ControlHub;
 import org.firstinspires.ftc.teamcode.Datalogger;
 import org.firstinspires.ftc.teamcode.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
+import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 
 @Configurable
 @Disabled
@@ -42,6 +45,7 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
     Pose startPose = new Pose(56, 8, Math.toRadians(90));
 
     Chassis chassis;
+    Constants constants;
     DcMotorEx collector;
     Shooter shooter;
     Servo shooterHinge;
@@ -73,13 +77,23 @@ public class MecanumAutoPedroPathing extends LinearOpMode {
 
     Datalog datalog = new Datalog("MecanumAutoLog");
     boolean logData = true;
+    public static ControlHub controlHub = new ControlHub();
 
     @Override
     public void runOpMode() {
         chassis = new Chassis(hardwareMap);
 
         // Pedro pathing init
-        follower = new ConstantsCompetition().createFollower(hardwareMap);
+        // Pedro pathing init
+        if (controlHub.getMacAddress().equals(Constants.PRIMARY_BOT)) {
+            constants = new ConstantsCompetition();
+        } else if (controlHub.getMacAddress().equals(Constants.SECONDARY_BOT)) {
+            constants = new ConstantsDemo();
+        } else {
+            throw new RuntimeException("ControlHub MAC address did not match primary or secondary");
+        }
+
+        follower = constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);   //set your starting pose
 
         doAutonomous = true;
