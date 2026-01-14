@@ -159,21 +159,23 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
 //                }
 //            }
 
-            telemetry.addData("Range to Obelisk AprilTag", aprilTags.getObeliskRange());
+//            telemetry.addData("Range to Obelisk AprilTag", aprilTags.getObeliskRange());
 
             telemetry.addLine();
             telemetry.addLine("--------------");
             telemetry.addLine();
 
-            telemetry.addData("Press Y (increase delay), A (decrease delay) | Delay", delaySeconds);
-            if (gamepad1.yWasReleased()) {
+            telemetry.addData("Press Up/Down dpad to adjust delay | Delay", delaySeconds);
+            if (gamepad1.dpadUpWasReleased()) {
                 delaySeconds++;
             }
-            if (gamepad1.aWasReleased()) {
+            if (gamepad1.dpadDownWasReleased()) {
                 delaySeconds--;
             }
 
             telemetry.addData("Press Right/Left dpad to toggle limited auto | Limited Auto", limitedAutoEnabled);
+            telemetry.addData("Near auto enabled", nearAutoEnabled);
+
             if (gamepad1.dpadRightWasReleased() && !limitedAutoEnabled) {
                 limitedAutoEnabled = true;
             }
@@ -209,10 +211,6 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
 
         Pose correctedStartPose;
         if (Blackboard.alliance == Blackboard.Alliance.RED) {
-            startPose = new Pose(-start_x, 8, Math.toRadians(90));
-            follower.setStartingPose(startPose);   //set your starting pose
-        }
-
             if (nearAutoEnabled) {
                 correctedStartPose = new Pose(144 - nearStartX, nearStartY, Math.toRadians(180 - nearStartAngle));
             } else {
