@@ -34,15 +34,27 @@ import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 public class MecanumAutoIterativePedroPathing extends LinearOpMode {
 
     // Pedro pathing constants (editable in panels)
-    public static double start_x = 56, start_y = 8, start_angle = 90;
-    public static double inFrontOfBalls1_x = 40, inFrontOfBalls1_y = 35,inFrontOfBalls1_angle = 0;
+    public static double farStartX = 56, farStartY = 8, farStartAngle = 90;
+    public static double nearStartX = 24, nearStartY = 120, nearStartAngle = 315;
 
+
+    public static double inFrontOfBalls1_x = 40, inFrontOfBalls1_y = 35,inFrontOfBalls1_angle = 0;
     public static double inFrontOfBalls2_x = 40, inFrontOfBalls2_y = 59 ,inFrontOfBalls2_angle = 0;
+    public static double inFrontOfBalls3_x = 40, inFrontOfBalls3_y = 83 ,inFrontOfBalls3_angle = 0;
     public static double behindBalls1_x = 13, behindBalls1_y = 35, behindBalls1_angle = 0;
     public static double behindBalls2_x = 13, behindBalls2_y = 59, behindBalls2_angle = 0;
+    public static double behindBalls3_x = 13, behindBalls3_y = 83, behindBalls3_angle = 0;
+
+    public static long moveToInFrontOfBallsDelayMS = 250;
+    public static long moveToBehindBallsDelayMS = 0;
+    public static long moveToFarShootDelayMS = 0;
+    public static long shootThreeBallsDelayMS = 0;
+
+
     public static double moveToFreeSpace_x = 50, moveToFreeSpace_y = 35, moveToFreeSpace_angle = 0;
     public static double moveToFarShoot_x = 60, moveToFarShoot_y = 11, moveToFarShoot_angle = 111;
-    Pose startPose = new Pose(56, 8, Math.toRadians(90));
+    public static double moveToNearShoot_x = 24, moveToNearShoot_y = 120, moveToNearShoot_angle = 135;
+
 
     Chassis chassis;
     Constants constants;
@@ -62,11 +74,12 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
     double collectorSpeed = 0.5;
 
     boolean limitedAutoEnabled = false;
+    boolean nearAutoEnabled = false;
 
     IMU imu;
 
     Follower follower;
-    PathChain inFrontOfBalls1, behindBalls1, inFrontOfBalls2, behindBalls2, moveToFreeSpace, moveToFarShoot;
+    PathChain inFrontOfBalls1, behindBalls1, inFrontOfBalls2, behindBalls2, inFrontOfBalls3, behindBalls3, moveToFreeSpace, moveToFarShoot;
     IterativeAutoStepChain farAutoStepChain;
 
 
@@ -88,7 +101,6 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
         }
 
         follower = constants.createFollower(hardwareMap);
-        follower.setStartingPose(startPose);   //set your starting pose
 
         buildPaths(Blackboard.alliance); // Build the paths once we know the alliance
         buildAutoStepChains();
@@ -176,30 +188,54 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                 Blackboard.alliance = Blackboard.Alliance.RED;
             }
 
+            if (gamepad1.aWasPressed() && gamepad1.right_bumper) {
+                nearAutoEnabled = true;
+            } else if (gamepad1.yWasPressed() && gamepad1.right_bumper) {
+                nearAutoEnabled = false;
+            }
+
             telemetry.addData("Alliance", Blackboard.getAllianceAsString());
             telemetry.addLine();
-            telemetry.addLine("--- IF NO ALLIANCE IS DETECTED (FOR SOME REASON) ---");
             telemetry.addLine("HOLD RB AND Press X to override alliance to BLUE");
             telemetry.addLine("HOLD RB AND Press B to override alliance to RED");
+
+            telemetry.addLine("HOLD RB AND Press Y to override auto to FAR");
+            telemetry.addLine("HOLD RB AND Press A to override auto to NEAR");
 
             telemetry.update();
         } while (opModeInInit());
 
-        farAutoStepChain.init(follower);
+        buildPaths(Blackboard.alliance); // Only build the paths once we press play(?)
+        buildAutoStepChains();
 
+        Pose correctedStartPose;
         if (Blackboard.alliance == Blackboard.Alliance.RED) {
             startPose = new Pose(-start_x, 8, Math.toRadians(90));
             follower.setStartingPose(startPose);   //set your starting pose
         }
 
+            if (nearAutoEnabled) {
+                correctedStartPose = new Pose(144 - nearStartX, nearStartY, Math.toRadians(180 - nearStartAngle));
+            } else {
+                correctedStartPose = new Pose(144 - farStartX, farStartY, Math.toRadians(180 - farStartAngle));
+            }
+        } else {
+            if (nearAutoEnabled) {
+                correctedStartPose = new Pose(nearStartX, nearStartY, Math.toRadians(nearStartAngle));
+            } else {
+                correctedStartPose = new Pose(farStartX, farStartY, Math.toRadians(farStartAngle));
+            }
+        }
+        follower.setStartingPose(correctedStartPose);
 
         runtime.reset();
         imu.resetYaw();
 
+        farAutoStepChain.init(follower);
+
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            farAutoStepChain.update(follower, collector, telemetry);
-//            doFarAutoLinear(Blackboard.alliance);
+            farAutoStepChain.update(follower, collector, shooter, shooterHinge, telemetry);
         }
     }
 
@@ -214,10 +250,10 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
         // are multiplied by horizontalSign to account for field symmetry
         inFrontOfBalls1 = follower.pathBuilder()
                 .addPath(new BezierLine(
-                        new Pose((start_x - 72) * sign + 72, start_y),
+                        new Pose((farStartX - 72) * sign + 72, farStartY),
                         new Pose((inFrontOfBalls1_x - 72) * sign + 72, inFrontOfBalls1_y)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians(start_angle * sign), Math.toRadians((inFrontOfBalls1_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(Math.toRadians(farStartAngle * sign), Math.toRadians((inFrontOfBalls1_angle - 90) * sign + 90))
                 .build();
 
         behindBalls1 = follower.pathBuilder()
@@ -230,10 +266,10 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
 
         inFrontOfBalls2 = follower.pathBuilder()
                 .addPath(new BezierLine(
-                        new Pose((start_x - 72) * sign + 72, start_y),
+                        new Pose((farStartX - 72) * sign + 72, farStartY),
                         new Pose((inFrontOfBalls2_x - 72) * sign + 72, inFrontOfBalls2_y)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians(start_angle * sign), Math.toRadians((inFrontOfBalls2_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(Math.toRadians(farStartAngle * sign), Math.toRadians((inFrontOfBalls2_angle - 90) * sign + 90))
                 .build();
 
         behindBalls2 = follower.pathBuilder()
@@ -242,6 +278,22 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                         new Pose((behindBalls2_x - 72) * sign + 72, behindBalls2_y)
                 ))
                 .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls2_angle * sign), Math.toRadians((behindBalls2_angle - 90) * sign + 90))
+                .build();
+
+        inFrontOfBalls3 = follower.pathBuilder()
+                .addPath(new BezierLine(
+                        new Pose((farStartX - 72) * sign + 72, farStartY),
+                        new Pose((inFrontOfBalls3_x - 72) * sign + 72, inFrontOfBalls3_y)
+                ))
+                .setLinearHeadingInterpolation(Math.toRadians(farStartAngle * sign), Math.toRadians((inFrontOfBalls3_angle - 90) * sign + 90))
+                .build();
+
+        behindBalls3 = follower.pathBuilder()
+                .addPath(new BezierLine(
+                        new Pose((inFrontOfBalls3_x - 72) * sign + 72, inFrontOfBalls3_y),
+                        new Pose((behindBalls3_x - 72) * sign + 72, behindBalls3_y)
+                ))
+                .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls2_angle * sign), Math.toRadians((behindBalls3_angle - 90) * sign + 90))
                 .build();
 
         moveToFreeSpace = follower.pathBuilder()
@@ -265,7 +317,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
         IterativeAutoStep moveToFarShootAutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.MOVE)
                 .setPathChain(moveToFarShoot)
-                .setStartDelayMS(50)
+                .setStartDelayMS(moveToFarShootDelayMS)
                 .build();
 
         IterativeAutoStep moveToFreeSpaceAutoStep = new IterativeAutoStep.Builder()
@@ -276,63 +328,82 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
         IterativeAutoStep moveToInFrontOfBalls1AutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.MOVE)
                 .setPathChain(inFrontOfBalls1)
-                .setStartDelayMS(700)
+                .setCollectorOn(true)
+                .setStartDelayMS(moveToInFrontOfBallsDelayMS)
                 .build();
 
         IterativeAutoStep moveToBehindBalls1AutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.MOVE)
                 .setPathChain(behindBalls1)
-                .setStartDelayMS(50)
+                .setCollectorOn(true)
+                .setStartDelayMS(moveToBehindBallsDelayMS)
+                .setMaxPower(0.4f)
                 .build();
 
         IterativeAutoStep moveToInFrontOfBalls2AutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.MOVE)
                 .setPathChain(inFrontOfBalls2)
-                .setStartDelayMS(700)
+                .setCollectorOn(true)
+                .setStartDelayMS(moveToInFrontOfBallsDelayMS)
                 .build();
 
         IterativeAutoStep moveToBehindBalls2AutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.MOVE)
                 .setPathChain(behindBalls2)
-                .setStartDelayMS(50)
+                .setCollectorOn(true)
+                .setStartDelayMS(moveToBehindBallsDelayMS)
+                .setMaxPower(0.4f)
                 .build();
 
-        moveToFreeSpaceAutoStep = new IterativeAutoStep.Builder()
+        IterativeAutoStep moveToInFrontOfBalls3AutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.MOVE)
-                .setPathChain(moveToFreeSpace)
+                .setPathChain(inFrontOfBalls3)
+                .setCollectorOn(true)
+                .setStartDelayMS(moveToInFrontOfBallsDelayMS)
+                .build();
+
+        IterativeAutoStep moveToBehindBalls3AutoStep = new IterativeAutoStep.Builder()
+                .setStepType(IterativeAutoStep.StepType.MOVE)
+                .setPathChain(behindBalls3)
+                .setCollectorOn(true)
+                .setStartDelayMS(moveToBehindBallsDelayMS)
+                .setMaxPower(0.4f)
+                .build();
+
+        IterativeAutoStep shootThreeBalls = new IterativeAutoStep.Builder()
+                .setStepType(IterativeAutoStep.StepType.SHOOT)
+                .setTargetShootCount(3)
+                .setStartDelayMS(shootThreeBallsDelayMS)
                 .build();
 
 
         // This is where you define the sequence of steps to be executed for each given auto
         farAutoStepChain = new IterativeAutoStepChain(
                 34.0,
+                0.5,
                 new IterativeAutoStep[] {
                         moveToFarShootAutoStep,
+                        shootThreeBalls,
 
                         moveToInFrontOfBalls1AutoStep,
                         moveToBehindBalls1AutoStep,
 
                         moveToFarShootAutoStep,
+                        shootThreeBalls,
 
                         moveToInFrontOfBalls2AutoStep,
                         moveToBehindBalls2AutoStep,
 
                         moveToFarShootAutoStep,
+                        shootThreeBalls,
+
+                        moveToInFrontOfBalls3AutoStep,
+                        moveToBehindBalls3AutoStep,
+
+                        moveToFarShootAutoStep,
+                        shootThreeBalls,
                 }
         );
-    }
-
-    private void moveForward(double power, double mseconds){
-        ElapsedTime timer = new ElapsedTime();
-        timer.reset();
-        while (timer.milliseconds() < mseconds) {
-            chassis.frontLeftDrive.setPower(power);
-            chassis.backLeftDrive.setPower(power);
-            chassis.frontRightDrive.setPower(power);
-            chassis.backRightDrive.setPower(power);
-        }
-
-        stopMotors();
     }
 
     private void stopMotors() {
@@ -340,102 +411,6 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
         chassis.backLeftDrive.setPower(0);
         chassis.frontRightDrive.setPower(0);
         chassis.backRightDrive.setPower(0);
-    }
-
-    public void shootShooter(double velocity) {
-        // shooter.targetVelocity = (aprilTags.distanceToGoal + 202.17) / 8.92124;
-        shooter.targetVelocity = velocity;
-        ElapsedTime shooterTimer = new ElapsedTime();
-
-        while (!shooter.atSpeed()) {
-            shooter.overridePower();
-        }
-
-        shooterTimer.reset();
-        shooterHinge.setPosition(0.55);
-
-        while (shooterTimer.milliseconds() < 500) {
-            shooter.overridePower();
-        }
-
-        shooterHinge.setPosition(0.25);
-
-        while (shooterTimer.milliseconds() < 1000) {
-            shooter.overridePower();
-        }
-    }
-
-    public void stopShooter() {
-        shooter.targetVelocity = 0;
-    }
-
-    private void rotateTo(double targetAngle) {
-        double Kp = 0.2;  // Proportional gain (tune this)
-        double Kd = 0.005;  // derivative gain
-        double minPower = 0.3;
-        double maxPower = 0.5;
-        double tolerance = 2.0;// degrees
-        double lastError = 0;
-        double derivative;
-        double currentAngle, error, turnPower;
-
-        long lastTime = System.nanoTime();
-
-        while (true) {
-            currentAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-
-            error = targetAngle - currentAngle;
-            error = (error + 540) % 360 - 180; // Wrap error to [-180, 180] range
-
-            long now = System.nanoTime();
-            double deltaTime = (now - lastTime) / 1e9;
-            lastTime = now;
-
-            derivative = (error - lastError) / deltaTime;
-            lastError = error;
-
-            if (Math.abs(error) < tolerance) break;
-
-            float turnPowerFactor = 1;
-            if (Math.abs(error) < 10) {
-                turnPowerFactor = 0.5f;
-            }
-
-            turnPower = Kp * error + Kd * derivative * turnPowerFactor;
-
-            // Enforce minimum power
-            if (Math.abs(turnPower) < minPower) {
-                turnPower = Math.signum(turnPower) * minPower;
-            }
-            // Clamp maximum power
-            turnPower = Math.max(-maxPower, Math.min(maxPower, turnPower));
-
-            telemetry.addData("Target (deg)", "%.2f", targetAngle);
-            telemetry.addData("Current (deg)", "%.2f", currentAngle);
-            telemetry.addData("Error", "%.2f", error);
-            telemetry.addData("Turn Power", "%.2f", turnPower);
-            telemetry.addData("IMU Angle", "%.2f", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
-            telemetry.update();
-
-            chassis.frontLeftDrive.setPower(-turnPower);
-            chassis.backLeftDrive.setPower(-turnPower);
-            chassis.frontRightDrive.setPower(turnPower);
-            chassis.backRightDrive.setPower(turnPower);
-
-            if (logData) {
-                datalog.runTime.set(runtime.seconds());
-                datalog.bearing.set(aprilTags.getBearing());
-                datalog.targetAngle.set(targetAngle);
-                datalog.currentAngle.set(currentAngle);
-                datalog.error.set(error);
-                datalog.turnPower.set(turnPower);
-                datalog.IMUAngle.set(imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
-                datalog.turnPowerFactor.set(turnPowerFactor);
-
-                datalog.writeLine();
-            }
-        }
-        stopMotors();
     }
 
     public static class Datalog {
