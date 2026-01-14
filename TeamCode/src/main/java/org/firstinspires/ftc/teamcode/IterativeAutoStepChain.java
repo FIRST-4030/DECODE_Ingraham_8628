@@ -115,7 +115,7 @@ public class IterativeAutoStepChain {
         }
     }
 
-    public void init(Follower follower) {
+    public void init() {
         activeStepIndex = 0;
         done = false;
 
