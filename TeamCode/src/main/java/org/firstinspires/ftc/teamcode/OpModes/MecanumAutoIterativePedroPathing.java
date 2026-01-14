@@ -37,22 +37,23 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
     public static double nearStartX = 24, nearStartY = 120, nearStartAngle = 315;
 
 
-    public static double inFrontOfBalls1_x = 40, inFrontOfBalls1_y = 35,inFrontOfBalls1_angle = 0;
-    public static double inFrontOfBalls2_x = 40, inFrontOfBalls2_y = 59 ,inFrontOfBalls2_angle = 0;
-    public static double inFrontOfBalls3_x = 40, inFrontOfBalls3_y = 83 ,inFrontOfBalls3_angle = 0;
-    public static double behindBalls1_x = 13, behindBalls1_y = 35, behindBalls1_angle = 0;
-    public static double behindBalls2_x = 13, behindBalls2_y = 59, behindBalls2_angle = 0;
-    public static double behindBalls3_x = 13, behindBalls3_y = 83, behindBalls3_angle = 0;
+    public static double inFrontOfBalls1_x = 50, inFrontOfBalls1_y = 35,inFrontOfBalls1_angle = 0;
+    public static double inFrontOfBalls2_x = 50, inFrontOfBalls2_y = 59 ,inFrontOfBalls2_angle = 0;
+    public static double inFrontOfBalls3_x = 50, inFrontOfBalls3_y = 83 ,inFrontOfBalls3_angle = 0;
+    public static double behindBalls1_x = 23, behindBalls1_y = 35, behindBalls1_angle = 0;
+    public static double behindBalls2_x = 23, behindBalls2_y = 59, behindBalls2_angle = 0;
+    public static double behindBalls3_x = 23, behindBalls3_y = 83, behindBalls3_angle = 0;
 
     public static long moveToInFrontOfBallsDelayMS = 250;
     public static long moveToBehindBallsDelayMS = 0;
     public static long moveToFarShootDelayMS = 0;
+    public static long moveToNearShootDelayMS = 0;
     public static long shootThreeBallsDelayMS = 0;
 
 
     public static double moveToFreeSpace_x = 50, moveToFreeSpace_y = 35, moveToFreeSpace_angle = 0;
     public static double moveToFarShoot_x = 60, moveToFarShoot_y = 11, moveToFarShoot_angle = 111;
-    public static double moveToNearShoot_x = 24, moveToNearShoot_y = 120, moveToNearShoot_angle = 135;
+    public static double moveToNearShoot_x = 48, moveToNearShoot_y = 96, moveToNearShoot_angle = 135;
 
 
     Chassis chassis;
@@ -78,8 +79,8 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
     IMU imu;
 
     Follower follower;
-    PathChain inFrontOfBalls1, behindBalls1, inFrontOfBalls2, behindBalls2, inFrontOfBalls3, behindBalls3, moveToFreeSpace, moveToFarShoot;
-    IterativeAutoStepChain farAutoStepChain;
+    PathChain inFrontOfBalls1, behindBalls1, inFrontOfBalls2, behindBalls2, inFrontOfBalls3, behindBalls3, moveToFreeSpace, moveToFarShoot, moveToNearShoot;
+    IterativeAutoStepChain farAutoStepChain, nearAutoStepChain;
 
 
     Datalog datalog = new Datalog("MecanumAutoLog");
@@ -228,11 +229,18 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
         runtime.reset();
         imu.resetYaw();
 
-        farAutoStepChain.init(follower);
+        IterativeAutoStepChain activeIterativeAutoStepChain = farAutoStepChain;
+        if (nearAutoEnabled) {
+            activeIterativeAutoStepChain = nearAutoStepChain;
+        }
+
+        activeIterativeAutoStepChain.init();
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            farAutoStepChain.update(follower, collector, shooter, shooterHinge, telemetry);
+            if (!activeIterativeAutoStepChain.done) {
+                activeIterativeAutoStepChain.update(follower, collector, shooter, shooterHinge, telemetry);
+            }
         }
     }
 
@@ -308,6 +316,14 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                 ))
                 .setLinearHeadingInterpolation(Math.toRadians(moveToFreeSpace_angle * sign), Math.toRadians((moveToFarShoot_angle - 90) * sign + 90))
                 .build();
+
+        moveToNearShoot = follower.pathBuilder()
+                .addPath(new BezierLine(
+                        new Pose((moveToFreeSpace_x - 72) * sign + 72, moveToFreeSpace_y),
+                        new Pose((moveToNearShoot_x - 72) * sign + 72, moveToNearShoot_y)
+                ))
+                .setLinearHeadingInterpolation(Math.toRadians((moveToFreeSpace_angle - 90) * sign + 90), Math.toRadians((moveToNearShoot_angle - 90) * sign + 90))
+                .build();
     }
 
     void buildAutoStepChains() {
@@ -315,6 +331,12 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                 .setStepType(IterativeAutoStep.StepType.MOVE)
                 .setPathChain(moveToFarShoot)
                 .setStartDelayMS(moveToFarShootDelayMS)
+                .build();
+
+        IterativeAutoStep moveToNearShootAutoStep = new IterativeAutoStep.Builder()
+                .setStepType(IterativeAutoStep.StepType.MOVE)
+                .setPathChain(moveToNearShoot)
+                .setStartDelayMS(moveToNearShootDelayMS)
                 .build();
 
         IterativeAutoStep moveToFreeSpaceAutoStep = new IterativeAutoStep.Builder()
@@ -375,6 +397,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
 
 
         // This is where you define the sequence of steps to be executed for each given auto
+
         farAutoStepChain = new IterativeAutoStepChain(
                 34.0,
                 0.5,
@@ -399,6 +422,35 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
 
                         moveToFarShootAutoStep,
                         shootThreeBalls,
+                }
+        );
+
+        nearAutoStepChain = new IterativeAutoStepChain(
+                34.0,
+                0.5,
+                new IterativeAutoStep[] {
+                        moveToNearShootAutoStep,
+                        shootThreeBallsAutoStep,
+
+                        moveToInFrontOfBalls3AutoStep,
+                        moveToBehindBalls3AutoStep,
+
+                        moveToNearShootAutoStep,
+                        shootThreeBallsAutoStep,
+
+                        moveToInFrontOfBalls2AutoStep,
+                        moveToBehindBalls2AutoStep,
+
+                        moveToNearShootAutoStep,
+                        shootThreeBallsAutoStep,
+
+                        moveToInFrontOfBalls1AutoStep,
+                        moveToBehindBalls1AutoStep,
+
+                        moveToNearShootAutoStep,
+                        shootThreeBallsAutoStep,
+
+                        moveToFreeSpaceAutoStep,
                 }
         );
     }
