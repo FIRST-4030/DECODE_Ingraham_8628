@@ -26,9 +26,10 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firstinspires.ftc.teamcode.OpModes;
+package org.firstinspires.ftc.teamcode.Archive;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -40,12 +41,15 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.AprilTag;
 import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Shooter;
-import org.firstinspires.ftc.teamcode.Chassis;
 
-@TeleOp(name = "MecanumTeleop With Chassis", group = "Robot")
-public class MecanumTeleop_With_Chassis extends OpMode {
+@Disabled
+@TeleOp(name = "MecanumTeleop - NEW", group = "Robot")
+public class MecanumTeleop_NEW extends OpMode {
 
-    Chassis chassis;
+    DcMotor frontLeftDrive;
+    DcMotor frontRightDrive;
+    DcMotor backLeftDrive;
+    DcMotor backRightDrive;
     DcMotorEx collector;
     Shooter shooter;
     Servo shooterHinge;
@@ -60,13 +64,36 @@ public class MecanumTeleop_With_Chassis extends OpMode {
     boolean shooterOn = false;
     boolean targetInView;
     boolean collectorOn = false;
+    private double driveSlower = 1;
 
     @Override
     public void init() {
+        frontLeftDrive = hardwareMap.get(DcMotor.class, "leftFront");
+        frontRightDrive = hardwareMap.get(DcMotor.class, "rightFront");
+        backLeftDrive = hardwareMap.get(DcMotor.class, "leftBack");
+        backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
 
-        chassis = new Chassis(hardwareMap);
+        frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         shooter=new Shooter(hardwareMap,"shooter",true);
+
+        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
+        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
+
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         collector = hardwareMap.get(DcMotorEx.class, "collector");
 
@@ -110,8 +137,6 @@ public class MecanumTeleop_With_Chassis extends OpMode {
             aprilTags.setGoalTagID(20);
         }
 
-        double currentCoordinate = 72 - Math.sqrt((aprilTags.getObeliskRange() * aprilTags.getObeliskRange()) - 18567.25);
-
         telemetry.addData("Pad 1, Left Bumper", "Slow Drive");
         telemetry.addData("Pad 1, Right Bumper", "Very Slow Drive");
         telemetry.addData("Pad 1, A", "Raise Robot");
@@ -126,8 +151,6 @@ public class MecanumTeleop_With_Chassis extends OpMode {
         telemetry.addLine("HOLD RB AND Press B to override alliance to RED");
 
         telemetry.addData("Goal Tag ID", aprilTags.getGoalTagId());
-        telemetry.addData("Obelisk Range", aprilTags.getObeliskRange());
-        telemetry.addData("Current Coordinate", currentCoordinate);
 
         telemetry.update();
     }
@@ -149,17 +172,18 @@ public class MecanumTeleop_With_Chassis extends OpMode {
 
         //Slow Drive
         if (gamepad1.leftBumperWasPressed()) {
-            chassis.setMaxSpeed(0.5);
+            driveSlower = 0.3;
         }
         if (gamepad1.leftBumperWasReleased()) {
-            chassis.setMaxSpeed(1.0);
+            driveSlower = 1;
         }
+
         //Precision Drive
         if (gamepad1.rightBumperWasPressed()) {
-            chassis.setMaxSpeed(0.2);
+            driveSlower = 0.1;
         }
         if (gamepad1.rightBumperWasReleased()) {
-            chassis.setMaxSpeed(1.0);
+            driveSlower = 1;
         }
 
         if (gamepad1.yWasPressed()) {
@@ -192,7 +216,14 @@ public class MecanumTeleop_With_Chassis extends OpMode {
                 collectorOn = false;
             }
         }
-
+//        if (gamepad2.bWasReleased() && !collectorOn) {
+//            collector.setPower(collectorSpeed);
+//            collectorOn = true;
+//        }
+//        else if (gamepad2.bWasReleased() && collectorOn) {
+//            collector.setPower(0.0);
+//            collectorOn = false;
+//        }
         if (gamepad2.xWasPressed()) {
             collector.setPower(-collectorSpeed);
         }
@@ -223,12 +254,39 @@ public class MecanumTeleop_With_Chassis extends OpMode {
             shooterHinge.setPosition(0.25);
         }
 
-        telemetry.addData("Collector Current Power:", collector.getVelocity());
+        telemetry.addData("Collector Current Velocity:", collector.getVelocity());
         telemetry.addData("Collector Target Power", collectorSpeed);
         telemetry.addData("Shooter Current Velocity:", shooter.getVelocity());
         telemetry.addData("Shooter Target Velocity: ", shooter.targetVelocity);
         telemetry.update();
 
-        chassis.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+        drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x,driveSlower);
+    }
+
+    // Thanks to FTC16072 for sharing this code!!
+    public void drive(double forward, double right, double rotate,double maxSpeed) {
+        // This calculates the power needed for each wheel based on the amount of forward,
+        // strafe right, and rotate
+        double frontLeftPower = forward + right + rotate;
+        double frontRightPower = forward - right - rotate;
+        double backRightPower = forward + right - rotate;
+        double backLeftPower = forward - right + rotate;
+
+        double maxPower = 1.0;
+          // make this slower for slower drive
+
+        // This is needed to make sure we don't pass > 1.0 to any wheel
+        // It allows us to keep all of the motors in proportion to what they should
+        // be and not get clipped
+        maxPower = Math.max(maxPower, Math.abs(frontLeftPower));
+        maxPower = Math.max(maxPower, Math.abs(frontRightPower));
+        maxPower = Math.max(maxPower, Math.abs(backRightPower));
+        maxPower = Math.max(maxPower, Math.abs(backLeftPower));
+
+        // We multiply by maxSpeed so that it can be set lower
+        frontLeftDrive.setPower(maxSpeed * (frontLeftPower / maxPower));
+        frontRightDrive.setPower(maxSpeed * (frontRightPower / maxPower));
+        backLeftDrive.setPower(maxSpeed * (backLeftPower / maxPower));
+        backRightDrive.setPower(maxSpeed * (backRightPower / maxPower));
     }
 }

@@ -29,7 +29,6 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -40,69 +39,40 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.AprilTag;
 import org.firstinspires.ftc.teamcode.Blackboard;
+import org.firstinspires.ftc.teamcode.Chassis;
+import org.firstinspires.ftc.teamcode.Limelight;
 import org.firstinspires.ftc.teamcode.Shooter;
 
-@Disabled
-@TeleOp(name = "MecanumTeleop - NEW", group = "Robot")
-public class MecanumTeleop_NEW extends OpMode {
+@TeleOp(name = "MecanumTeleop Limelight", group = "Robot")
+public class MecanumTeleop_Limelight extends OpMode {
 
-    DcMotor frontLeftDrive;
-    DcMotor frontRightDrive;
-    DcMotor backLeftDrive;
-    DcMotor backRightDrive;
+    Chassis chassis;
     DcMotorEx collector;
     Shooter shooter;
-    Servo shooterHinge;
-    AprilTag aprilTags;
     Servo liftServo;
+    Limelight limelight;
 
     IMU imu;
     ElapsedTime shotTimer = new ElapsedTime();
 
     boolean shooting = false; // true when shooting sequence begins
-    double collectorSpeed = 0.4;
+    double collectorSpeed = 0.5;
     boolean shooterOn = false;
     boolean targetInView;
     boolean collectorOn = false;
-    private double driveSlower = 1;
 
     @Override
     public void init() {
-        frontLeftDrive = hardwareMap.get(DcMotor.class, "leftFront");
-        frontRightDrive = hardwareMap.get(DcMotor.class, "rightFront");
-        backLeftDrive = hardwareMap.get(DcMotor.class, "leftBack");
-        backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
 
-        frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        chassis = new Chassis(hardwareMap);
 
         shooter=new Shooter(hardwareMap,"shooter",true);
-
-        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
-        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
-
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         collector = hardwareMap.get(DcMotorEx.class, "collector");
 
         collector.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         collector.setDirection(DcMotor.Direction.REVERSE);
-
-        shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
-        shooterHinge.setPosition(0.25);
 
         liftServo = hardwareMap.get(Servo.class, "liftServo");
         liftServo.setPosition(1.0);  // Up with Axon Max is 1.0,  was 0.0 with Savox
@@ -118,23 +88,20 @@ public class MecanumTeleop_NEW extends OpMode {
                 RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
-        aprilTags = new AprilTag();
-        aprilTags.initAprilTag(hardwareMap);
+        limelight = new Limelight();
+        limelight.init(hardwareMap, telemetry);
     }
 
     @Override
     public void init_loop() {
+        limelight.readObelisk();
+
         if (gamepad1.xWasPressed() && gamepad1.right_bumper) {
             Blackboard.alliance = Blackboard.Alliance.BLUE;
+            limelight.setTeam(20);
         } else if (gamepad1.bWasPressed() && gamepad1.right_bumper) {
             Blackboard.alliance = Blackboard.Alliance.RED;
-        }
-
-        if (Blackboard.alliance == Blackboard.Alliance.RED) {
-            aprilTags.setGoalTagID(24);
-        }
-        else if (Blackboard.alliance == Blackboard.Alliance.BLUE) {
-            aprilTags.setGoalTagID(20);
+            limelight.setTeam(24);
         }
 
         telemetry.addData("Pad 1, Left Bumper", "Slow Drive");
@@ -150,20 +117,30 @@ public class MecanumTeleop_NEW extends OpMode {
         telemetry.addLine("HOLD RB AND Press X to override alliance to BLUE");
         telemetry.addLine("HOLD RB AND Press B to override alliance to RED");
 
-        telemetry.addData("Goal Tag ID", aprilTags.getGoalTagId());
+        telemetry.addData("Obelisk", limelight.getObelisk());
+        telemetry.addData("Goal Tag ID", limelight.getTeam());
 
         telemetry.update();
     }
 
+    public void start() {
+        if (Blackboard.alliance == Blackboard.Alliance.RED) {
+            limelight.setTeam(24);
+        }
+        else if (Blackboard.alliance == Blackboard.Alliance.BLUE) {
+            limelight.setTeam(20);
+        }
+    }
+
     @Override
     public void loop() {
-
-        targetInView = aprilTags.runInLoop(telemetry, false);
+        targetInView = limelight.process(telemetry);
         shooter.overridePower();
 
         telemetry.addData("Target is in view:", targetInView);
         telemetry.addData("Shooter Current Velocity", shooter.getVelocity());
         telemetry.addData("Shooter Target Velocity", shooter.targetVelocity);
+        telemetry.addData("Distance to Target", limelight.getRange());
 
         //Gamepad 1
         if (gamepad1.start) {
@@ -172,18 +149,17 @@ public class MecanumTeleop_NEW extends OpMode {
 
         //Slow Drive
         if (gamepad1.leftBumperWasPressed()) {
-            driveSlower = 0.3;
+            chassis.setMaxSpeed(0.5);
         }
         if (gamepad1.leftBumperWasReleased()) {
-            driveSlower = 1;
+            chassis.setMaxSpeed(1.0);
         }
-
         //Precision Drive
         if (gamepad1.rightBumperWasPressed()) {
-            driveSlower = 0.1;
+            chassis.setMaxSpeed(0.2);
         }
         if (gamepad1.rightBumperWasReleased()) {
-            driveSlower = 1;
+            chassis.setMaxSpeed(1.0);
         }
 
         if (gamepad1.yWasPressed()) {
@@ -216,14 +192,7 @@ public class MecanumTeleop_NEW extends OpMode {
                 collectorOn = false;
             }
         }
-//        if (gamepad2.bWasReleased() && !collectorOn) {
-//            collector.setPower(collectorSpeed);
-//            collectorOn = true;
-//        }
-//        else if (gamepad2.bWasReleased() && collectorOn) {
-//            collector.setPower(0.0);
-//            collectorOn = false;
-//        }
+
         if (gamepad2.xWasPressed()) {
             collector.setPower(-collectorSpeed);
         }
@@ -236,57 +205,24 @@ public class MecanumTeleop_NEW extends OpMode {
         if (gamepad2.leftBumperWasReleased()) {
             collector.setPower(0.0);
             collectorOn = false;
-            shooter.targetVelocity = (aprilTags.distanceToGoal + 202.17) / 8.92124;
+            shooter.setTargetVelocity(shooter.getShooterVelo(limelight));
             shooting = true;
             shotTimer.reset();
             shooterOn = false;
         }
 
         if (shooting) {
-            if (shooter.atSpeed()) {
                 shotTimer.reset();
-                shooterHinge.setPosition(0.55);
+                shooter.shoot(shooter.getShooterVelo(limelight));
                 shooting = false;
-            }
         }
 
-        if (shotTimer.milliseconds() > 500) {
-            shooterHinge.setPosition(0.25);
-        }
-
-        telemetry.addData("Collector Current Velocity:", collector.getVelocity());
+        telemetry.addData("Collector Current Power:", collector.getVelocity());
         telemetry.addData("Collector Target Power", collectorSpeed);
         telemetry.addData("Shooter Current Velocity:", shooter.getVelocity());
         telemetry.addData("Shooter Target Velocity: ", shooter.targetVelocity);
         telemetry.update();
 
-        drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x,driveSlower);
-    }
-
-    // Thanks to FTC16072 for sharing this code!!
-    public void drive(double forward, double right, double rotate,double maxSpeed) {
-        // This calculates the power needed for each wheel based on the amount of forward,
-        // strafe right, and rotate
-        double frontLeftPower = forward + right + rotate;
-        double frontRightPower = forward - right - rotate;
-        double backRightPower = forward + right - rotate;
-        double backLeftPower = forward - right + rotate;
-
-        double maxPower = 1.0;
-          // make this slower for slower drive
-
-        // This is needed to make sure we don't pass > 1.0 to any wheel
-        // It allows us to keep all of the motors in proportion to what they should
-        // be and not get clipped
-        maxPower = Math.max(maxPower, Math.abs(frontLeftPower));
-        maxPower = Math.max(maxPower, Math.abs(frontRightPower));
-        maxPower = Math.max(maxPower, Math.abs(backRightPower));
-        maxPower = Math.max(maxPower, Math.abs(backLeftPower));
-
-        // We multiply by maxSpeed so that it can be set lower
-        frontLeftDrive.setPower(maxSpeed * (frontLeftPower / maxPower));
-        frontRightDrive.setPower(maxSpeed * (frontRightPower / maxPower));
-        backLeftDrive.setPower(maxSpeed * (backLeftPower / maxPower));
-        backRightDrive.setPower(maxSpeed * (backRightPower / maxPower));
+        chassis.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
     }
 }
