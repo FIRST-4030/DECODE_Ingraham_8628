@@ -17,14 +17,17 @@ public class LimelightAngleSetter extends OpMode {
 
     @Override
     public void init() {
-        imu = hardwareMap.get(IMU.class, "imu");
-        limelight = hardwareMap.get(Limelight.class, "limelight");
+//        imu = hardwareMap.get(IMU.class, "imu");
+
+        limelight = new Limelight();
+        limelight.init(hardwareMap, telemetry);
 
         cameraAngle = limelight.getCameraAngle();
     }
 
     @Override
     public void init_loop() {
+        telemetry.addLine("Set alliance: X = Blue, B = Red");
         if (gamepad1.xWasPressed()) {
             limelight.setTeam(20);
         }
@@ -42,12 +45,13 @@ public class LimelightAngleSetter extends OpMode {
         telemetry.addLine("to get the correct computed range");
 
         if (gamepad1.dpadLeftWasPressed()) {
-            limelight.setCameraAngle(cameraAngle += 0.002);
+            limelight.setCameraAngle(cameraAngle += 0.001);
         } else if (gamepad1.dpadRightWasPressed()) {
-            limelight.setCameraAngle(cameraAngle -= 0.002);
+            limelight.setCameraAngle(cameraAngle -= 0.001);
         }
 
         telemetry.addData("Camera Angle ", cameraAngle);
+        telemetry.addData("limelight Range", limelight.getRange());
         telemetry.update();
 
         limelight.process(telemetry);

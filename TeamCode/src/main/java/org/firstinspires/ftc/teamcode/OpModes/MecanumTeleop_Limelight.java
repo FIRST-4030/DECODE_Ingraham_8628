@@ -28,6 +28,7 @@
  */
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -37,14 +38,16 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.AprilTag;
 import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Chassis;
 import org.firstinspires.ftc.teamcode.Limelight;
 import org.firstinspires.ftc.teamcode.Shooter;
 
+@Configurable
 @TeleOp(name = "MecanumTeleop Limelight", group = "Robot")
 public class MecanumTeleop_Limelight extends OpMode {
+
+    public static int volley_delay = 200;
 
     Chassis chassis;
     DcMotorEx collector;
@@ -229,7 +232,7 @@ public class MecanumTeleop_Limelight extends OpMode {
 
         if (shoot3) {
             shotTimer.reset();
-            shooter.fireVolleySorted(limelight,telemetry);
+            shooter.fireVolleySorted(limelight,telemetry,volley_delay);
             shooter.stopShooter();
             shoot3 = false;
         }

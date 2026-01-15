@@ -38,7 +38,7 @@ public class Limelight {
 
     private final double camera_height = 16.75; // in
     private final double target_height = 29.5; // in
-    private double camera_angle = 0.032;    //0.0523599
+    private double camera_angle = -0.042; // Using LimelightAngleSetter
 
     IMU imu;
 //
@@ -110,7 +110,7 @@ public class Limelight {
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD);
+                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT);
         imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
@@ -132,7 +132,6 @@ public class Limelight {
             if (botPose != null) {
 
                 goalYaw = botPose.getOrientation().getYaw();
-//                goalRange = (target_height - camera_height) / (Math.tan(Math.toRadians(ty)+camera_angle)) + 27; //added const.
                 goalRange = (target_height - camera_height) / (Math.tan(Math.toRadians(ty)+camera_angle));
 
                 isDataCurrent = true;

@@ -60,7 +60,7 @@ public class Shooter {
         shooter.setPower(power);
     }
 
-    public void fireVolleySorted(Limelight limelight, Telemetry telemetry) {
+    public void fireVolleySorted(Limelight limelight, Telemetry telemetry, int volley_delay) {
         ElapsedTime timer = new ElapsedTime();
         timer.reset();
         double shooterVelo = 0;
@@ -70,13 +70,15 @@ public class Shooter {
         }
 
         this.shoot(shooterVelo);
-        sleep(500);
+        sleep(volley_delay);
 
+        limelight.process(telemetry);
         this.shoot(shooterVelo);
-        sleep(500);
+        sleep(volley_delay);
 
+        limelight.process(telemetry);
         this.shoot(shooterVelo);
-        sleep(500);
+        sleep(volley_delay);
     }
 
     public void shoot(double velo) {
@@ -115,40 +117,23 @@ public class Shooter {
 
     public double getShooterVelo(Limelight limelight) {
         // compute velocity from range using function based on shooting experiments
+        double poly;
         range = limelight.getRange();
         if (range < 80) {
-            double poly = 29;
-            return poly;
+            poly = 29;
         } else {
-            double poly = 19 + 0.125 * range;
-            return poly;
+            poly = 19 + 0.125 * range;
         }
+        return poly;
     }
-//    public static void fireShooter(double velocity, Shooter shooterRight, Servo launchFlapRight) {
-//        shooterRight.targetVelocity = velocity;
-//        ElapsedTime timer = new ElapsedTime();
-//
-//        while (!shooterRight.atSpeed()) {
-//            shooterRight.overridePower();
-//        }
-//        timer.reset();
-//        launchFlapRight.setPosition(Constants.rightFlapUp);
-//        while (timer.seconds() < 0.6) {
-//            shooterRight.overridePower();
-//        }
-//        launchFlapRight.setPosition(Constants.rightFlapDown);
-//        while (timer.seconds() < 1) {
-//            shooterRight.overridePower();
-//        }
-//    }
 
     private void sleep(long milliseconds) {
-    try {
-        Thread.sleep(milliseconds);
-    } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
-}
 
     public void setTargetVelocity(double velo) {
         this.targetVelocity = velo;
