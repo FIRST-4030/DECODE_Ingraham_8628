@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.pedropathing.follower.Follower;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -9,7 +10,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class IterativeAutoStepChain {
     public IterativeAutoStep[] iterativeAutoSteps;
     public double collectorSpeed;
-    public double shootingVelocity;
+    public double shootingVelocity = 34;
     public boolean done = false;
 
 
@@ -19,15 +20,21 @@ public class IterativeAutoStepChain {
 
     private int currentShootCount = 0;
     private ElapsedTime currentShotTime = new ElapsedTime();
+    private final double SHOOTER_HINGE_LIFT_DURATION_MS = 400;
+    private final double SHOT_DURATION_MS = 800;
+
+
     private boolean finishedWaiting = false;
+    private boolean shooterReachedSpeed = false;
 
 
-    public IterativeAutoStepChain(double collectorSpeedValue, IterativeAutoStep[] iterativeAutoStepsValue) {
-        iterativeAutoSteps = iterativeAutoStepsValue;
+    public IterativeAutoStepChain(double shootingVelocityValue, double collectorSpeedValue, IterativeAutoStep[] iterativeAutoStepsValue) {
+        shootingVelocity = shootingVelocityValue;
         collectorSpeed = collectorSpeedValue;
+        iterativeAutoSteps = iterativeAutoStepsValue;
     }
 
-    public void update(Follower follower, DcMotorEx collector, Telemetry telemetry) {
+    public void update(Follower follower, DcMotorEx collector, Shooter shooter, Servo shooterHinge, Telemetry telemetry) {
         telemetry.update();
 
         if (done) {
@@ -40,7 +47,10 @@ public class IterativeAutoStepChain {
         // This condition passes only the FIRST frame we are finished waiting
         if (currentWaitTime.milliseconds() >= activeIterativeAutoStep.getStartDelayMS() && !finishedWaiting) {
             finishedWaiting = true;
-            follower.followPath(activeIterativeAutoStep.getPathChain());
+
+            if (activeIterativeAutoStep.getStepType() == IterativeAutoStep.StepType.MOVE) {
+                follower.followPath(activeIterativeAutoStep.getPathChain());
+            }
         }
 
         telemetry.addData("Start Delay", activeIterativeAutoStep.getStartDelayMS());
@@ -58,40 +68,75 @@ public class IterativeAutoStepChain {
             collector.setPower(0);
         }
 
+        telemetry.addLine("--- STEP-TYPE-SPECIFIC EXECUTION ---");
+        telemetry.addData("StepType", activeIterativeAutoStep.getStepType());
+
         switch (activeIterativeAutoStep.getStepType()) {
             case MOVE:
                 if (!follower.isBusy()) {
-                    nextStep(follower, collector);
+                    nextStep(follower, collector, shooter, shooterHinge);
                 }
-            case SHOOT: // WIP
+                break;
+            case SHOOT:
+                telemetry.addData("Shooter target velocity", shooter.targetVelocity);
                 int targetShootCount = activeIterativeAutoStep.getTargetShootCount();
 
-                if (currentShootCount <= targetShootCount) {
+                if (currentShootCount < targetShootCount) {
+                    shooter.targetVelocity = shootingVelocity;
+                    shooter.overridePower();
 
+                    telemetry.addData("Current shot time", currentShotTime.milliseconds());
+
+                    if (shooter.atSpeed()) {
+                        shooterReachedSpeed = true;
+                    }
+
+                    if (!shooterReachedSpeed) {
+                        currentShotTime.reset();
+                        return;
+                    }
+
+                    if (currentShotTime.milliseconds() < SHOOTER_HINGE_LIFT_DURATION_MS) {
+                        shooterHinge.setPosition(0.25);
+                        telemetry.addLine("KEEP IT DOWN!");
+                    } else if (currentShotTime.milliseconds() < SHOT_DURATION_MS) {
+                        shooterHinge.setPosition(0.55);
+                        telemetry.addLine("SHOOTTT!!!");
+                    } else {
+                        currentShootCount ++;
+                        currentShotTime.reset();
+                    }
                 }
 
-                // We've finished shooting if we're one ABOVE shoot count this frame
-                if (currentShootCount > targetShootCount) {
-                    nextStep(follower, collector);
+                if (currentShootCount == targetShootCount) {
+                    nextStep(follower, collector, shooter, shooterHinge);
                 }
+                break;
         }
     }
 
-    public void init(Follower follower) {
+    public void init() {
         activeStepIndex = 0;
         done = false;
+
         currentShootCount = 0;
         currentWaitTime.reset();
         currentShotTime.reset();
+        finishedWaiting = false;
+        shooterReachedSpeed = false;
 
         IterativeAutoStep activeIterativeAutoStep = iterativeAutoSteps[activeStepIndex];
     }
 
-    public void nextStep(Follower follower, DcMotorEx collector) {
+    public void nextStep(Follower follower, DcMotorEx collector, Shooter shooter, Servo shooterHinge) {
+        currentShootCount = 0;
         currentWaitTime.reset();
         currentShotTime.reset();
-        currentShootCount = 0;
         finishedWaiting = false;
+        shooterReachedSpeed = false;
+
+        shooter.targetVelocity = 0;
+        shooterHinge.setPosition(0.25);
 
         int lastActiveStepIndex = activeStepIndex;
 
@@ -105,5 +150,7 @@ public class IterativeAutoStepChain {
 
         IterativeAutoStep lastIterativeAutoStep = iterativeAutoSteps[lastActiveStepIndex];
         IterativeAutoStep activeIterativeAutoStep = iterativeAutoSteps[activeStepIndex];
+
+        follower.setMaxPower(activeIterativeAutoStep.getMaxPower());
     }
 }

@@ -8,9 +8,10 @@ public class IterativeAutoStep {
 
     private final StepType stepType;
     private final PathChain pathChain;
-    private double startDelayMS = 0;
-    private boolean collectorOn = false;
-    private int targetShootCount = 3;
+    private final double startDelayMS;
+    private final boolean collectorOn;
+    private final int targetShootCount;
+    private final float maxPower;
 
 
     private IterativeAutoStep(Builder builder) {
@@ -18,34 +19,29 @@ public class IterativeAutoStep {
         this.pathChain = builder.pathChain;
         this.startDelayMS = builder.startDelayMS;
         this.collectorOn = builder.collectorOn;
+        this.targetShootCount = builder.targetShootCount;
+        this.maxPower = builder.maxPower;
     }
 
-    public StepType getStepType() {
-        return stepType;
-    }
+    public StepType getStepType() { return stepType; }
 
-    public PathChain getPathChain() {
-        return pathChain;
-    }
+    public PathChain getPathChain() { return pathChain; }
 
-    public double getStartDelayMS() {
-        return startDelayMS;
-    }
+    public double getStartDelayMS() { return startDelayMS; }
 
-    public boolean getCollectorOn() {
-        return collectorOn;
-    }
+    public boolean getCollectorOn() { return collectorOn; }
 
-    public int getTargetShootCount() {
-        return targetShootCount;
-    }
+    public int getTargetShootCount() { return targetShootCount; }
+
+    public float getMaxPower() { return maxPower; }
 
     public static class Builder {
         private StepType stepType;
         private PathChain pathChain;
         private long startDelayMS = 0;
         private boolean collectorOn = false;
-        private int targetShootCount = 3;
+        private int targetShootCount = 0;
+        private float maxPower = 1;
 
         public Builder setStepType(StepType value) {
             stepType = value;
@@ -69,6 +65,11 @@ public class IterativeAutoStep {
 
         public Builder setTargetShootCount(int value) {
             targetShootCount = value;
+            return this;
+        }
+
+        public Builder setMaxPower(float value) {
+            maxPower = value;
             return this;
         }
 
