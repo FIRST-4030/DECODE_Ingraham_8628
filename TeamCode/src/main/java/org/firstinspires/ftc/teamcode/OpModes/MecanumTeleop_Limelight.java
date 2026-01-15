@@ -55,7 +55,7 @@ public class MecanumTeleop_Limelight extends OpMode {
     IMU imu;
     ElapsedTime shotTimer = new ElapsedTime();
 
-    boolean shooting = false; // true when shooting sequence begins
+    boolean shoot1 = false, shoot3 = false; // true when shooting sequence begins
     double collectorSpeed = 0.5;
     boolean shooterOn = false;
     boolean targetInView;
@@ -206,15 +206,32 @@ public class MecanumTeleop_Limelight extends OpMode {
             collector.setPower(0.0);
             collectorOn = false;
             shooter.setTargetVelocity(shooter.getShooterVelo(limelight));
-            shooting = true;
+            shoot1 = true;
             shotTimer.reset();
             shooterOn = false;
         }
 
-        if (shooting) {
-                shotTimer.reset();
-                shooter.shoot(shooter.getShooterVelo(limelight));
-                shooting = false;
+        if (shoot1) {
+            shotTimer.reset();
+            shooter.shoot(shooter.getShooterVelo(limelight));
+            shooter.stopShooter();
+            shoot1 = false;
+        }
+
+        if (gamepad2.rightBumperWasReleased()) {
+            collector.setPower(0.0);
+            collectorOn = false;
+            shooter.setTargetVelocity(shooter.getShooterVelo(limelight));
+            shoot3 = true;
+            shotTimer.reset();
+            shooterOn = false;
+        }
+
+        if (shoot3) {
+            shotTimer.reset();
+            shooter.fireVolleySorted(limelight,telemetry);
+            shooter.stopShooter();
+            shoot3 = false;
         }
 
         telemetry.addData("Collector Current Power:", collector.getVelocity());

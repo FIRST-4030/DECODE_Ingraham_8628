@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -61,34 +60,24 @@ public class Shooter {
         shooter.setPower(power);
     }
 
-//    public static void fireVolleySorted(Limelight limelight, Telemetry telemetry, Servo flipper, Shooter shooterLeft, Servo launchFlapLeft, Shooter shooterRight, Servo launchFlapRight, LinearOpMode opMode) {
-//        ElapsedTime timer = new ElapsedTime();
-//        timer.reset();
-//        double shooterVelo = 0;
-//        while (timer.seconds() < 0.1) {
-//            limelight.process(telemetry);
-//            shooterVelo = shooterLeft.getShooterVelo(limelight);
-//        }
-//        if (limelight.getObelisk().equals("PGP")) {
-//            fireShooter(shooterVelo, shooterLeft, launchFlapLeft);
-//            flipper.setPosition(1);
-//            opMode.sleep(500);
-//            fireShooter(shooterVelo, shooterLeft, launchFlapLeft);
-//            flipper.setPosition(0.525);
-//        } else if (limelight.getObelisk().equals("GPP")) {
-//            fireShooter(shooterVelo, shooterLeft, launchFlapLeft);
-//            flipper.setPosition(1);
-//            opMode.sleep(500);
-//            fireShooter(shooterVelo, shooterLeft, launchFlapLeft);
-//            flipper.setPosition(0.525);
-//        } else if (limelight.getObelisk().equals("PPG")) {
-//            fireShooter(shooterVelo, shooterLeft, launchFlapLeft);
-//            flipper.setPosition(1);
-//            opMode.sleep(500);
-//            fireShooter(shooterVelo, shooterLeft, launchFlapLeft);
-//            flipper.setPosition(0.525);
-//        }
-//    }
+    public void fireVolleySorted(Limelight limelight, Telemetry telemetry) {
+        ElapsedTime timer = new ElapsedTime();
+        timer.reset();
+        double shooterVelo = 0;
+        while (timer.seconds() < 0.1) {
+            limelight.process(telemetry);
+            shooterVelo = this.getShooterVelo(limelight);
+        }
+
+        this.shoot(shooterVelo);
+        sleep(500);
+
+        this.shoot(shooterVelo);
+        sleep(500);
+
+        this.shoot(shooterVelo);
+        sleep(500);
+    }
 
     public void shoot(double velo) {
         targetVelocity = velo;
@@ -99,13 +88,13 @@ public class Shooter {
         }
 
         shooterTimer.reset();
-        shooterHinge.setPosition(0.55);
+        putHingeUp();
 
         while (shooterTimer.milliseconds() < 500) {
             overridePower();
         }
 
-        shooterHinge.setPosition(0.25);
+        putHingeDown();
 
         while (shooterTimer.milliseconds() < 1000) {
             overridePower();
@@ -152,6 +141,14 @@ public class Shooter {
 //            shooterRight.overridePower();
 //        }
 //    }
+
+    private void sleep(long milliseconds) {
+    try {
+        Thread.sleep(milliseconds);
+    } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+    }
+}
 
     public void setTargetVelocity(double velo) {
         this.targetVelocity = velo;
