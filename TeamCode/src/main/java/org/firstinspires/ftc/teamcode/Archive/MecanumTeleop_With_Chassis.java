@@ -44,191 +44,200 @@ import org.firstinspires.ftc.teamcode.Chassis;
 
 @TeleOp(name = "MecanumTeleop With Chassis", group = "Robot")
 public class MecanumTeleop_With_Chassis extends OpMode {
-
-    Chassis chassis;
-    DcMotorEx collector;
-    Shooter shooter;
-    Servo shooterHinge;
-    AprilTag aprilTags;
-    Servo liftServo;
-
-    IMU imu;
-    ElapsedTime shotTimer = new ElapsedTime();
-
-    boolean shooting = false; // true when shooting sequence begins
-    double collectorSpeed = 0.4;
-    boolean shooterOn = false;
-    boolean targetInView;
-    boolean collectorOn = false;
-
     @Override
     public void init() {
 
-        chassis = new Chassis(hardwareMap);
-
-        shooter=new Shooter(hardwareMap,"shooter",true);
-
-        collector = hardwareMap.get(DcMotorEx.class, "collector");
-
-        collector.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        collector.setDirection(DcMotor.Direction.REVERSE);
-
-        shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
-        shooterHinge.setPosition(0.25);
-
-        liftServo = hardwareMap.get(Servo.class, "liftServo");
-        liftServo.setPosition(1.0);  // Up with Axon Max is 1.0,  was 0.0 with Savox
-
-        imu = hardwareMap.get(IMU.class, "imu");
-
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection =
-                RevHubOrientationOnRobot.LogoFacingDirection.UP;
-        RevHubOrientationOnRobot.UsbFacingDirection usbDirection =
-                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
-
-        RevHubOrientationOnRobot orientationOnRobot = new
-                RevHubOrientationOnRobot(logoDirection, usbDirection);
-        imu.initialize(new IMU.Parameters(orientationOnRobot));
-
-        aprilTags = new AprilTag();
-        aprilTags.initAprilTag(hardwareMap);
-    }
-
-    @Override
-    public void init_loop() {
-        if (gamepad1.xWasPressed() && gamepad1.right_bumper) {
-            Blackboard.alliance = Blackboard.Alliance.BLUE;
-        } else if (gamepad1.bWasPressed() && gamepad1.right_bumper) {
-            Blackboard.alliance = Blackboard.Alliance.RED;
-        }
-
-        if (Blackboard.alliance == Blackboard.Alliance.RED) {
-            aprilTags.setGoalTagID(24);
-        }
-        else if (Blackboard.alliance == Blackboard.Alliance.BLUE) {
-            aprilTags.setGoalTagID(20);
-        }
-
-        double currentCoordinate = 72 - Math.sqrt((aprilTags.getObeliskRange() * aprilTags.getObeliskRange()) - 18567.25);
-
-        telemetry.addData("Pad 1, Left Bumper", "Slow Drive");
-        telemetry.addData("Pad 1, Right Bumper", "Very Slow Drive");
-        telemetry.addData("Pad 1, A", "Raise Robot");
-        telemetry.addData("Pad 1, Y", "Lower Robot");
-        telemetry.addData("--", "--");
-        telemetry.addData("Pad 2, Left Bumper", "Shoot");
-        telemetry.addData("Pad 2, B", "Collector On/Off");
-        telemetry.addData("Pad 2, X", "Collector Reverse");
-
-        telemetry.addData("Alliance", Blackboard.getAllianceAsString());
-        telemetry.addLine("HOLD RB AND Press X to override alliance to BLUE");
-        telemetry.addLine("HOLD RB AND Press B to override alliance to RED");
-
-        telemetry.addData("Goal Tag ID", aprilTags.getGoalTagId());
-        telemetry.addData("Obelisk Range", aprilTags.getObeliskRange());
-        telemetry.addData("Current Coordinate", currentCoordinate);
-
-        telemetry.update();
     }
 
     @Override
     public void loop() {
 
-        targetInView = aprilTags.runInLoop(telemetry, false);
-        shooter.overridePower();
-
-        telemetry.addData("Target is in view:", targetInView);
-        telemetry.addData("Shooter Current Velocity", shooter.getVelocity());
-        telemetry.addData("Shooter Target Velocity", shooter.targetVelocity);
-
-        //Gamepad 1
-        if (gamepad1.start) {
-            imu.resetYaw();
-        }
-
-        //Slow Drive
-        if (gamepad1.leftBumperWasPressed()) {
-            chassis.setMaxSpeed(0.5);
-        }
-        if (gamepad1.leftBumperWasReleased()) {
-            chassis.setMaxSpeed(1.0);
-        }
-        //Precision Drive
-        if (gamepad1.rightBumperWasPressed()) {
-            chassis.setMaxSpeed(0.2);
-        }
-        if (gamepad1.rightBumperWasReleased()) {
-            chassis.setMaxSpeed(1.0);
-        }
-
-        if (gamepad1.yWasPressed()) {
-            shooter.targetVelocity = 0;
-            shooterOn = false;
-            collector.setPower(0.0);
-            collectorOn = false;
-            liftServo.setPosition(1.0);
-        }
-        if (gamepad1.aWasPressed()) {
-            shooter.targetVelocity = 0;
-            shooterOn = false;
-            collector.setPower(0.0);
-            collectorOn = false;
-            liftServo.setPosition(0.0);
-        }
-
-        //Gamepad 2
-        if (gamepad2.start) {
-            imu.resetYaw();
-        }
-
-        //Collector Controls
-        if (gamepad2.bWasReleased()) {
-            if (!collectorOn) {
-                collector.setPower(collectorSpeed);
-                collectorOn = true;
-            } else {
-                collector.setPower(0.0);
-                collectorOn = false;
-            }
-        }
-
-        if (gamepad2.xWasPressed()) {
-            collector.setPower(-collectorSpeed);
-        }
-        if (gamepad2.xWasReleased()) {
-            collector.setPower(0.0);
-            collectorOn = false;
-        }
-
-        //Shooter Toggle
-        if (gamepad2.leftBumperWasReleased()) {
-            collector.setPower(0.0);
-            collectorOn = false;
-            shooter.targetVelocity = (aprilTags.distanceToGoal + 202.17) / 8.92124;
-            shooting = true;
-            shotTimer.reset();
-            shooterOn = false;
-        }
-
-        if (shooting) {
-            if (shooter.atSpeed()) {
-                shotTimer.reset();
-                shooterHinge.setPosition(0.55);
-                shooting = false;
-            }
-        }
-
-        if (shotTimer.milliseconds() > 500) {
-            shooterHinge.setPosition(0.25);
-        }
-
-        telemetry.addData("Collector Current Power:", collector.getVelocity());
-        telemetry.addData("Collector Target Power", collectorSpeed);
-        telemetry.addData("Shooter Current Velocity:", shooter.getVelocity());
-        telemetry.addData("Shooter Target Velocity: ", shooter.targetVelocity);
-        telemetry.update();
-
-        chassis.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
     }
+
+//    Chassis chassis;
+//    DcMotorEx collector;
+//    Shooter shooter;
+//    Servo shooterHinge;
+//    AprilTag aprilTags;
+//    Servo liftServo;
+//
+//    IMU imu;
+//    ElapsedTime shotTimer = new ElapsedTime();
+//
+//    boolean shooting = false; // true when shooting sequence begins
+//    double collectorSpeed = 0.4;
+//    boolean shooterOn = false;
+//    boolean targetInView;
+//    boolean collectorOn = false;
+//
+//    @Override
+//    public void init() {
+//
+//        chassis = new Chassis(hardwareMap);
+//
+//        shooter=new Shooter(hardwareMap,"shooter",true);
+//
+//        collector = hardwareMap.get(DcMotorEx.class, "collector");
+//
+//        collector.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//
+//        collector.setDirection(DcMotor.Direction.REVERSE);
+//
+//        shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
+//        shooterHinge.setPosition(0.25);
+//
+//        liftServo = hardwareMap.get(Servo.class, "liftServo");
+//        liftServo.setPosition(1.0);  // Up with Axon Max is 1.0,  was 0.0 with Savox
+//
+//        imu = hardwareMap.get(IMU.class, "imu");
+//
+//        RevHubOrientationOnRobot.LogoFacingDirection logoDirection =
+//                RevHubOrientationOnRobot.LogoFacingDirection.UP;
+//        RevHubOrientationOnRobot.UsbFacingDirection usbDirection =
+//                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
+//
+//        RevHubOrientationOnRobot orientationOnRobot = new
+//                RevHubOrientationOnRobot(logoDirection, usbDirection);
+//        imu.initialize(new IMU.Parameters(orientationOnRobot));
+//
+//        aprilTags = new AprilTag();
+//        aprilTags.initAprilTag(hardwareMap);
+//    }
+//
+//    @Override
+//    public void init_loop() {
+//        if (gamepad1.xWasPressed() && gamepad1.right_bumper) {
+//            Blackboard.alliance = Blackboard.Alliance.BLUE;
+//        } else if (gamepad1.bWasPressed() && gamepad1.right_bumper) {
+//            Blackboard.alliance = Blackboard.Alliance.RED;
+//        }
+//
+//        if (Blackboard.alliance == Blackboard.Alliance.RED) {
+//            aprilTags.setGoalTagID(24);
+//        }
+//        else if (Blackboard.alliance == Blackboard.Alliance.BLUE) {
+//            aprilTags.setGoalTagID(20);
+//        }
+//
+//        double currentCoordinate = 72 - Math.sqrt((aprilTags.getObeliskRange() * aprilTags.getObeliskRange()) - 18567.25);
+//
+//        telemetry.addData("Pad 1, Left Bumper", "Slow Drive");
+//        telemetry.addData("Pad 1, Right Bumper", "Very Slow Drive");
+//        telemetry.addData("Pad 1, A", "Raise Robot");
+//        telemetry.addData("Pad 1, Y", "Lower Robot");
+//        telemetry.addData("--", "--");
+//        telemetry.addData("Pad 2, Left Bumper", "Shoot");
+//        telemetry.addData("Pad 2, B", "Collector On/Off");
+//        telemetry.addData("Pad 2, X", "Collector Reverse");
+//
+//        telemetry.addData("Alliance", Blackboard.getAllianceAsString());
+//        telemetry.addLine("HOLD RB AND Press X to override alliance to BLUE");
+//        telemetry.addLine("HOLD RB AND Press B to override alliance to RED");
+//
+//        telemetry.addData("Goal Tag ID", aprilTags.getGoalTagId());
+//        telemetry.addData("Obelisk Range", aprilTags.getObeliskRange());
+//        telemetry.addData("Current Coordinate", currentCoordinate);
+//
+//        telemetry.update();
+//    }
+//
+//    @Override
+//    public void loop() {
+//
+//        targetInView = aprilTags.runInLoop(telemetry, false);
+//        shooter.overridePower();
+//
+//        telemetry.addData("Target is in view:", targetInView);
+//        telemetry.addData("Shooter Current Velocity", shooter.getVelocity());
+//        telemetry.addData("Shooter Target Velocity", shooter.targetVelocity);
+//
+//        //Gamepad 1
+//        if (gamepad1.start) {
+//            imu.resetYaw();
+//        }
+//
+//        //Slow Drive
+//        if (gamepad1.leftBumperWasPressed()) {
+//            chassis.setMaxSpeed(0.5);
+//        }
+//        if (gamepad1.leftBumperWasReleased()) {
+//            chassis.setMaxSpeed(1.0);
+//        }
+//        //Precision Drive
+//        if (gamepad1.rightBumperWasPressed()) {
+//            chassis.setMaxSpeed(0.2);
+//        }
+//        if (gamepad1.rightBumperWasReleased()) {
+//            chassis.setMaxSpeed(1.0);
+//        }
+//
+//        if (gamepad1.yWasPressed()) {
+//            shooter.targetVelocity = 0;
+//            shooterOn = false;
+//            collector.setPower(0.0);
+//            collectorOn = false;
+//            liftServo.setPosition(1.0);
+//        }
+//        if (gamepad1.aWasPressed()) {
+//            shooter.targetVelocity = 0;
+//            shooterOn = false;
+//            collector.setPower(0.0);
+//            collectorOn = false;
+//            liftServo.setPosition(0.0);
+//        }
+//
+//        //Gamepad 2
+//        if (gamepad2.start) {
+//            imu.resetYaw();
+//        }
+//
+//        //Collector Controls
+//        if (gamepad2.bWasReleased()) {
+//            if (!collectorOn) {
+//                collector.setPower(collectorSpeed);
+//                collectorOn = true;
+//            } else {
+//                collector.setPower(0.0);
+//                collectorOn = false;
+//            }
+//        }
+//
+//        if (gamepad2.xWasPressed()) {
+//            collector.setPower(-collectorSpeed);
+//        }
+//        if (gamepad2.xWasReleased()) {
+//            collector.setPower(0.0);
+//            collectorOn = false;
+//        }
+//
+//        //Shooter Toggle
+//        if (gamepad2.leftBumperWasReleased()) {
+//            collector.setPower(0.0);
+//            collectorOn = false;
+//            shooter.targetVelocity = (aprilTags.distanceToGoal + 202.17) / 8.92124;
+//            shooting = true;
+//            shotTimer.reset();
+//            shooterOn = false;
+//        }
+//
+//        if (shooting) {
+//            if (shooter.atSpeed()) {
+//                shotTimer.reset();
+//                shooterHinge.setPosition(0.55);
+//                shooting = false;
+//            }
+//        }
+//
+//        if (shotTimer.milliseconds() > 500) {
+//            shooterHinge.setPosition(0.25);
+//        }
+//
+//        telemetry.addData("Collector Current Power:", collector.getVelocity());
+//        telemetry.addData("Collector Target Power", collectorSpeed);
+//        telemetry.addData("Shooter Current Velocity:", shooter.getVelocity());
+//        telemetry.addData("Shooter Target Velocity: ", shooter.targetVelocity);
+//        telemetry.update();
+//
+//        chassis.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+//    }
 }

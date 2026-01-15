@@ -6,6 +6,7 @@ import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -24,7 +25,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
  * link on how to go about proper tuning
  *     https://pedropathing.com/docs/pathing/tuning
  */
-@Configurable
+@Disabled
 @Autonomous(name="PedroPathingDemoAuto")
 public class PedroPathingDemoAuto extends LinearOpMode {
 

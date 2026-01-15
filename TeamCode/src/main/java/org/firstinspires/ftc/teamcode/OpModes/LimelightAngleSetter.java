@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.OpModes;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.teamcode.Limelight;
 
@@ -11,13 +10,11 @@ import org.firstinspires.ftc.teamcode.Limelight;
 public class LimelightAngleSetter extends OpMode {
 
     Limelight limelight;
-    IMU imu;
 
     double cameraAngle;
 
     @Override
     public void init() {
-//        imu = hardwareMap.get(IMU.class, "imu");
 
         limelight = new Limelight();
         limelight.init(hardwareMap, telemetry);

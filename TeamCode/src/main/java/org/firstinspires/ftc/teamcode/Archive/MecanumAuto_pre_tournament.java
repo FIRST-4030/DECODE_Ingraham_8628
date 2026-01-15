@@ -48,534 +48,538 @@ import org.firstinspires.ftc.teamcode.Shooter;
 @Disabled
 @Autonomous(name="Mecanum Auto - Pre-tournament", group="Linear OpMode")
 public class MecanumAuto_pre_tournament extends LinearOpMode {
-
-    DcMotor frontLeftDrive;
-    DcMotor frontRightDrive;
-    DcMotor backLeftDrive;
-    DcMotor backRightDrive;
-    DcMotorEx collector;
-    Shooter shooter;
-    Servo shooterHinge;
-
-    ElapsedTime runtime = new ElapsedTime();
-
-    AprilTag aprilTags;
-
-    Servo liftServo;
-    
-    ElapsedTime collectorTime = new ElapsedTime();
-
-    int sideInt;
-
-    double obBearing, obDist;
-    double collectorSpeed = 0.5;
-
-    boolean redSide, blueSide;
-    boolean smallFootprint = false;
-
-    IMU imu;
-
-    Datalog datalog = new Datalog("MecanumAutoLog");
-    boolean logData = true;
-
     @Override
-    public void runOpMode() {
-        frontLeftDrive = hardwareMap.get(DcMotor.class, "leftFront");
-        frontRightDrive = hardwareMap.get(DcMotor.class, "rightFront");
-        backLeftDrive = hardwareMap.get(DcMotor.class, "leftBack");
-        backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
+    public void runOpMode() throws InterruptedException {
 
-        shooter = new Shooter(hardwareMap, "shooter", true);
-
-        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
-        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
-
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        collector = hardwareMap.get(DcMotorEx.class, "collector");
-        collector.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        collector.setDirection(DcMotor.Direction.REVERSE);
-
-        shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
-        shooterHinge.setPosition(0.25);
-
-        liftServo = hardwareMap.get(Servo.class, "liftServo");
-        liftServo.setPosition(1.0);
-
-        imu = hardwareMap.get(IMU.class, "imu");
-        // This needs to be changed to match the orientation on your robot
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection =
-                RevHubOrientationOnRobot.LogoFacingDirection.UP;
-        RevHubOrientationOnRobot.UsbFacingDirection usbDirection =
-                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
-
-        RevHubOrientationOnRobot orientationOnRobot = new
-                RevHubOrientationOnRobot(logoDirection, usbDirection);
-        imu.initialize(new IMU.Parameters(orientationOnRobot));
-
-        aprilTags = new AprilTag();
-        aprilTags.initAprilTag(hardwareMap);
-        long delaySeconds=0;
-
-        do {
-            aprilTags.scanField(telemetry);
-            obBearing = aprilTags.getObeliskBearing();
-            obDist = aprilTags.getObeliskRange();
-
-            telemetry.addData("!!! Obelisk Bearing ", obBearing);
-            telemetry.addData("Obelisk Range ", obDist);
-            if (obBearing > 0) {
-                telemetry.addData("SIDE ", "RED");
-                if (aprilTags.getObeliskRange() > 100) {
-                    Blackboard.alliance = Blackboard.Alliance.RED;
-                }
-                else {
-                    Blackboard.alliance = Blackboard.Alliance.BLUE;
-                }
-                redSide = true;
-                blueSide = false;
-            }
-            if (obBearing < 0 && obBearing > -30) {
-                telemetry.addData("SIDE ", "BLUE");
-                if (aprilTags.getObeliskRange() > 100) {
-                    Blackboard.alliance = Blackboard.Alliance.BLUE;
-                }
-                else {
-                    Blackboard.alliance = Blackboard.Alliance.RED;
-                }
-                redSide = false;
-                blueSide = true;
-            }
-            telemetry.addData("Press X to add 1 sec to delay",delaySeconds);
-            telemetry.addData("Press Y to remove 1 sec from delay",delaySeconds);
-            telemetry.addData("Range to Obelisk AprilTag", aprilTags.getObeliskRange());
-
-            if (aprilTags.getObeliskRange() > 100) telemetry.addData("Field Position", "Far");
-            if (aprilTags.getObeliskRange() < 100) telemetry.addData("Field Position", "Close");
-            telemetry.addLine();
-            telemetry.addLine();
-            telemetry.addData("Press Right/Left bumper to toggle limited auto | Limited Auto", smallFootprint);
-            telemetry.addData("Alliance", Blackboard.getAllianceAsString());
-
-            if (gamepad1.xWasPressed()) {
-                delaySeconds++;
-            }
-            if (gamepad1.yWasPressed()) {
-                delaySeconds--;
-            }
-
-            if (gamepad1.rightBumperWasReleased() && !smallFootprint) {
-                smallFootprint = true;
-            }
-            if (gamepad1.leftBumperWasReleased() && smallFootprint) {
-                smallFootprint = false;
-            }
-
-            telemetry.update();
-        } while (opModeInInit());
-
-        runtime.reset();
-        imu.resetYaw();
-
-        // run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
-
-//            if (redSide) {
-//                sideInt = 1;
-//            }
-//            else {
-//                sideInt = -1;
-//            }
-
-            sleep(delaySeconds * 1000);
-
-            if (smallFootprint) {
-                runSmallFootprint();
-            }
-
-            if (!smallFootprint) {
-                if (obDist > 100) {
-                    runFromFar();
-                } else {
-                    runFromClose();
-                }
-            }
-
-            break;
-        }
     }
 
-    private void runFromFar() {
-        imu.resetYaw();
-        double velocity = 34.0;
-
-        //if (redSide) {
-        if (Blackboard.alliance == Blackboard.Alliance.RED) {
-            moveForward(0.5, 75);
-
-            rotateTo(aprilTags.getBearing() + 5);
-            shootShooter(velocity);
-            shootShooter(velocity);
-            shootShooter(velocity);
-            stopShooter();
-
-            rotateTo(10);
-
-            imu.resetYaw();
-
-            moveForward(0.5, 915);
-
-            rotateTo(80);
-
-            collector.setPower(collectorSpeed);
-
-            moveForward(-0.2, 4000);
-
-            collectorTime.reset();
-            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
-
-            collector.setPower(0);
-
-            moveForward(0.25, 2750);
-
-            rotateTo(0);
-
-            moveForward(-0.25, 1500);
-
-            rotateTo(-10);
-
-            rotateTo(aprilTags.getBearing() - 8);
-
-            shootShooter(velocity);
-            shootShooter(velocity);
-            shootShooter(velocity);
-            stopShooter();
-
-            moveForward(0.5, 800);
-        }
-
-        else {
-            moveForward(0.5, 250);
-
-            rotateTo (aprilTags.getBearing() - 3);
-
-            shootShooter(velocity);
-            shootShooter(velocity);
-            shootShooter(velocity);
-            stopShooter();
-
-            rotateTo(0);
-
-            imu.resetYaw();
-
-            moveForward(0.5, 450);
-
-            rotateTo(-90);
-
-            collector.setPower(collectorSpeed);
-
-            moveForward(-0.2, 4375);
-
-            collectorTime.reset();
-            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
-
-            collector.setPower(0);
-
-            moveForward(0.25, 2250);
-
-            rotateTo(0);
-
-            moveForward(-0.25, 1500);
-
-            rotateTo(aprilTags.getBearing() - 5);
-
-            shootShooter(velocity);
-            shootShooter(velocity);
-            shootShooter(velocity);
-            stopShooter();
-
-            moveForward(0.5, 800);
-        }
-    }
-
-    private void runFromClose() {
-        double velocity = 29.0;
-        imu.resetYaw();
-        //sideInt = -sideInt;
-
-        if (Blackboard.alliance == Blackboard.Alliance.BLUE) {
-            rotateTo(130);
-            moveForward(-0.5, 1550);
-
-            shootShooter(velocity);
-            shootShooter(velocity);
-            shootShooter(velocity);
-            stopShooter();
-
-            rotateTo(-135);
-            moveForward(0.5, 570);
-
-            rotateTo(0);
-
-            collector.setPower(collectorSpeed);
-
-            moveForward(-0.2, 2850);
-
-            collectorTime.reset();
-            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
-
-            collector.setPower(0);
-
-            imu.resetYaw();
-        }
-
-        else {
-            rotateTo(-130);
-            moveForward(-0.5, 1550);
-
-            shootShooter(velocity);
-            shootShooter(velocity);
-            shootShooter(velocity);
-            stopShooter();
-
-            rotateTo(135);
-            moveForward(0.5, 570);
-
-            rotateTo(0);
-
-            collector.setPower(collectorSpeed);
-
-            moveForward(-0.2, 2850);
-
-            collectorTime.reset();
-            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
-
-            collector.setPower(0);
-
-            imu.resetYaw();
-        }
-
-        //unused auto bits
-//        moveForward(0.25, 2550);
+//    DcMotor frontLeftDrive;
+//    DcMotor frontRightDrive;
+//    DcMotor backLeftDrive;
+//    DcMotor backRightDrive;
+//    DcMotorEx collector;
+//    Shooter shooter;
+//    Servo shooterHinge;
 //
-//        rotateTo(39);
+//    ElapsedTime runtime = new ElapsedTime();
 //
-//        shootShooter();
-//        shootShooter();
-//        shootShooter();
+//    AprilTag aprilTags;
+//
+//    Servo liftServo;
+//
+//    ElapsedTime collectorTime = new ElapsedTime();
+//
+//    int sideInt;
+//
+//    double obBearing, obDist;
+//    double collectorSpeed = 0.5;
+//
+//    boolean redSide, blueSide;
+//    boolean smallFootprint = false;
+//
+//    IMU imu;
+//
+//    Datalog datalog = new Datalog("MecanumAutoLog");
+//    boolean logData = true;
+//
+//    @Override
+//    public void runOpMode() {
+//        frontLeftDrive = hardwareMap.get(DcMotor.class, "leftFront");
+//        frontRightDrive = hardwareMap.get(DcMotor.class, "rightFront");
+//        backLeftDrive = hardwareMap.get(DcMotor.class, "leftBack");
+//        backRightDrive = hardwareMap.get(DcMotor.class, "rightBack");
+//
+//        shooter = new Shooter(hardwareMap, "shooter", true);
+//
+//        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+//        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+//        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
+//        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
+//
+//        frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//
+//        backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//
+//        collector = hardwareMap.get(DcMotorEx.class, "collector");
+//        collector.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        collector.setDirection(DcMotor.Direction.REVERSE);
+//
+//        shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
+//        shooterHinge.setPosition(0.25);
+//
+//        liftServo = hardwareMap.get(Servo.class, "liftServo");
+//        liftServo.setPosition(1.0);
+//
+//        imu = hardwareMap.get(IMU.class, "imu");
+//        // This needs to be changed to match the orientation on your robot
+//        RevHubOrientationOnRobot.LogoFacingDirection logoDirection =
+//                RevHubOrientationOnRobot.LogoFacingDirection.UP;
+//        RevHubOrientationOnRobot.UsbFacingDirection usbDirection =
+//                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
+//
+//        RevHubOrientationOnRobot orientationOnRobot = new
+//                RevHubOrientationOnRobot(logoDirection, usbDirection);
+//        imu.initialize(new IMU.Parameters(orientationOnRobot));
+//
+//        aprilTags = new AprilTag();
+//        aprilTags.initAprilTag(hardwareMap);
+//        long delaySeconds=0;
+//
+//        do {
+//            aprilTags.scanField(telemetry);
+//            obBearing = aprilTags.getObeliskBearing();
+//            obDist = aprilTags.getObeliskRange();
+//
+//            telemetry.addData("!!! Obelisk Bearing ", obBearing);
+//            telemetry.addData("Obelisk Range ", obDist);
+//            if (obBearing > 0) {
+//                telemetry.addData("SIDE ", "RED");
+//                if (aprilTags.getObeliskRange() > 100) {
+//                    Blackboard.alliance = Blackboard.Alliance.RED;
+//                }
+//                else {
+//                    Blackboard.alliance = Blackboard.Alliance.BLUE;
+//                }
+//                redSide = true;
+//                blueSide = false;
+//            }
+//            if (obBearing < 0 && obBearing > -30) {
+//                telemetry.addData("SIDE ", "BLUE");
+//                if (aprilTags.getObeliskRange() > 100) {
+//                    Blackboard.alliance = Blackboard.Alliance.BLUE;
+//                }
+//                else {
+//                    Blackboard.alliance = Blackboard.Alliance.RED;
+//                }
+//                redSide = false;
+//                blueSide = true;
+//            }
+//            telemetry.addData("Press X to add 1 sec to delay",delaySeconds);
+//            telemetry.addData("Press Y to remove 1 sec from delay",delaySeconds);
+//            telemetry.addData("Range to Obelisk AprilTag", aprilTags.getObeliskRange());
+//
+//            if (aprilTags.getObeliskRange() > 100) telemetry.addData("Field Position", "Far");
+//            if (aprilTags.getObeliskRange() < 100) telemetry.addData("Field Position", "Close");
+//            telemetry.addLine();
+//            telemetry.addLine();
+//            telemetry.addData("Press Right/Left bumper to toggle limited auto | Limited Auto", smallFootprint);
+//            telemetry.addData("Alliance", Blackboard.getAllianceAsString());
+//
+//            if (gamepad1.xWasPressed()) {
+//                delaySeconds++;
+//            }
+//            if (gamepad1.yWasPressed()) {
+//                delaySeconds--;
+//            }
+//
+//            if (gamepad1.rightBumperWasReleased() && !smallFootprint) {
+//                smallFootprint = true;
+//            }
+//            if (gamepad1.leftBumperWasReleased() && smallFootprint) {
+//                smallFootprint = false;
+//            }
+//
+//            telemetry.update();
+//        } while (opModeInInit());
+//
+//        runtime.reset();
+//        imu.resetYaw();
+//
+//        // run until the end of the match (driver presses STOP)
+//        while (opModeIsActive()) {
+//
+////            if (redSide) {
+////                sideInt = 1;
+////            }
+////            else {
+////                sideInt = -1;
+////            }
+//
+//            sleep(delaySeconds * 1000);
+//
+//            if (smallFootprint) {
+//                runSmallFootprint();
+//            }
+//
+//            if (!smallFootprint) {
+//                if (obDist > 100) {
+//                    runFromFar();
+//                } else {
+//                    runFromClose();
+//                }
+//            }
+//
+//            break;
+//        }
+//    }
+//
+//    private void runFromFar() {
+//        imu.resetYaw();
+//        double velocity = 34.0;
+//
+//        //if (redSide) {
+//        if (Blackboard.alliance == Blackboard.Alliance.RED) {
+//            moveForward(0.5, 75);
+//
+//            rotateTo(aprilTags.getBearing() + 5);
+//            shootShooter(velocity);
+//            shootShooter(velocity);
+//            shootShooter(velocity);
+//            stopShooter();
+//
+//            rotateTo(10);
+//
+//            imu.resetYaw();
+//
+//            moveForward(0.5, 915);
+//
+//            rotateTo(80);
+//
+//            collector.setPower(collectorSpeed);
+//
+//            moveForward(-0.2, 4000);
+//
+//            collectorTime.reset();
+//            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
+//
+//            collector.setPower(0);
+//
+//            moveForward(0.25, 2750);
+//
+//            rotateTo(0);
+//
+//            moveForward(-0.25, 1500);
+//
+//            rotateTo(-10);
+//
+//            rotateTo(aprilTags.getBearing() - 8);
+//
+//            shootShooter(velocity);
+//            shootShooter(velocity);
+//            shootShooter(velocity);
+//            stopShooter();
+//
+//            moveForward(0.5, 800);
+//        }
+//
+//        else {
+//            moveForward(0.5, 250);
+//
+//            rotateTo (aprilTags.getBearing() - 3);
+//
+//            shootShooter(velocity);
+//            shootShooter(velocity);
+//            shootShooter(velocity);
+//            stopShooter();
+//
+//            rotateTo(0);
+//
+//            imu.resetYaw();
+//
+//            moveForward(0.5, 450);
+//
+//            rotateTo(-90);
+//
+//            collector.setPower(collectorSpeed);
+//
+//            moveForward(-0.2, 4375);
+//
+//            collectorTime.reset();
+//            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
+//
+//            collector.setPower(0);
+//
+//            moveForward(0.25, 2250);
+//
+//            rotateTo(0);
+//
+//            moveForward(-0.25, 1500);
+//
+//            rotateTo(aprilTags.getBearing() - 5);
+//
+//            shootShooter(velocity);
+//            shootShooter(velocity);
+//            shootShooter(velocity);
+//            stopShooter();
+//
+//            moveForward(0.5, 800);
+//        }
+//    }
+//
+//    private void runFromClose() {
+//        double velocity = 29.0;
+//        imu.resetYaw();
+//        //sideInt = -sideInt;
+//
+//        if (Blackboard.alliance == Blackboard.Alliance.BLUE) {
+//            rotateTo(130);
+//            moveForward(-0.5, 1550);
+//
+//            shootShooter(velocity);
+//            shootShooter(velocity);
+//            shootShooter(velocity);
+//            stopShooter();
+//
+//            rotateTo(-135);
+//            moveForward(0.5, 570);
+//
+//            rotateTo(0);
+//
+//            collector.setPower(collectorSpeed);
+//
+//            moveForward(-0.2, 2850);
+//
+//            collectorTime.reset();
+//            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
+//
+//            collector.setPower(0);
+//
+//            imu.resetYaw();
+//        }
+//
+//        else {
+//            rotateTo(-130);
+//            moveForward(-0.5, 1550);
+//
+//            shootShooter(velocity);
+//            shootShooter(velocity);
+//            shootShooter(velocity);
+//            stopShooter();
+//
+//            rotateTo(135);
+//            moveForward(0.5, 570);
+//
+//            rotateTo(0);
+//
+//            collector.setPower(collectorSpeed);
+//
+//            moveForward(-0.2, 2850);
+//
+//            collectorTime.reset();
+//            while (collectorTime.milliseconds() < 1000) collector.setPower(collectorSpeed);
+//
+//            collector.setPower(0);
+//
+//            imu.resetYaw();
+//        }
+//
+//        //unused auto bits
+////        moveForward(0.25, 2550);
+////
+////        rotateTo(39);
+////
+////        shootShooter();
+////        shootShooter();
+////        shootShooter();
+////        stopShooter();
+////
+////        rotateTo(-220);
+////
+////        moveForward(0.5, 700);
+//    }
+//
+//    private void runSmallFootprint() {
+//        double velocity = 34.0;
+//
+//        if (Blackboard.alliance == Blackboard.Alliance.RED) {
+//            rotateTo(aprilTags.getBearing() + 5);
+//        } else {
+//            rotateTo(aprilTags.getBearing() - 3);
+//        }
+//
+//        shootShooter(velocity);
+//        shootShooter(velocity);
+//        shootShooter(velocity);
 //        stopShooter();
 //
-//        rotateTo(-220);
+//        rotateTo(0);
 //
 //        moveForward(0.5, 700);
-    }
-
-    private void runSmallFootprint() {
-        double velocity = 34.0;
-
-        if (Blackboard.alliance == Blackboard.Alliance.RED) {
-            rotateTo(aprilTags.getBearing() + 5);
-        } else {
-            rotateTo(aprilTags.getBearing() - 3);
-        }
-
-        shootShooter(velocity);
-        shootShooter(velocity);
-        shootShooter(velocity);
-        stopShooter();
-
-        rotateTo(0);
-
-        moveForward(0.5, 700);
-    }
-
-    private void moveForward(double power, double mseconds){
-        ElapsedTime timer = new ElapsedTime();
-        timer.reset();
-        while (timer.milliseconds() < mseconds) {
-            frontLeftDrive.setPower(power);
-            backLeftDrive.setPower(power);
-            frontRightDrive.setPower(power);
-            backRightDrive.setPower(power);
-        }
-
-        stopMotors();
-    }
-
-    private void stopMotors() {
-        frontLeftDrive.setPower(0);
-        backLeftDrive.setPower(0);
-        frontRightDrive.setPower(0);
-        backRightDrive.setPower(0);
-    }
-
-    public void shootShooter(double velocity) {
-        // shooter.targetVelocity = (aprilTags.distanceToGoal + 202.17) / 8.92124;
-        shooter.targetVelocity = velocity;
-        ElapsedTime shooterTimer = new ElapsedTime();
-
-        while (!shooter.atSpeed()) {
-            shooter.overridePower();
-        }
-
-        shooterTimer.reset();
-        shooterHinge.setPosition(0.55);
-
-        while (shooterTimer.milliseconds() < 500) {
-            shooter.overridePower();
-        }
-
-        shooterHinge.setPosition(0.25);
-
-        while (shooterTimer.milliseconds() < 1000) {
-            shooter.overridePower();
-        }
-    }
-
-    public void stopShooter() {
-        shooter.targetVelocity = 0;
-    }
-
-    private void rotate (double milliseconds, int reverse) {
-        ElapsedTime turnTimer = new ElapsedTime();
-        turnTimer.reset();
-        int leftSidepos;
-
-        if (blueSide) {
-            leftSidepos = reverse;
-        }
-        else {
-            leftSidepos = -reverse;
-        }
-
-        while (turnTimer.milliseconds() < milliseconds) {
-            frontLeftDrive.setPower(leftSidepos * -0.5);
-            backLeftDrive.setPower(leftSidepos * -0.5);
-            frontRightDrive.setPower(leftSidepos * 0.5);
-            backRightDrive.setPower(leftSidepos * 0.5);
-        }
-
-        stopMotors();
-    }
-
-    private void rotateTo(double targetAngle) {
-        double Kp = 0.2;  // Proportional gain (tune this)
-        double Kd = 0.005;  // derivative gain
-        double minPower = 0.3;
-        double maxPower = 0.5;
-        double tolerance = 2.0;// degrees
-        double lastError = 0;
-        double derivative;
-        double currentAngle, error, turnPower;
-
-        long lastTime = System.nanoTime();
-
-        while (true) {
-            currentAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-
-            error = targetAngle - currentAngle;
-            error = (error + 540) % 360 - 180; // Wrap error to [-180, 180] range
-
-            long now = System.nanoTime();
-            double deltaTime = (now - lastTime) / 1e9;
-            lastTime = now;
-
-            derivative = (error - lastError) / deltaTime;
-            lastError = error;
-
-            if (Math.abs(error) < tolerance) break;
-
-            float turnPowerFactor = 1;
-            if (Math.abs(error) < 10) {
-                turnPowerFactor = 0.5f;
-            }
-
-            turnPower = Kp * error + Kd * derivative * turnPowerFactor;
-
-            // Enforce minimum power
-            if (Math.abs(turnPower) < minPower) {
-                turnPower = Math.signum(turnPower) * minPower;
-            }
-            // Clamp maximum power
-            turnPower = Math.max(-maxPower, Math.min(maxPower, turnPower));
-
-            telemetry.addData("Target (deg)", "%.2f", targetAngle);
-            telemetry.addData("Current (deg)", "%.2f", currentAngle);
-            telemetry.addData("Error", "%.2f", error);
-            telemetry.addData("Turn Power", "%.2f", turnPower);
-            telemetry.addData("IMU Angle", "%.2f", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
-            telemetry.update();
-
-            frontLeftDrive.setPower(-turnPower);
-            backLeftDrive.setPower(-turnPower);
-            frontRightDrive.setPower(turnPower);
-            backRightDrive.setPower(turnPower);
-
-            if (logData) {
-                datalog.runTime.set(runtime.seconds());
-                datalog.bearing.set(aprilTags.getBearing());
-                datalog.targetAngle.set(targetAngle);
-                datalog.currentAngle.set(currentAngle);
-                datalog.error.set(error);
-                datalog.turnPower.set(turnPower);
-                datalog.IMUAngle.set(imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
-                datalog.turnPowerFactor.set(turnPowerFactor);
-
-                datalog.writeLine();
-            }
-        }
-        stopMotors();
-    }
-
-    public static class Datalog {
-
-        /*
-         * The underlying datalogger object - it cares only about an array of loggable fields
-         */
-        private final Datalogger datalogger;
-        /*
-         * These are all of the fields that we want in the datalog.
-         * Note: Order here is NOT important. The order is important
-         *       in the setFields() call below
-         */
-        public Datalogger.GenericField runTime = new Datalogger.GenericField("runTime");
-        public Datalogger.GenericField bearing = new Datalogger.GenericField("bearing");
-        public Datalogger.GenericField currentAngle = new Datalogger.GenericField("currentAngle");
-        public Datalogger.GenericField targetAngle = new Datalogger.GenericField("targetAngle");
-        public Datalogger.GenericField error = new Datalogger.GenericField("error");
-        public Datalogger.GenericField IMUAngle = new Datalogger.GenericField("IMUAngle");
-        public Datalogger.GenericField turnPower = new Datalogger.GenericField("turnPower");
-        public Datalogger.GenericField turnPowerFactor = new Datalogger.GenericField("turnPowerFactor");
-
-        public Datalog(String name) {
-            datalogger = new Datalogger.Builder()
-                    .setFilename(name)
-                    .setAutoTimestamp(Datalogger.AutoTimestamp.DECIMAL_SECONDS)
-                    /*
-                     * Tell it about the fields we care to log.
-                     * Note: Order *IS* important here! The order in which we list the
-                     *       fields is the order in which they will appear in the log.
-                     */
-                    .setFields(
-                        runTime, bearing, currentAngle, targetAngle, error, IMUAngle, turnPower, turnPowerFactor
-                    )
-                    .build();
-        }
-
-        // Tell the datalogger to gather the values of the fields
-        // and write a new line in the log.
-        public void writeLine() {
-            datalogger.writeLine();
-        }
-    }
+//    }
+//
+//    private void moveForward(double power, double mseconds){
+//        ElapsedTime timer = new ElapsedTime();
+//        timer.reset();
+//        while (timer.milliseconds() < mseconds) {
+//            frontLeftDrive.setPower(power);
+//            backLeftDrive.setPower(power);
+//            frontRightDrive.setPower(power);
+//            backRightDrive.setPower(power);
+//        }
+//
+//        stopMotors();
+//    }
+//
+//    private void stopMotors() {
+//        frontLeftDrive.setPower(0);
+//        backLeftDrive.setPower(0);
+//        frontRightDrive.setPower(0);
+//        backRightDrive.setPower(0);
+//    }
+//
+//    public void shootShooter(double velocity) {
+//        // shooter.targetVelocity = (aprilTags.distanceToGoal + 202.17) / 8.92124;
+//        shooter.targetVelocity = velocity;
+//        ElapsedTime shooterTimer = new ElapsedTime();
+//
+//        while (!shooter.atSpeed()) {
+//            shooter.overridePower();
+//        }
+//
+//        shooterTimer.reset();
+//        shooterHinge.setPosition(0.55);
+//
+//        while (shooterTimer.milliseconds() < 500) {
+//            shooter.overridePower();
+//        }
+//
+//        shooterHinge.setPosition(0.25);
+//
+//        while (shooterTimer.milliseconds() < 1000) {
+//            shooter.overridePower();
+//        }
+//    }
+//
+//    public void stopShooter() {
+//        shooter.targetVelocity = 0;
+//    }
+//
+//    private void rotate (double milliseconds, int reverse) {
+//        ElapsedTime turnTimer = new ElapsedTime();
+//        turnTimer.reset();
+//        int leftSidepos;
+//
+//        if (blueSide) {
+//            leftSidepos = reverse;
+//        }
+//        else {
+//            leftSidepos = -reverse;
+//        }
+//
+//        while (turnTimer.milliseconds() < milliseconds) {
+//            frontLeftDrive.setPower(leftSidepos * -0.5);
+//            backLeftDrive.setPower(leftSidepos * -0.5);
+//            frontRightDrive.setPower(leftSidepos * 0.5);
+//            backRightDrive.setPower(leftSidepos * 0.5);
+//        }
+//
+//        stopMotors();
+//    }
+//
+//    private void rotateTo(double targetAngle) {
+//        double Kp = 0.2;  // Proportional gain (tune this)
+//        double Kd = 0.005;  // derivative gain
+//        double minPower = 0.3;
+//        double maxPower = 0.5;
+//        double tolerance = 2.0;// degrees
+//        double lastError = 0;
+//        double derivative;
+//        double currentAngle, error, turnPower;
+//
+//        long lastTime = System.nanoTime();
+//
+//        while (true) {
+//            currentAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+//
+//            error = targetAngle - currentAngle;
+//            error = (error + 540) % 360 - 180; // Wrap error to [-180, 180] range
+//
+//            long now = System.nanoTime();
+//            double deltaTime = (now - lastTime) / 1e9;
+//            lastTime = now;
+//
+//            derivative = (error - lastError) / deltaTime;
+//            lastError = error;
+//
+//            if (Math.abs(error) < tolerance) break;
+//
+//            float turnPowerFactor = 1;
+//            if (Math.abs(error) < 10) {
+//                turnPowerFactor = 0.5f;
+//            }
+//
+//            turnPower = Kp * error + Kd * derivative * turnPowerFactor;
+//
+//            // Enforce minimum power
+//            if (Math.abs(turnPower) < minPower) {
+//                turnPower = Math.signum(turnPower) * minPower;
+//            }
+//            // Clamp maximum power
+//            turnPower = Math.max(-maxPower, Math.min(maxPower, turnPower));
+//
+//            telemetry.addData("Target (deg)", "%.2f", targetAngle);
+//            telemetry.addData("Current (deg)", "%.2f", currentAngle);
+//            telemetry.addData("Error", "%.2f", error);
+//            telemetry.addData("Turn Power", "%.2f", turnPower);
+//            telemetry.addData("IMU Angle", "%.2f", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
+//            telemetry.update();
+//
+//            frontLeftDrive.setPower(-turnPower);
+//            backLeftDrive.setPower(-turnPower);
+//            frontRightDrive.setPower(turnPower);
+//            backRightDrive.setPower(turnPower);
+//
+//            if (logData) {
+//                datalog.runTime.set(runtime.seconds());
+//                datalog.bearing.set(aprilTags.getBearing());
+//                datalog.targetAngle.set(targetAngle);
+//                datalog.currentAngle.set(currentAngle);
+//                datalog.error.set(error);
+//                datalog.turnPower.set(turnPower);
+//                datalog.IMUAngle.set(imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
+//                datalog.turnPowerFactor.set(turnPowerFactor);
+//
+//                datalog.writeLine();
+//            }
+//        }
+//        stopMotors();
+//    }
+//
+//    public static class Datalog {
+//
+//        /*
+//         * The underlying datalogger object - it cares only about an array of loggable fields
+//         */
+//        private final Datalogger datalogger;
+//        /*
+//         * These are all of the fields that we want in the datalog.
+//         * Note: Order here is NOT important. The order is important
+//         *       in the setFields() call below
+//         */
+//        public Datalogger.GenericField runTime = new Datalogger.GenericField("runTime");
+//        public Datalogger.GenericField bearing = new Datalogger.GenericField("bearing");
+//        public Datalogger.GenericField currentAngle = new Datalogger.GenericField("currentAngle");
+//        public Datalogger.GenericField targetAngle = new Datalogger.GenericField("targetAngle");
+//        public Datalogger.GenericField error = new Datalogger.GenericField("error");
+//        public Datalogger.GenericField IMUAngle = new Datalogger.GenericField("IMUAngle");
+//        public Datalogger.GenericField turnPower = new Datalogger.GenericField("turnPower");
+//        public Datalogger.GenericField turnPowerFactor = new Datalogger.GenericField("turnPowerFactor");
+//
+//        public Datalog(String name) {
+//            datalogger = new Datalogger.Builder()
+//                    .setFilename(name)
+//                    .setAutoTimestamp(Datalogger.AutoTimestamp.DECIMAL_SECONDS)
+//                    /*
+//                     * Tell it about the fields we care to log.
+//                     * Note: Order *IS* important here! The order in which we list the
+//                     *       fields is the order in which they will appear in the log.
+//                     */
+//                    .setFields(
+//                        runTime, bearing, currentAngle, targetAngle, error, IMUAngle, turnPower, turnPowerFactor
+//                    )
+//                    .build();
+//        }
+//
+//        // Tell the datalogger to gather the values of the fields
+//        // and write a new line in the log.
+//        public void writeLine() {
+//            datalogger.writeLine();
+//        }
+//    }
 }

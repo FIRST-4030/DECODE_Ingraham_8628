@@ -55,28 +55,32 @@ import org.firstinspires.ftc.teamcode.Blackboard;
 @Autonomous(name="Blackboard Test Mecanum Auto", group="Linear OpMode")
 public class BlackboardTestMecanumAuto extends LinearOpMode {
     @Override
-    public void runOpMode() {
-        while (opModeInInit()) {
-            telemetry.addData("Status", "Initialized");
-            telemetry.addData("Alliance", Blackboard.getAllianceAsString());
-            telemetry.addLine("Press X to set alliance to BLUE");
-            telemetry.addLine("Press B to set alliance to RED");
-            telemetry.update();
+    public void runOpMode() throws InterruptedException {
 
-            if (gamepad1.xWasPressed()) {
-                Blackboard.alliance = Blackboard.Alliance.BLUE;
-            } else if (gamepad1.bWasPressed()) {
-                Blackboard.alliance = Blackboard.Alliance.RED;
-            }
-        }
-
-        // Wait for the game to start (driver presses START)
-        waitForStart();
-        // run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
-            telemetry.addData("Alliance", Blackboard.getAllianceAsString());
-            telemetry.update();
-            sleep(3000);
-        }
     }
+//    @Override
+//    public void runOpMode() {
+//        while (opModeInInit()) {
+//            telemetry.addData("Status", "Initialized");
+//            telemetry.addData("Alliance", Blackboard.getAllianceAsString());
+//            telemetry.addLine("Press X to set alliance to BLUE");
+//            telemetry.addLine("Press B to set alliance to RED");
+//            telemetry.update();
+//
+//            if (gamepad1.xWasPressed()) {
+//                Blackboard.alliance = Blackboard.Alliance.BLUE;
+//            } else if (gamepad1.bWasPressed()) {
+//                Blackboard.alliance = Blackboard.Alliance.RED;
+//            }
+//        }
+//
+//        // Wait for the game to start (driver presses START)
+//        waitForStart();
+//        // run until the end of the match (driver presses STOP)
+//        while (opModeIsActive()) {
+//            telemetry.addData("Alliance", Blackboard.getAllianceAsString());
+//            telemetry.update();
+//            sleep(3000);
+//        }
+//    }
 }

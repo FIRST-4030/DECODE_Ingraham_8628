@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -24,6 +26,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
  * link on how to go about proper tuning
  *     https://pedropathing.com/docs/pathing/tuning
  */
+@Disabled
 @Autonomous(name="PedroPathingDemo")
 public class PedroPathingDemo extends LinearOpMode {
 

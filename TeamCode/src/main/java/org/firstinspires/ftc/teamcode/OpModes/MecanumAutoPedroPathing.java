@@ -28,7 +28,6 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 
-@Configurable
 @Disabled
 @Autonomous(name="Mecanum Auto PedroPathing", group="Linear OpMode")
 public class MecanumAutoPedroPathing extends LinearOpMode {
