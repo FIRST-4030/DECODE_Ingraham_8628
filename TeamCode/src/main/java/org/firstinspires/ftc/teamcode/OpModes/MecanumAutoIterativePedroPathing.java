@@ -64,6 +64,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
     DcMotorEx collector;
     Shooter shooter;
     Servo shooterHinge;
+    IMU imu;
 
     ElapsedTime runtime = new ElapsedTime();
 
@@ -102,9 +103,6 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
 
         follower = constants.createFollower(hardwareMap);
 
-//        buildPaths(Blackboard.alliance); // Build the paths once we know the alliance
-//        buildAutoStepChains();
-
         shooter = new Shooter(hardwareMap, "shooter", true);
 
         collector = hardwareMap.get(DcMotorEx.class, "collector");
@@ -117,10 +115,21 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
         liftServo = hardwareMap.get(Servo.class, "liftServo");
         liftServo.setPosition(1.0);
 
+        imu = hardwareMap.get(IMU.class, "imu");
+
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection =
+                RevHubOrientationOnRobot.LogoFacingDirection.UP;
+        RevHubOrientationOnRobot.UsbFacingDirection usbDirection =
+                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
+
+        RevHubOrientationOnRobot orientationOnRobot = new
+                RevHubOrientationOnRobot(logoDirection, usbDirection);
+        imu.initialize(new IMU.Parameters(orientationOnRobot));
+
         long delaySeconds = 0;
 
         limelight = new Limelight();
-        limelight.init(hardwareMap, telemetry);
+        limelight.init(hardwareMap, imu, telemetry);
 
         // Init
         do {
@@ -128,27 +137,6 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
 
             telemetry.addData("Obelisk Bearing ", obeliskBearing);
             telemetry.addData("Obelisk Range ", obeliskDistance);
-
-//            if (aprilTags.getObeliskRange() > 100) telemetry.addData("Field Position", "Far");
-//            if (aprilTags.getObeliskRange() < 100) telemetry.addData("Field Position", "Close");
-
-//            if (obeliskBearing > 0) {
-//                if (aprilTags.getObeliskRange() > 100) {
-//                    Blackboard.alliance = Blackboard.Alliance.RED;
-//                }
-//                else {
-//                    Blackboard.alliance = Blackboard.Alliance.BLUE;
-//                }
-//            }
-//            if (obeliskBearing < 0 && obeliskBearing > -30) {
-//                if (aprilTags.getObeliskRange() > 100) {
-//                    Blackboard.alliance = Blackboard.Alliance.BLUE;
-//                } else {
-//                    Blackboard.alliance = Blackboard.Alliance.RED;
-//                }
-//            }
-
-//            telemetry.addData("Range to Obelisk AprilTag", aprilTags.getObeliskRange());
 
             telemetry.addLine();
             telemetry.addLine("--------------");
@@ -234,7 +222,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            limelight.process(telemetry);
+            limelight.process();
             telemetry.addLine("----------");
 
             if (!activeIterativeAutoStepChain.done) {

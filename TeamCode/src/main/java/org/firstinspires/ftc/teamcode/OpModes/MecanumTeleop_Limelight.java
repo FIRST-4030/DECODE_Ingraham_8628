@@ -234,7 +234,7 @@ public class MecanumTeleop_Limelight extends OpMode {
 
         if (shoot3) {
             shotTimer.reset();
-            shooter.fireVolleySorted(limelight,telemetry,volley_delay);
+            shooter.fireVolley(limelight,telemetry,volley_delay);
             shooter.stopShooter();
             shoot3 = false;
         }

@@ -60,23 +60,23 @@ public class Shooter {
         shooter.setPower(power);
     }
 
-    public void fireVolleySorted(Limelight limelight, Telemetry telemetry, int volley_delay) {
+    public void fireVolley(Limelight limelight, Telemetry telemetry, int volley_delay) {
         ElapsedTime timer = new ElapsedTime();
         timer.reset();
         double shooterVelo = 0;
         while (timer.seconds() < 0.1) {
-            limelight.process(telemetry);
+            limelight.process();
             shooterVelo = this.getShooterVelo(limelight);
         }
 
         this.shoot(shooterVelo);
         sleep(volley_delay);
 
-        limelight.process(telemetry);
+        limelight.process();
         this.shoot(shooterVelo);
         sleep(volley_delay);
 
-        limelight.process(telemetry);
+        limelight.process();
         this.shoot(shooterVelo);
         sleep(volley_delay);
     }
