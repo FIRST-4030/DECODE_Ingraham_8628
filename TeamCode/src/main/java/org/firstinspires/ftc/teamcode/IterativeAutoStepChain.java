@@ -10,7 +10,6 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class IterativeAutoStepChain {
     public IterativeAutoStep[] iterativeAutoSteps;
     public double collectorSpeed;
-    public double shootingVelocity = 34;
     public boolean done = false;
 
 
@@ -28,15 +27,12 @@ public class IterativeAutoStepChain {
     private boolean shooterReachedSpeed = false;
 
 
-    public IterativeAutoStepChain(double shootingVelocityValue, double collectorSpeedValue, IterativeAutoStep[] iterativeAutoStepsValue) {
-        shootingVelocity = shootingVelocityValue;
+    public IterativeAutoStepChain(double collectorSpeedValue, IterativeAutoStep[] iterativeAutoStepsValue) {
         collectorSpeed = collectorSpeedValue;
         iterativeAutoSteps = iterativeAutoStepsValue;
     }
 
-    public void update(Follower follower, DcMotorEx collector, Shooter shooter, Telemetry telemetry) {
-        telemetry.update();
-
+    public void update(Follower follower, DcMotorEx collector, Shooter shooter, Limelight limelight, Telemetry telemetry) {
         if (done) {
             telemetry.addLine("Done");
             return;
@@ -82,7 +78,7 @@ public class IterativeAutoStepChain {
                 int targetShootCount = activeIterativeAutoStep.getTargetShootCount();
 
                 if (currentShootCount < targetShootCount) {
-                    shooter.targetVelocity = shootingVelocity;
+                    shooter.setTargetVelocity(shooter.getShooterVelo(limelight));
                     shooter.overridePower();
 
                     telemetry.addData("Current shot time", currentShotTime.milliseconds());
@@ -135,7 +131,7 @@ public class IterativeAutoStepChain {
         finishedWaiting = false;
         shooterReachedSpeed = false;
 
-        shooter.targetVelocity = 0;
+        shooter.setTargetVelocity(0);
         shooter.putHingeDown();
 
         int lastActiveStepIndex = activeStepIndex;

@@ -23,6 +23,7 @@ import org.firstinspires.ftc.teamcode.ControlHub;
 import org.firstinspires.ftc.teamcode.Datalogger;
 import org.firstinspires.ftc.teamcode.IterativeAutoStep;
 import org.firstinspires.ftc.teamcode.IterativeAutoStepChain;
+import org.firstinspires.ftc.teamcode.Limelight;
 import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
@@ -49,10 +50,12 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
     public static long moveToFarShootDelayMS = 0;
     public static long moveToNearShootDelayMS = 0;
     public static long shootThreeBallsDelayMS = 0;
+    public static double collectorSpeed = 0.45;
+    public static float collectingMaxPower = 0.2f;
 
 
     public static double moveToFreeSpace_x = 50, moveToFreeSpace_y = 35, moveToFreeSpace_angle = 0;
-    public static double moveToFarShoot_x = 60, moveToFarShoot_y = 11, moveToFarShoot_angle = 111;
+    public static double moveToFarShoot_x = 65, moveToFarShoot_y = 16, moveToFarShoot_angle = 111;
     public static double moveToNearShoot_x = 48, moveToNearShoot_y = 96, moveToNearShoot_angle = 135;
 
 
@@ -64,19 +67,16 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
 
     ElapsedTime runtime = new ElapsedTime();
 
-//    AprilTag aprilTags;
+    Limelight limelight;
 
     Servo liftServo;
 
     ElapsedTime collectorTime = new ElapsedTime();
 
     double obeliskBearing, obeliskDistance;
-    double collectorSpeed = 0.5;
 
     boolean limitedAutoEnabled = false;
     boolean nearAutoEnabled = false;
-
-    IMU imu;
 
     Follower follower;
     PathChain inFrontOfBalls1, behindBalls1, inFrontOfBalls2, behindBalls2, inFrontOfBalls3, behindBalls3, moveToFreeSpace, moveToFarShoot, moveToNearShoot;
@@ -117,26 +117,14 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
         liftServo = hardwareMap.get(Servo.class, "liftServo");
         liftServo.setPosition(1.0);
 
-        imu = hardwareMap.get(IMU.class, "imu");
-        // This needs to be changed to match the orientation on your robot
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection =
-                RevHubOrientationOnRobot.LogoFacingDirection.UP;
-        RevHubOrientationOnRobot.UsbFacingDirection usbDirection =
-                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
-
-        RevHubOrientationOnRobot orientationOnRobot = new
-                RevHubOrientationOnRobot(logoDirection, usbDirection);
-        imu.initialize(new IMU.Parameters(orientationOnRobot));
-
-//        aprilTags = new AprilTag();
-//        aprilTags.initAprilTag(hardwareMap);
         long delaySeconds = 0;
+
+        limelight = new Limelight();
+        limelight.init(hardwareMap, telemetry);
 
         // Init
         do {
-//            aprilTags.scanField(telemetry);
-//            obeliskBearing = aprilTags.getObeliskBearing();
-//            obeliskDistance = aprilTags.getObeliskRange();
+            limelight.readObelisk();
 
             telemetry.addData("Obelisk Bearing ", obeliskBearing);
             telemetry.addData("Obelisk Range ", obeliskDistance);
@@ -197,6 +185,9 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
             }
 
             telemetry.addData("Alliance", Blackboard.getAllianceAsString());
+            telemetry.addData("Limelight team (alliance)", limelight.getTeam());
+            telemetry.addData("Limelight obelisk", limelight.getObelisk());
+
             telemetry.addLine();
             telemetry.addLine("HOLD RB AND Press X to override alliance to BLUE");
             telemetry.addLine("HOLD RB AND Press B to override alliance to RED");
@@ -207,6 +198,12 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
             telemetry.update();
         } while (opModeInInit());
 
+        if (Blackboard.alliance == Blackboard.Alliance.RED) {
+            limelight.setTeam(24);
+        } else {
+            limelight.setTeam(20);
+        }
+
         buildPaths(Blackboard.alliance); // Only build the paths once we press play(?)
         buildAutoStepChains();
 
@@ -215,7 +212,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
             if (nearAutoEnabled) {
                 correctedStartPose = new Pose(144 - nearStartX, nearStartY, Math.toRadians((nearStartAngle - 90) * -1 + 90));
             } else {
-                correctedStartPose = new Pose(144 - farStartX, farStartY, Math.toRadians((nearStartAngle - 90) * -1 + 90));
+                correctedStartPose = new Pose(144 - farStartX, farStartY, Math.toRadians((farStartAngle - 90) * -1 + 90));
             }
         } else {
             if (nearAutoEnabled) {
@@ -227,7 +224,6 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
         follower.setStartingPose(correctedStartPose);
 
         runtime.reset();
-        imu.resetYaw();
 
         IterativeAutoStepChain activeIterativeAutoStepChain = farAutoStepChain;
         if (nearAutoEnabled) {
@@ -238,9 +234,14 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+            limelight.process(telemetry);
+            telemetry.addLine("----------");
+
             if (!activeIterativeAutoStepChain.done) {
-                activeIterativeAutoStepChain.update(follower, collector, shooter, telemetry);
+                activeIterativeAutoStepChain.update(follower, collector, shooter, limelight, telemetry);
             }
+
+            telemetry.update();
         }
     }
 
@@ -356,7 +357,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                 .setPathChain(behindBalls1)
                 .setCollectorOn(true)
                 .setStartDelayMS(moveToBehindBallsDelayMS)
-                .setMaxPower(0.4f)
+                .setMaxPower(collectingMaxPower)
                 .build();
 
         IterativeAutoStep moveToInFrontOfBalls2AutoStep = new IterativeAutoStep.Builder()
@@ -371,7 +372,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                 .setPathChain(behindBalls2)
                 .setCollectorOn(true)
                 .setStartDelayMS(moveToBehindBallsDelayMS)
-                .setMaxPower(0.4f)
+                .setMaxPower(collectingMaxPower)
                 .build();
 
         IterativeAutoStep moveToInFrontOfBalls3AutoStep = new IterativeAutoStep.Builder()
@@ -386,7 +387,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                 .setPathChain(behindBalls3)
                 .setCollectorOn(true)
                 .setStartDelayMS(moveToBehindBallsDelayMS)
-                .setMaxPower(0.4f)
+                .setMaxPower(collectingMaxPower)
                 .build();
 
         IterativeAutoStep shootThreeBallsAutoStep = new IterativeAutoStep.Builder()
@@ -399,8 +400,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
         // This is where you define the sequence of steps to be executed for each given auto
 
         farAutoStepChain = new IterativeAutoStepChain(
-                34.0,
-                0.5,
+                collectorSpeed,
                 new IterativeAutoStep[] {
                         moveToFarShootAutoStep,
                         shootThreeBallsAutoStep,
@@ -428,8 +428,7 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
         );
 
         nearAutoStepChain = new IterativeAutoStepChain(
-                34.0,
-                0.5,
+                collectorSpeed,
                 new IterativeAutoStep[] {
                         moveToNearShootAutoStep,
                         shootThreeBallsAutoStep,
@@ -455,13 +454,6 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
                         moveToFreeSpaceAutoStep,
                 }
         );
-    }
-
-    private void stopMotors() {
-        chassis.frontLeftDrive.setPower(0);
-        chassis.backLeftDrive.setPower(0);
-        chassis.frontRightDrive.setPower(0);
-        chassis.backRightDrive.setPower(0);
     }
 
     public static class Datalog {
