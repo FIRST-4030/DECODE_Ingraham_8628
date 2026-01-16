@@ -5,7 +5,6 @@ import android.annotation.SuppressLint;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 
@@ -27,12 +26,11 @@ public class Limelight {
 
     private int goalTagId;
     private int teamID;
-    private static double METERS_TO_INCHES = 39.3701;
+    private static final double METERS_TO_INCHES = 39.3701;
 
     private double tx, ty, x, y;
 
     private boolean PPG,PGP,GPP;
-    private boolean targetInView = false;
     public boolean seeObelisk = false;
     public boolean isDataCurrent;
 
@@ -41,7 +39,7 @@ public class Limelight {
     private double camera_angle = -0.042; // Using LimelightAngleSetter
 
     IMU imu;
-//
+        //
 //    @SuppressLint("DefaultLocale")
 //    public void getTagLocations(String color) {
 //        LLResult result;
@@ -104,14 +102,9 @@ public class Limelight {
         }
     }
 
-    public void init(HardwareMap hardwareMap,Telemetry telemetry) {
+    public void init(HardwareMap hardwareMap, IMU imu, Telemetry telemetry) {
+        this.imu = imu;
         this.telemetry = telemetry;
-
-        imu = hardwareMap.get(IMU.class, "imu");
-        RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT);
-        imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
@@ -119,7 +112,7 @@ public class Limelight {
         limelight.start(); // This tells Limelight to start looking!
     }
 
-    public boolean process(Telemetry telemetry) {
+    public boolean process() {
 
         LLResult result = limelight.getLatestResult();
         if (result != null && result.isValid()) {

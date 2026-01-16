@@ -92,7 +92,7 @@ public class MecanumTeleop_Limelight extends OpMode {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
         limelight = new Limelight();
-        limelight.init(hardwareMap, telemetry);
+        limelight.init(hardwareMap, imu, telemetry);
     }
 
     @Override
@@ -112,7 +112,8 @@ public class MecanumTeleop_Limelight extends OpMode {
         telemetry.addData("Pad 1, A", "Raise Robot");
         telemetry.addData("Pad 1, Y", "Lower Robot");
         telemetry.addData("--", "--");
-        telemetry.addData("Pad 2, Left Bumper", "Shoot");
+        telemetry.addData("Pad 2, Left Bumper", "Shoot 1");
+        telemetry.addData("Pad 2, Right Bumper", "Shoot 3");
         telemetry.addData("Pad 2, B", "Collector On/Off");
         telemetry.addData("Pad 2, X", "Collector Reverse");
 
@@ -136,7 +137,7 @@ public class MecanumTeleop_Limelight extends OpMode {
 
     @Override
     public void loop() {
-        targetInView = limelight.process(telemetry);
+        targetInView = limelight.process();
         shooter.overridePower();
 
         telemetry.addData("Target is in view:", targetInView);
