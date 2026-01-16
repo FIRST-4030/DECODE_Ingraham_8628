@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Limelight;
 
+@Disabled
 @TeleOp(name = "Limelight Angle Setter")
 public class LimelightAngleSetter extends OpMode {
 
