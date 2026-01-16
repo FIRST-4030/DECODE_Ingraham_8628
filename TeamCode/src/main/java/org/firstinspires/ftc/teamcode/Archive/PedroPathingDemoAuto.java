@@ -1,11 +1,9 @@
-package org.firstinspires.ftc.teamcode.OpModes;
+package org.firstinspires.ftc.teamcode.Archive;
 
-import com.bylazar.configurables.annotations.Configurable;
-import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
-
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -16,8 +14,8 @@ import org.firstinspires.ftc.teamcode.Chassis;
 import org.firstinspires.ftc.teamcode.ControlHub;
 import org.firstinspires.ftc.teamcode.Datalogger;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
+import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 
 /*
  * This opMode is provided to show how to introduce PedroPathing into a project.
@@ -27,8 +25,16 @@ import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
  *     https://pedropathing.com/docs/pathing/tuning
  */
 @Disabled
-@Autonomous(name="PedroPathingDemo")
-public class PedroPathingDemo extends LinearOpMode {
+@Autonomous(name="PedroPathingDemoAuto")
+public class PedroPathingDemoAuto extends LinearOpMode {
+
+    public static double start_x = 56, start_y = 8, start_angle = 90;
+    public static double inFrontOfBalls1_x = 40, inFrontOfBalls1_y = 35,inFrontOfBalls1_angle = 0;
+    public static double behindBalls1_x = 13, behindBalls1_y = 35, behindBalls1_angle = 0;
+    public static double moveToFreeSpace_x = 50, moveToFreeSpace_y = 35,moveToFreeSpace_angle = 0;
+    public static double moveToFarShoot_x = 60, moveToFarShoot_y = 11,moveToFarShoot_angle = 110;
+
+    public static ControlHub controlHub = new ControlHub();
 
     Chassis chassis;
 
@@ -41,37 +47,21 @@ public class PedroPathingDemo extends LinearOpMode {
     Datalog datalog;
 
     String compiledDate = BuildConfig.COMPILATION_DATE;
+    PathChain InFrontOfBalls1, BehindBalls1, MoveToFreeSpace, MoveToFarShoot;
 
-    int heightX = 20, widthY = 20;
     boolean logData = false;
 
     // The order of values listed in Options is irrelevant
-    enum Options { STOP, MOVE_LEFT, MOVE_FORWARD, MOVE_BACK, MOVE_RIGHT }
+    enum Options { STOP, Do_InFrontOfBalls1, Do_BehindBalls1, Do_MoveToFreeSpace, Do_MoveToFarShoot }
     Options option;
 
     boolean doAutonomous = false;
-    /*
-     * Note: Pedro’s coordinate system spans an interval of [0, 144] on both the
-     *       x and y axes, with (0, 0) defined as the bottom-left corner of the field.
-     *
-     * The following code is an attempt to show how to define a set of paths to
-     * move in a rectangle.
-     *
-     * Start at lower left-hand corner (0,0)
-     */
-    private final Pose startPose = new Pose(0, 0, Math.toRadians(0));
-    private final Pose forwardPose = new Pose(heightX, 0, Math.toRadians(0));
-    private final Pose rightPose = new Pose(heightX, -widthY, Math.toRadians(0));
-    private final Pose backPose = new Pose(0, -widthY, Math.toRadians(0));
-
-    public static ControlHub controlHub = new ControlHub();
-
-    PathChain moveLeft, moveForward, moveBack, moveRight;
 
     @Override
     public void runOpMode() {
 
         chassis = new Chassis(hardwareMap);
+        Pose startPose = new Pose(start_x, start_y, Math.toRadians(start_angle));
 
         if (controlHub.getMacAddress().equals(Constants.PRIMARY_BOT)) {
             constants = new ConstantsCompetition();
@@ -87,7 +77,7 @@ public class PedroPathingDemo extends LinearOpMode {
         buildPaths();
 
         doAutonomous = true;
-        option = Options.MOVE_FORWARD;   // Define the first action in the path
+        option = Options.Do_InFrontOfBalls1;   // Define the first action in the path
 
         do {
             telemetry.addLine(String.format("Compiled on: %s",compiledDate));
@@ -117,25 +107,24 @@ public class PedroPathingDemo extends LinearOpMode {
     }
 
     void buildPaths() {
-
-        moveForward = follower.pathBuilder()
-                .addPath(new BezierLine(startPose, forwardPose))
-                .setLinearHeadingInterpolation(startPose.getHeading(), forwardPose.getHeading())
+        InFrontOfBalls1 = follower.pathBuilder()
+                .addPath(new BezierLine(new Pose(start_x, start_y), new Pose(inFrontOfBalls1_x, inFrontOfBalls1_y)))
+                .setLinearHeadingInterpolation(Math.toRadians(start_angle), Math.toRadians(inFrontOfBalls1_angle))
                 .build();
 
-        moveBack = follower.pathBuilder()
-                .addPath(new BezierLine(rightPose, backPose))
-                .setLinearHeadingInterpolation(rightPose.getHeading(), backPose.getHeading())
+        BehindBalls1 = follower.pathBuilder()
+                .addPath(new BezierLine(new Pose(inFrontOfBalls1_x, inFrontOfBalls1_y), new Pose(behindBalls1_x, behindBalls1_y)))
+                .setLinearHeadingInterpolation(Math.toRadians(inFrontOfBalls1_angle), Math.toRadians(behindBalls1_angle))
                 .build();
 
-        moveRight = follower.pathBuilder()
-                .addPath(new BezierLine(forwardPose, rightPose))
-                .setLinearHeadingInterpolation(forwardPose.getHeading(), rightPose.getHeading())
+        MoveToFreeSpace = follower.pathBuilder()
+                .addPath(new BezierLine(new Pose(behindBalls1_x, behindBalls1_y), new Pose(50., 35.)))
+                .setLinearHeadingInterpolation(Math.toRadians(behindBalls1_angle), Math.toRadians(moveToFreeSpace_angle))
                 .build();
 
-        moveLeft = follower.pathBuilder()
-                .addPath(new BezierLine(backPose, startPose))
-                .setLinearHeadingInterpolation(backPose.getHeading(), startPose.getHeading())
+        MoveToFarShoot = follower.pathBuilder()
+                .addPath(new BezierLine(new Pose(moveToFreeSpace_x, moveToFreeSpace_y), new Pose(moveToFarShoot_x, moveToFarShoot_y)))
+                .setLinearHeadingInterpolation(Math.toRadians(moveToFreeSpace_angle), Math.toRadians(moveToFarShoot_angle))
                 .build();
     }
 
@@ -143,28 +132,28 @@ public class PedroPathingDemo extends LinearOpMode {
         follower.update();
 
         switch (option) {
-            case MOVE_LEFT:
+            case Do_InFrontOfBalls1:
                 if (!follower.isBusy()) {
-                    follower.followPath(moveLeft,true);
+                    follower.followPath(InFrontOfBalls1);
+                    option = Options.Do_BehindBalls1;
+                }
+                break;
+            case Do_BehindBalls1:
+                if (!follower.isBusy()) {
+                    follower.followPath(BehindBalls1);
+                    option = Options.Do_MoveToFreeSpace;
+                }
+                break;
+            case Do_MoveToFreeSpace:
+                if (!follower.isBusy()) {
+                    follower.followPath(MoveToFreeSpace);
+                    option = Options.Do_MoveToFarShoot;
+                }
+                break;
+            case Do_MoveToFarShoot:
+                if (!follower.isBusy()) {
+                    follower.followPath(MoveToFarShoot);
                     option = Options.STOP;
-                }
-                break;
-            case MOVE_FORWARD:
-                if (!follower.isBusy()) {
-                    follower.followPath(moveForward,true);
-                    option = Options.MOVE_RIGHT;
-                }
-                break;
-            case MOVE_BACK:
-                if (!follower.isBusy()) {
-                    follower.followPath(moveBack,true);
-                    option = Options.MOVE_LEFT;
-                }
-                break;
-            case MOVE_RIGHT:
-                if (!follower.isBusy()) {
-                    follower.followPath(moveRight,true);
-                    option = Options.MOVE_BACK;
                 }
                 break;
             case STOP:
