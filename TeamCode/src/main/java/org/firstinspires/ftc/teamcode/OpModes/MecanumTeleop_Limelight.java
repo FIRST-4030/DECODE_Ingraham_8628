@@ -59,7 +59,7 @@ public class MecanumTeleop_Limelight extends OpMode {
     ElapsedTime shotTimer = new ElapsedTime();
 
     boolean shoot1 = false, shoot3 = false; // true when shooting sequence begins
-    double collectorSpeed = 0.5;
+    double collectorSpeed = 0.45;
     boolean shooterOn = false;
     boolean targetInView;
     boolean collectorOn = false;
@@ -107,8 +107,8 @@ public class MecanumTeleop_Limelight extends OpMode {
             limelight.setTeam(24);
         }
 
-        telemetry.addData("Pad 1, Left Bumper", "Slow Drive");
-        telemetry.addData("Pad 1, Right Bumper", "Very Slow Drive");
+        telemetry.addData("Pad 1, Left Bumper", "Very Slow Drive");
+        telemetry.addData("Pad 1, Right Bumper", "Slow Drive");
         telemetry.addData("Pad 1, A", "Raise Robot");
         telemetry.addData("Pad 1, Y", "Lower Robot");
         telemetry.addData("--", "--");
@@ -116,12 +116,11 @@ public class MecanumTeleop_Limelight extends OpMode {
         telemetry.addData("Pad 2, B", "Collector On/Off");
         telemetry.addData("Pad 2, X", "Collector Reverse");
 
+        telemetry.addData("Obelisk", limelight.getObelisk());
         telemetry.addData("Alliance", Blackboard.getAllianceAsString());
+        telemetry.addData("Goal Tag ID", limelight.getTeam());
         telemetry.addLine("HOLD RB AND Press X to override alliance to BLUE");
         telemetry.addLine("HOLD RB AND Press B to override alliance to RED");
-
-        telemetry.addData("Obelisk", limelight.getObelisk());
-        telemetry.addData("Goal Tag ID", limelight.getTeam());
 
         telemetry.update();
     }
@@ -151,20 +150,22 @@ public class MecanumTeleop_Limelight extends OpMode {
         }
 
         //Slow Drive
-        if (gamepad1.leftBumperWasPressed()) {
-            chassis.setMaxSpeed(0.5);
+        if (gamepad1.rightBumperWasPressed()) {
+            chassis.setMaxSpeed(0.4);
         }
         if (gamepad1.leftBumperWasReleased()) {
             chassis.setMaxSpeed(1.0);
         }
+
         //Precision Drive
-        if (gamepad1.rightBumperWasPressed()) {
+        if (gamepad1.leftBumperWasPressed()) {
             chassis.setMaxSpeed(0.2);
         }
         if (gamepad1.rightBumperWasReleased()) {
             chassis.setMaxSpeed(1.0);
         }
 
+        //Lift Servo Controls
         if (gamepad1.yWasPressed()) {
             shooter.targetVelocity = 0;
             shooterOn = false;
@@ -204,7 +205,7 @@ public class MecanumTeleop_Limelight extends OpMode {
             collectorOn = false;
         }
 
-        //Shooter Toggle
+        //Shooter Controls
         if (gamepad2.leftBumperWasReleased()) {
             collector.setPower(0.0);
             collectorOn = false;
