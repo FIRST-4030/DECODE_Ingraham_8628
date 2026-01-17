@@ -241,6 +241,13 @@ public class MecanumTeleop_Limelight extends OpMode {
                     shooter.putHingeDown();
                 }
             }
+        } else {
+            if (gamepad2.y) {
+                shooter.setTargetVelocity(20);
+                shooter.overridePower();
+            } else {
+                shooter.stopShooter();
+            }
         }
     }
 }
