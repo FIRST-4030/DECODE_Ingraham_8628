@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.Limelight;
 import org.firstinspires.ftc.teamcode.Shooter;
 
 @Configurable
-@TeleOp(name = "MecanumTeleop Limelight", group = "Robot")
+@TeleOp(name = "Mecanum Teleop Limelight", group = "Robot")
 public class MecanumTeleop_Limelight extends OpMode {
     public static double collectorSpeed = 0.45;
 

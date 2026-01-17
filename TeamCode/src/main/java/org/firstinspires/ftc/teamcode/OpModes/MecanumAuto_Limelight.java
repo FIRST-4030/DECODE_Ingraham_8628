@@ -16,7 +16,6 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-//import org.firstinspires.ftc.teamcode.AprilTag;
 import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Chassis;
 import org.firstinspires.ftc.teamcode.ControlHub;
@@ -30,13 +29,12 @@ import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 
 @Configurable
-@Autonomous(name="Mecanum Auto ITERATIVE PedroPathing", group="Linear OpMode")
-public class MecanumAutoIterativePedroPathing extends LinearOpMode {
+@Autonomous(name="Mecanum Auto Limelight", group="Linear OpMode")
+public class MecanumAuto_Limelight extends LinearOpMode {
 
     // Pedro pathing constants (editable in panels)
     public static double farStartX = 56, farStartY = 8, farStartAngle = 90;
     public static double nearStartX = 24, nearStartY = 120, nearStartAngle = 315;
-
 
     public static double inFrontOfBalls1_x = 50, inFrontOfBalls1_y = 35,inFrontOfBalls1_angle = 0;
     public static double inFrontOfBalls2_x = 50, inFrontOfBalls2_y = 59 ,inFrontOfBalls2_angle = 0;
@@ -53,11 +51,9 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
     public static double collectorSpeed = 0.35;
     public static float collectingMaxPower = 0.6f;
 
-
     public static double moveToFreeSpace_x = 50, moveToFreeSpace_y = 35, moveToFreeSpace_angle = 0;
     public static double moveToFarShoot_x = 55, moveToFarShoot_y = 16, moveToFarShoot_angle = 111;
     public static double moveToNearShoot_x = 48, moveToNearShoot_y = 96, moveToNearShoot_angle = 135;
-
 
     Chassis chassis;
     Constants constants;
@@ -82,7 +78,6 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
     Follower follower;
     PathChain inFrontOfBalls1, behindBalls1, inFrontOfBalls2, behindBalls2, inFrontOfBalls3, behindBalls3, moveToFreeSpace, moveToFarShoot, moveToNearShoot;
     IterativeAutoStepChain farAutoStepChain, nearAutoStepChain;
-
 
     Datalog datalog = new Datalog("MecanumAutoLog");
     boolean logData = true;
