@@ -4,9 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 public class Shooter {
@@ -60,52 +58,7 @@ public class Shooter {
         shooter.setPower(power);
     }
 
-    public void fireVolley(Limelight limelight, Telemetry telemetry, int volley_delay) {
-        ElapsedTime timer = new ElapsedTime();
-        timer.reset();
-        double shooterVelo = 0;
-        while (timer.seconds() < 0.1) {
-            limelight.process();
-            shooterVelo = this.getShooterVelo(limelight);
-        }
-
-        this.shoot(shooterVelo);
-        sleep(volley_delay);
-
-        limelight.process();
-        this.shoot(shooterVelo);
-        sleep(volley_delay);
-
-        limelight.process();
-        this.shoot(shooterVelo);
-        sleep(volley_delay);
-    }
-
-    public void shoot(double velo) {
-        targetVelocity = velo;
-        ElapsedTime shooterTimer = new ElapsedTime();
-
-        while (!atSpeed()) {
-            overridePower();
-        }
-
-        shooterTimer.reset();
-        putHingeUp();
-
-        while (shooterTimer.milliseconds() < 500) {
-            overridePower();
-        }
-
-        putHingeDown();
-
-        while (shooterTimer.milliseconds() < 1000) {
-            overridePower();
-        }
-    }
-
-    public void stopShooter() {
-        targetVelocity = 0;
-    }
+    public void stopShooter() { targetVelocity = 0; }
 
     public void putHingeUp() {
         shooterHinge.setPosition(0.55);
@@ -117,21 +70,13 @@ public class Shooter {
 
     public double getShooterVelo(Limelight limelight) {
         // compute velocity from range using function based on shooting experiments
-        double poly;
         range = limelight.getRange();
         if (range < 80) {
-            poly = 29;
+            double poly = 29;
+            return poly;
         } else {
-            poly = 19 + 0.125 * range;
-        }
-        return poly;
-    }
-
-    private void sleep(long milliseconds) {
-        try {
-            Thread.sleep(milliseconds);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            double poly = 19 + 0.125 * range;
+            return poly;
         }
     }
 

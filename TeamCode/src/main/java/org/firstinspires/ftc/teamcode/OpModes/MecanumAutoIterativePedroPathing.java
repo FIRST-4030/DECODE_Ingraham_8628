@@ -50,12 +50,12 @@ public class MecanumAutoIterativePedroPathing extends LinearOpMode {
     public static long moveToFarShootDelayMS = 0;
     public static long moveToNearShootDelayMS = 0;
     public static long shootThreeBallsDelayMS = 0;
-    public static double collectorSpeed = 0.45;
-    public static float collectingMaxPower = 0.2f;
+    public static double collectorSpeed = 0.35;
+    public static float collectingMaxPower = 0.6f;
 
 
     public static double moveToFreeSpace_x = 50, moveToFreeSpace_y = 35, moveToFreeSpace_angle = 0;
-    public static double moveToFarShoot_x = 65, moveToFarShoot_y = 16, moveToFarShoot_angle = 111;
+    public static double moveToFarShoot_x = 55, moveToFarShoot_y = 16, moveToFarShoot_angle = 111;
     public static double moveToNearShoot_x = 48, moveToNearShoot_y = 96, moveToNearShoot_angle = 135;
 
 

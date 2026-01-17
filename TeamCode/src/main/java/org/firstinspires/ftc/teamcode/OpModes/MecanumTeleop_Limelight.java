@@ -1,31 +1,3 @@
-/* Copyright (c) 2025 FIRST. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted (subject to the limitations in the disclaimer below) provided that
- * the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice, this list
- * of conditions and the following disclaimer.
- *
- * Redistributions in binary form must reproduce the above copyright notice, this
- * list of conditions and the following disclaimer in the documentation and/or
- * other materials provided with the distribution.
- *
- * Neither the name of FIRST nor the names of its contributors may be used to endorse or
- * promote products derived from this software without specific prior written permission.
- *
- * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
- * LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.bylazar.configurables.annotations.Configurable;
@@ -46,23 +18,26 @@ import org.firstinspires.ftc.teamcode.Shooter;
 @Configurable
 @TeleOp(name = "MecanumTeleop Limelight", group = "Robot")
 public class MecanumTeleop_Limelight extends OpMode {
-
-    public static int volley_delay = 200;
+    public static double collectorSpeed = 0.45;
 
     Chassis chassis;
     DcMotorEx collector;
     Shooter shooter;
     Servo liftServo;
     Limelight limelight;
-
     IMU imu;
-    ElapsedTime shotTimer = new ElapsedTime();
 
-    boolean shoot1 = false, shoot3 = false; // true when shooting sequence begins
-    double collectorSpeed = 0.45;
-    boolean shooterOn = false;
     boolean targetInView;
     boolean collectorOn = false;
+
+    int currentShootCount = 0;
+    int targetShootCount = 1;
+    boolean isShooting = false;
+    boolean reachedSpeed = false;
+    ElapsedTime shotTimer = new ElapsedTime();
+
+    private final double SHOOTER_HINGE_LIFT_DURATION_MS = 400;
+    private final double SHOT_DURATION_MS = 800;
 
     @Override
     public void init() {
@@ -101,10 +76,8 @@ public class MecanumTeleop_Limelight extends OpMode {
 
         if (gamepad1.xWasPressed() && gamepad1.right_bumper) {
             Blackboard.alliance = Blackboard.Alliance.BLUE;
-            limelight.setTeam(20);
         } else if (gamepad1.bWasPressed() && gamepad1.right_bumper) {
             Blackboard.alliance = Blackboard.Alliance.RED;
-            limelight.setTeam(24);
         }
 
         telemetry.addData("Pad 1, Left Bumper", "Very Slow Drive");
@@ -119,9 +92,8 @@ public class MecanumTeleop_Limelight extends OpMode {
 
         telemetry.addData("Obelisk", limelight.getObelisk());
         telemetry.addData("Alliance", Blackboard.getAllianceAsString());
-        telemetry.addData("Goal Tag ID", limelight.getTeam());
-        telemetry.addLine("HOLD RB AND Press X to override alliance to BLUE");
-        telemetry.addLine("HOLD RB AND Press B to override alliance to RED");
+        telemetry.addLine("Hold RB and Press X to override alliance to BLUE");
+        telemetry.addLine("Hold RB and Press B to override alliance to RED");
 
         telemetry.update();
     }
@@ -169,14 +141,12 @@ public class MecanumTeleop_Limelight extends OpMode {
         //Lift Servo Controls
         if (gamepad1.yWasPressed()) {
             shooter.targetVelocity = 0;
-            shooterOn = false;
             collector.setPower(0.0);
             collectorOn = false;
             liftServo.setPosition(1.0);
         }
         if (gamepad1.aWasPressed()) {
             shooter.targetVelocity = 0;
-            shooterOn = false;
             collector.setPower(0.0);
             collectorOn = false;
             liftServo.setPosition(0.0);
@@ -206,45 +176,65 @@ public class MecanumTeleop_Limelight extends OpMode {
             collectorOn = false;
         }
 
-        //Shooter Controls
-        if (gamepad2.leftBumperWasReleased()) {
-            collector.setPower(0.0);
-            collectorOn = false;
-            shooter.setTargetVelocity(shooter.getShooterVelo(limelight));
-            shoot1 = true;
-            shotTimer.reset();
-            shooterOn = false;
-        }
+        handleShooting();
 
-        if (shoot1) {
-            shotTimer.reset();
-            shooter.shoot(shooter.getShooterVelo(limelight));
-            shooter.stopShooter();
-            shoot1 = false;
-        }
-
-        if (gamepad2.rightBumperWasReleased()) {
-            collector.setPower(0.0);
-            collectorOn = false;
-            shooter.setTargetVelocity(shooter.getShooterVelo(limelight));
-            shoot3 = true;
-            shotTimer.reset();
-            shooterOn = false;
-        }
-
-        if (shoot3) {
-            shotTimer.reset();
-            shooter.fireVolley(limelight,telemetry,volley_delay);
-            shooter.stopShooter();
-            shoot3 = false;
-        }
-
+        telemetry.addData("Current Shoot Count", currentShootCount);
         telemetry.addData("Collector Current Power:", collector.getVelocity());
         telemetry.addData("Collector Target Power", collectorSpeed);
         telemetry.addData("Shooter Current Velocity:", shooter.getVelocity());
         telemetry.addData("Shooter Target Velocity: ", shooter.targetVelocity);
+        telemetry.addData("Get Shooter Velocity", shooter.getShooterVelo(limelight));
         telemetry.update();
 
         chassis.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+    }
+
+    public void handleShooting() {
+        if (gamepad2.leftBumperWasReleased() && !isShooting) {
+            isShooting = true;
+            currentShootCount = 0;
+            targetShootCount = 1;
+            reachedSpeed = false;
+            shotTimer.reset();
+        }
+
+        if (gamepad2.rightBumperWasReleased() && !isShooting) {
+            isShooting = true;
+            currentShootCount = 0;
+            targetShootCount = 3;
+            reachedSpeed = false;
+            shotTimer.reset();
+        }
+
+        if (isShooting) {
+            shooter.setTargetVelocity(shooter.getShooterVelo(limelight));
+            shooter.overridePower();
+
+            collector.setPower(0);
+            collectorOn = false;
+
+            if (shooter.atSpeed()) {
+                reachedSpeed = true;
+            }
+
+            if (!reachedSpeed) {
+                shotTimer.reset();
+                return;
+            }
+
+            if (shotTimer.milliseconds() < SHOOTER_HINGE_LIFT_DURATION_MS) {
+                shooter.putHingeDown();
+            } else if (shotTimer.milliseconds() < SHOT_DURATION_MS) {
+                shooter.putHingeUp();
+            } else {
+                currentShootCount ++;
+                shotTimer.reset();
+                if (currentShootCount == targetShootCount) {
+                    isShooting = false;
+                    shooter.stopShooter();
+                    shooter.putHingeDown();
+                }
+            }
+        }
     }
 }
