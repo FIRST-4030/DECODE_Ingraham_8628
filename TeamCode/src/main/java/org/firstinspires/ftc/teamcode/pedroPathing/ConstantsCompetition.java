@@ -16,7 +16,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class ConstantsCompetition extends Constants {
     protected FollowerConstants followerConstants = new FollowerConstants()
-            .mass(9.976)  // Kg
+            .mass(10.449)  // Kg
             .forwardZeroPowerAcceleration(-33.283483666739514)
             .lateralZeroPowerAcceleration(-60.30465072724906)
             .translationalPIDFCoefficients(new PIDFCoefficients(0.18, 0, 0.01, 0.025))

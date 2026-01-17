@@ -12,12 +12,17 @@ public class Shooter {
     DcMotorEx shooter;
     Servo shooterHinge;
 
+    int polyRangeCrossover = 80;
+    int polyVeloBaseFar = 19;
+    int polyVeloBaseNear = 29;
+    double polyVeloBaseRangeFactor = 0.125;
+
     public static double Kvelo = 0.0243; // power multiplier for rotations per second
     // FeedBack term is Kp (proportional term)
     // Set Kp to zero when tuning the Kvelo term!!
     public static double Kp = 0.3;  // no gain in improvement when increasing beyond this
 
-    static final double   COUNTS_PER_REV = 28 ;  // REV HD Hex 1:1 Motor Encoder
+    static final double COUNTS_PER_REV = 28 ;  // REV HD Hex 1:1 Motor Encoder
 
     public double targetVelocity = 0;  // rotations per second (max is ~40)
     double range;
@@ -49,36 +54,43 @@ public class Shooter {
         }
     }
 
-    public void setControllerValues(double Kp, double Kvelo) {
-        this.Kp = Kp;
-        this.Kvelo = Kvelo;
-    }
-
-    public void setPower(double power) {
-        shooter.setPower(power);
-    }
-
-    public void stopShooter() { targetVelocity = 0; }
-
-    public void putHingeUp() {
-        shooterHinge.setPosition(0.55);
+    public double getShooterVelo(Limelight limelight) {
+        // compute velocity from range using function based on shooting experiments
+        double poly;
+        range = limelight.getRange();
+        if (range < polyRangeCrossover) {
+            poly = polyVeloBaseNear;
+        } else {
+            poly = polyVeloBaseFar + polyVeloBaseRangeFactor * range;
+        }
+        return poly;
     }
 
     public void putHingeDown() {
         shooterHinge.setPosition(0.25);
     }
 
-    public double getShooterVelo(Limelight limelight) {
-        // compute velocity from range using function based on shooting experiments
-        range = limelight.getRange();
-        if (range < 80) {
-            double poly = 29;
-            return poly;
-        } else {
-            double poly = 19 + 0.125 * range;
-            return poly;
-        }
+    public void putHingeUp() {
+        shooterHinge.setPosition(0.55);
     }
+
+    public void setControllerValues(double Kp, double Kvelo) {
+        this.Kp = Kp;
+        this.Kvelo = Kvelo;
+    }
+
+    public void setVeloParameters( int prc, int pvbf, int pvbn, double pvbrf ) {
+        polyRangeCrossover = prc;
+        polyVeloBaseFar = pvbf;
+        polyVeloBaseNear = pvbn;
+        polyVeloBaseRangeFactor = pvbrf;
+
+    }
+    public void setPower(double power) {
+        shooter.setPower(power);
+    }
+
+    public void stopShooter() { targetVelocity = 0; }
 
     public void setTargetVelocity(double velo) {
         this.targetVelocity = velo;

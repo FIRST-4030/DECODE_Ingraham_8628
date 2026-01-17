@@ -20,6 +20,11 @@ import org.firstinspires.ftc.teamcode.Shooter;
 public class MecanumTeleop_Limelight extends OpMode {
     public static double collectorSpeed = 0.45;
 
+    public static int polyRangeCrossover = 80;
+    public static int polyVeloBaseFar = 19;
+    public static int polyVeloBaseNear = 29;
+    public static double polyVeloBaseRangeFactor = 0.125;
+
     Chassis chassis;
     DcMotorEx collector;
     Shooter shooter;
@@ -36,8 +41,8 @@ public class MecanumTeleop_Limelight extends OpMode {
     boolean reachedSpeed = false;
     ElapsedTime shotTimer = new ElapsedTime();
 
-    private final double SHOOTER_HINGE_LIFT_DURATION_MS = 400;
-    private final double SHOT_DURATION_MS = 800;
+    public static double SHOOTER_HINGE_LIFT_DURATION_MS = 400;
+    public static double SHOT_DURATION_MS = 800;
 
     @Override
     public void init() {
@@ -45,6 +50,7 @@ public class MecanumTeleop_Limelight extends OpMode {
         chassis = new Chassis(hardwareMap);
 
         shooter=new Shooter(hardwareMap,"shooter",true);
+        shooter.setVeloParameters(polyRangeCrossover, polyVeloBaseFar, polyVeloBaseNear, polyVeloBaseRangeFactor);
 
         collector = hardwareMap.get(DcMotorEx.class, "collector");
 

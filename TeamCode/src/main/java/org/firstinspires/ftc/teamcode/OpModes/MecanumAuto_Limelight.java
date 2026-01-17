@@ -32,27 +32,32 @@ import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 @Autonomous(name="Mecanum Auto Limelight", group="Linear OpMode")
 public class MecanumAuto_Limelight extends LinearOpMode {
 
+    public static int polyRangeCrossover = 80;
+    public static int polyVeloBaseFar = 19;
+    public static int polyVeloBaseNear = 29;
+    public static double polyVeloBaseRangeFactor = 0.125;
+
     // Pedro pathing constants (editable in panels)
     public static double farStartX = 56, farStartY = 8, farStartAngle = 90;
-    public static double nearStartX = 24, nearStartY = 120, nearStartAngle = 315;
+    public static double nearStartX = 26, nearStartY = 122, nearStartAngle = 315;
 
-    public static double inFrontOfBalls1_x = 50, inFrontOfBalls1_y = 35,inFrontOfBalls1_angle = 0;
-    public static double inFrontOfBalls2_x = 50, inFrontOfBalls2_y = 59 ,inFrontOfBalls2_angle = 0;
-    public static double inFrontOfBalls3_x = 50, inFrontOfBalls3_y = 83 ,inFrontOfBalls3_angle = 0;
-    public static double behindBalls1_x = 23, behindBalls1_y = 35, behindBalls1_angle = 0;
-    public static double behindBalls2_x = 23, behindBalls2_y = 59, behindBalls2_angle = 0;
-    public static double behindBalls3_x = 23, behindBalls3_y = 83, behindBalls3_angle = 0;
+    public static double inFrontOfBalls1_x = 50, inFrontOfBalls1_y = 36,inFrontOfBalls1_angle = 0;
+    public static double inFrontOfBalls2_x = 50, inFrontOfBalls2_y = 60 ,inFrontOfBalls2_angle = 0;
+    public static double inFrontOfBalls3_x = 50, inFrontOfBalls3_y = 84 ,inFrontOfBalls3_angle = 0;
+    public static double behindBalls1_x = 23, behindBalls1_y = 36, behindBalls1_angle = 0;
+    public static double behindBalls2_x = 23, behindBalls2_y = 60, behindBalls2_angle = 0;
+    public static double behindBalls3_x = 23, behindBalls3_y = 84, behindBalls3_angle = 0;
 
     public static long moveToInFrontOfBallsDelayMS = 250;
     public static long moveToBehindBallsDelayMS = 0;
     public static long moveToFarShootDelayMS = 0;
     public static long moveToNearShootDelayMS = 0;
     public static long shootThreeBallsDelayMS = 0;
-    public static double collectorSpeed = 0.35;
-    public static float collectingMaxPower = 0.6f;
+    public static double collectorSpeed = 0.45;
+    public static float collectingMaxPower = 0.5f;
 
-    public static double moveToFreeSpace_x = 50, moveToFreeSpace_y = 35, moveToFreeSpace_angle = 0;
-    public static double moveToFarShoot_x = 55, moveToFarShoot_y = 16, moveToFarShoot_angle = 111;
+    public static double moveToFreeSpace_x = 50, moveToFreeSpace_y = 55, moveToFreeSpace_angle = 90;
+    public static double moveToFarShoot_x = 55, moveToFarShoot_y = 16, moveToFarShoot_angle = 110;
     public static double moveToNearShoot_x = 48, moveToNearShoot_y = 96, moveToNearShoot_angle = 135;
 
     Chassis chassis;
@@ -99,16 +104,17 @@ public class MecanumAuto_Limelight extends LinearOpMode {
         follower = constants.createFollower(hardwareMap);
 
         shooter = new Shooter(hardwareMap, "shooter", true);
+        shooter.setVeloParameters(polyRangeCrossover, polyVeloBaseFar, polyVeloBaseNear, polyVeloBaseRangeFactor);
 
         collector = hardwareMap.get(DcMotorEx.class, "collector");
         collector.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         collector.setDirection(DcMotor.Direction.REVERSE);
 
         shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
-        shooterHinge.setPosition(0.25);
+        shooter.putHingeDown();
 
         liftServo = hardwareMap.get(Servo.class, "liftServo");
-        liftServo.setPosition(1.0);
+        liftServo.setPosition(1);
 
         imu = hardwareMap.get(IMU.class, "imu");
 
@@ -128,6 +134,8 @@ public class MecanumAuto_Limelight extends LinearOpMode {
 
         // Init
         do {
+            limelight.getTagLocations("Red", imu);
+            limelight.getTagLocations("Blue", imu);
             limelight.readObelisk();
 
             telemetry.addData("Obelisk Bearing ", obeliskBearing);
@@ -172,11 +180,11 @@ public class MecanumAuto_Limelight extends LinearOpMode {
             telemetry.addData("Limelight obelisk", limelight.getObelisk());
 
             telemetry.addLine();
-            telemetry.addLine("HOLD RB AND Press X to override alliance to BLUE");
-            telemetry.addLine("HOLD RB AND Press B to override alliance to RED");
+            telemetry.addLine("Hold RB and Press X to override alliance to BLUE");
+            telemetry.addLine("Hold RB and Press B to override alliance to RED");
 
-            telemetry.addLine("HOLD RB AND Press Y to override auto to FAR");
-            telemetry.addLine("HOLD RB AND Press A to override auto to NEAR");
+            telemetry.addLine("Hold RB and Press Y to override auto to FAR");
+            telemetry.addLine("Hold RB and Press A to override auto to NEAR");
 
             telemetry.update();
         } while (opModeInInit());
@@ -293,13 +301,23 @@ public class MecanumAuto_Limelight extends LinearOpMode {
                 .setLinearHeadingInterpolation(Math.toRadians((behindBalls1_angle - 90) * sign + 90), Math.toRadians((moveToFreeSpace_angle - 90) * sign + 90))
                 .build();
 
-        moveToFarShoot = follower.pathBuilder()
-                .addPath(new BezierLine(
-                        new Pose((moveToFreeSpace_x - 72) * sign + 72, moveToFreeSpace_y),
-                        new Pose((moveToFarShoot_x - 72) * sign + 72, moveToFarShoot_y)
-                ))
-                .setLinearHeadingInterpolation(Math.toRadians((moveToFreeSpace_angle - 90) * sign + 90), Math.toRadians((moveToFarShoot_angle - 90) * sign + 90))
-                .build();
+        if (Blackboard.alliance == Blackboard.Alliance.RED) {
+            moveToFarShoot = follower.pathBuilder()
+                    .addPath(new BezierLine(
+                            new Pose((moveToFreeSpace_x - 72) * sign + 72, moveToFreeSpace_y),
+                            new Pose((moveToFarShoot_x - 72) * sign + 72, moveToFarShoot_y)
+                    ))
+                    .setLinearHeadingInterpolation(Math.toRadians(((moveToFreeSpace_angle) - 90) * sign + 90), Math.toRadians(((moveToFarShoot_angle + 2) - 90) * sign + 90))
+                    .build();
+        } else {
+            moveToFarShoot = follower.pathBuilder()
+                    .addPath(new BezierLine(
+                            new Pose((moveToFreeSpace_x - 72) * sign + 72, moveToFreeSpace_y),
+                            new Pose((moveToFarShoot_x - 72) * sign + 72, moveToFarShoot_y)
+                    ))
+                    .setLinearHeadingInterpolation(Math.toRadians((moveToFreeSpace_angle - 90) * sign + 90), Math.toRadians((moveToFarShoot_angle - 90) * sign + 90))
+                    .build();
+        }
 
         moveToNearShoot = follower.pathBuilder()
                 .addPath(new BezierLine(
@@ -403,8 +421,8 @@ public class MecanumAuto_Limelight extends LinearOpMode {
                         moveToInFrontOfBalls3AutoStep,
                         moveToBehindBalls3AutoStep,
 
-                        moveToFarShootAutoStep,
-                        shootThreeBallsAutoStep,
+//                        moveToFarShootAutoStep,
+//                        shootThreeBallsAutoStep,
 
                         moveToFreeSpaceAutoStep,
                 }

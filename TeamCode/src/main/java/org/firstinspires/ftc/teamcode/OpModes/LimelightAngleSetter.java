@@ -8,7 +8,6 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.teamcode.Limelight;
 
-@Disabled
 @TeleOp(name = "Limelight Angle Setter")
 public class LimelightAngleSetter extends OpMode {
 

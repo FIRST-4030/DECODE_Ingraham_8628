@@ -36,59 +36,63 @@ public class Limelight {
 
     private final double camera_height = 16.75; // in
     private final double target_height = 29.5; // in
-    private double camera_angle = -0.042; // Using LimelightAngleSetter
+    private double camera_angle = -0.002; // Using LimelightAngleSetter
 
     IMU imu;
-        //
-//    @SuppressLint("DefaultLocale")
-//    public void getTagLocations(String color) {
-//        LLResult result;
-////        YawPitchRollAngles orientation;
-//
-//        if (color.equals("Red")) {
-//            limelight.pipelineSwitch(1);
-//
-////            orientation = imu.getRobotYawPitchRollAngles();
-////            limelight.updateRobotOrientation(orientation.getYaw());
-//
-//            result = limelight.getLatestResult();
-//            List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
-//
-//            for (LLResultTypes.FiducialResult fiducial : fiducials) {
-//                int tagId = fiducial.getFiducialId();
-//                if (tagId==24) {
-//                    Pose3D botposeRedMT2 = result.getBotpose_MT2();
-//                    redSideXMT2 = botposeRedMT2.getPosition().x;
-//                    redSideYMT2 = botposeRedMT2.getPosition().y;
-//                    Pose3D botposeRed = result.getBotpose();
-//                    redSideX = botposeRed.getPosition().x;
-//                    redSideY = botposeRed.getPosition().y;
-//                }
-//            }
-//        }
-//
-//        if (color.equals("Blue")) {
-//            limelight.pipelineSwitch(5);
-//
-////            orientation = imu.getRobotYawPitchRollAngles();
-////            limelight.updateRobotOrientation(orientation.getYaw());
-//
-//            result = limelight.getLatestResult();
-//            List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
-//
-//            for (LLResultTypes.FiducialResult fiducial : fiducials) {
-//                int tagId = fiducial.getFiducialId();
-//                if (tagId==20) {
-//                    Pose3D botposeBlueMT2 = result.getBotpose_MT2();
-//                    blueSideXMT2 = botposeBlueMT2.getPosition().x;
-//                    blueSideYMT2 = botposeBlueMT2.getPosition().y;
-//                    Pose3D botposeBlue = result.getBotpose();
-//                    blueSideX = botposeBlue.getPosition().x;
-//                    blueSideY = botposeBlue.getPosition().y;
-//                }
-//            }
-//        }
-//    }
+
+    @SuppressLint("DefaultLocale")
+    public void getTagLocations(String color, IMU imu) {
+        LLResult result;
+        YawPitchRollAngles orientation;
+
+        if (color.equals("Red")) {
+            limelight.pipelineSwitch(1);
+
+            orientation = imu.getRobotYawPitchRollAngles();
+            limelight.updateRobotOrientation(orientation.getYaw());
+
+            result = limelight.getLatestResult();
+            List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
+
+            for (LLResultTypes.FiducialResult fiducial : fiducials) {
+                int tagId = fiducial.getFiducialId();
+                if (tagId==24) {
+                    Pose3D botposeRedMT2 = result.getBotpose_MT2();
+                    redSideXMT2 = botposeRedMT2.getPosition().x;
+                    redSideYMT2 = botposeRedMT2.getPosition().y;
+                    Pose3D botposeRed = result.getBotpose();
+                    redSideX = botposeRed.getPosition().x;
+                    redSideY = botposeRed.getPosition().y;
+//                    telemetry.addLine(String.format("Red: xMT2=%6.2f, yMT2=%6.2f",redSideXMT2,redSideYMT2));
+//                    telemetry.addLine(String.format("     x=%6.2f, y=%6.2f",redSideX,redSideY));
+                }
+            }
+        }
+
+        if (color.equals("Blue")) {
+            limelight.pipelineSwitch(5);
+
+            orientation = imu.getRobotYawPitchRollAngles();
+            limelight.updateRobotOrientation(orientation.getYaw());
+
+            result = limelight.getLatestResult();
+            List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
+
+            for (LLResultTypes.FiducialResult fiducial : fiducials) {
+                int tagId = fiducial.getFiducialId();
+                if (tagId==20) {
+                    Pose3D botposeBlueMT2 = result.getBotpose_MT2();
+                    blueSideXMT2 = botposeBlueMT2.getPosition().x;
+                    blueSideYMT2 = botposeBlueMT2.getPosition().y;
+                    Pose3D botposeBlue = result.getBotpose();
+                    blueSideX = botposeBlue.getPosition().x;
+                    blueSideY = botposeBlue.getPosition().y;
+//                    telemetry.addLine(String.format("Blue: xMT2=%6.2f, yMT2=%6.2f",blueSideXMT2,blueSideYMT2));
+//                    telemetry.addLine(String.format("      x=%6.2f, y=%6.2f",blueSideX,blueSideY));
+                }
+            }
+        }
+    }
 
     public String getObelisk() {
         if (PGP) {

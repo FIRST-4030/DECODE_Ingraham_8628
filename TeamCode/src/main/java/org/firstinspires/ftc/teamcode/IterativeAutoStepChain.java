@@ -60,6 +60,8 @@ public class IterativeAutoStepChain {
 
         if (activeIterativeAutoStep.getCollectorOn()) {
             collector.setPower(collectorSpeed);
+        } else if (activeIterativeAutoStep.getStepType() == IterativeAutoStep.StepType.SHOOT) {
+            collector.setPower(-collectorSpeed);
         } else {
             collector.setPower(0);
         }
@@ -139,6 +141,7 @@ public class IterativeAutoStepChain {
         if (activeStepIndex >= iterativeAutoSteps.length - 1) {
             done = true;
             collector.setPower(0);
+            shooter.stopShooter();
             return;
         } else {
             activeStepIndex ++;
