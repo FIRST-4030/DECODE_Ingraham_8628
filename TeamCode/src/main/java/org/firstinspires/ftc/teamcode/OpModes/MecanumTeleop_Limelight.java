@@ -234,6 +234,7 @@ public class MecanumTeleop_Limelight extends OpMode {
                 shooter.putHingeUp();
             } else {
                 currentShootCount ++;
+                reachedSpeed = false;
                 shotTimer.reset();
                 if (currentShootCount == targetShootCount) {
                     isShooting = false;
@@ -243,7 +244,7 @@ public class MecanumTeleop_Limelight extends OpMode {
             }
         } else {
             if (gamepad2.y) {
-                shooter.setTargetVelocity(20);
+                shooter.setTargetVelocity(35);
                 shooter.overridePower();
             } else {
                 shooter.stopShooter();
