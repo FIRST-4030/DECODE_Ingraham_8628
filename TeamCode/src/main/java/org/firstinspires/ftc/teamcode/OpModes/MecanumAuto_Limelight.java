@@ -98,7 +98,11 @@ public class MecanumAuto_Limelight extends LinearOpMode {
         } else if (controlHub.getMacAddress().equals(Constants.SECONDARY_BOT)) {
             constants = new ConstantsDemo();
         } else {
-            throw new RuntimeException("ControlHub MAC address did not match primary or secondary");
+            constants = new ConstantsCompetition();
+            telemetry.addLine("MAC address did not match any registered address");
+            telemetry.addLine("Resorting to using the one for PRIMARY_BOT");
+            telemetry.update();
+            sleep(5000);
         }
 
         follower = constants.createFollower(hardwareMap);

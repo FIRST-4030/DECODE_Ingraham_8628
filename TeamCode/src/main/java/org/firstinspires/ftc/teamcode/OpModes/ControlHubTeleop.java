@@ -1,13 +1,12 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.BuildConfig;
 import org.firstinspires.ftc.teamcode.ControlHub;
 
-@Disabled
+// DO NOT disable this opmode
 @TeleOp(name="ControlHubTeleop")
 public class ControlHubTeleop extends OpMode {
 
