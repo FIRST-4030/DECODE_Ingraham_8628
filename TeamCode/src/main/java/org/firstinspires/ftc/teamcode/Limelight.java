@@ -145,6 +145,11 @@ public class Limelight {
         return isDataCurrent;
     }
 
+    public boolean hasResults() {
+        LLResult result = limelight.getLatestResult();
+        return (result != null && result.isValid());
+    }
+
     public void processRobotPose() {
         limelight.pipelineSwitch(6); // obelisk
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
@@ -215,6 +220,8 @@ public class Limelight {
     public double getCameraAngle() { return camera_angle; }
     public double getX() { return x; }
     public double getY() { return y; }
+    public double getTx() { return tx; };
+    public double getTy() { return ty; };
     public double getYaw() { return goalYaw; }
     public double getRange() { return goalRange; }
     public double getGoalTagId() { return goalTagId; }

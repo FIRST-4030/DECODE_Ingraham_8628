@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -10,6 +11,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Chassis;
 import org.firstinspires.ftc.teamcode.Limelight;
@@ -24,6 +26,7 @@ public class MecanumTeleop_Limelight extends OpMode {
     public static int polyVeloBaseFar = 19;
     public static int polyVeloBaseNear = 29;
     public static double polyVeloBaseRangeFactor = 0.125;
+    public static double aimLeniencyDegrees = 5;
 
     Chassis chassis;
     DcMotorEx collector;
@@ -46,6 +49,7 @@ public class MecanumTeleop_Limelight extends OpMode {
 
     @Override
     public void init() {
+        Blackboard.alliance = Blackboard.Alliance.BLUE;
 
         chassis = new Chassis(hardwareMap);
 
@@ -111,6 +115,8 @@ public class MecanumTeleop_Limelight extends OpMode {
         else if (Blackboard.alliance == Blackboard.Alliance.BLUE) {
             limelight.setTeam(20);
         }
+        collector.setPower(collectorSpeed);
+        collectorOn = true;
     }
 
     @Override
@@ -144,45 +150,56 @@ public class MecanumTeleop_Limelight extends OpMode {
             chassis.setMaxSpeed(1.0);
         }
 
-        //Lift Servo Controls
-        if (gamepad1.yWasPressed()) {
-            shooter.targetVelocity = 0;
-            collector.setPower(0.0);
-            collectorOn = false;
-            liftServo.setPosition(1.0);
-        }
-        if (gamepad1.aWasPressed()) {
-            shooter.targetVelocity = 0;
-            collector.setPower(0.0);
-            collectorOn = false;
-            liftServo.setPosition(0.0);
-        }
-
-        //Gamepad 2
-        if (gamepad2.start) {
-            imu.resetYaw();
-        }
+//        //Lift Servo Controls
+//        if (gamepad1.yWasPressed()) {
+//            shooter.targetVelocity = 0;
+//            collector.setPower(0.0);
+//            collectorOn = false;
+//            liftServo.setPosition(1.0);
+//        }
+//        if (gamepad1.aWasPressed()) {
+//            shooter.targetVelocity = 0;
+//            collector.setPower(0.0);
+//            collectorOn = false;
+//            liftServo.setPosition(0.0);
+//        }
+//
+//        //Gamepad 2
+//        if (gamepad1.start) {
+//            imu.resetYaw();
+//        }
 
         //Collector Controls
-        if (gamepad2.bWasReleased()) {
+        if (gamepad1.bWasReleased()) {
             if (!collectorOn) {
                 collector.setPower(collectorSpeed);
                 collectorOn = true;
-            } else {
-                collector.setPower(0.0);
-                collectorOn = false;
             }
+//            else {
+//                collector.setPower(0.0);
+//                collectorOn = false;
+//            }
         }
 
-        if (gamepad2.xWasPressed()) {
+        if (gamepad1.xWasPressed()) {
             collector.setPower(-collectorSpeed);
         }
-        if (gamepad2.xWasReleased()) {
-            collector.setPower(0.0);
+        if (gamepad1.xWasReleased()) {
+            collector.setPower(collectorSpeed);
             collectorOn = false;
         }
 
         handleShooting();
+
+        if (!isShooting) {
+            chassis.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+        } else {
+            chassis.drive(0, 0, 0);
+        }
+
+        double limelightGetTx = limelight.getTx();
+        telemetry.addData("TX", limelightGetTx);
+        telemetry.addData("Within leniency range", isWithinLeniencyRange());
 
         telemetry.addData("Current Shoot Count", currentShootCount);
         telemetry.addData("Collector Current Power:", collector.getVelocity());
@@ -191,12 +208,10 @@ public class MecanumTeleop_Limelight extends OpMode {
         telemetry.addData("Shooter Target Velocity: ", shooter.targetVelocity);
         telemetry.addData("Get Shooter Velocity", shooter.getShooterVelo(limelight));
         telemetry.update();
-
-        chassis.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
     }
 
     public void handleShooting() {
-        if (gamepad2.leftBumperWasReleased() && !isShooting) {
+        if (gamepad1.left_trigger > 0.5 && !isShooting && isWithinLeniencyRange()) {
             isShooting = true;
             currentShootCount = 0;
             targetShootCount = 1;
@@ -204,7 +219,7 @@ public class MecanumTeleop_Limelight extends OpMode {
             shotTimer.reset();
         }
 
-        if (gamepad2.rightBumperWasReleased() && !isShooting) {
+        if (gamepad1.right_trigger > 0.5 && !isShooting && isWithinLeniencyRange()) {
             isShooting = true;
             currentShootCount = 0;
             targetShootCount = 3;
@@ -216,7 +231,7 @@ public class MecanumTeleop_Limelight extends OpMode {
             shooter.setTargetVelocity(shooter.getShooterVelo(limelight));
             shooter.overridePower();
 
-            collector.setPower(0);
+            collector.setPower(-collectorSpeed);
             collectorOn = false;
 
             if (shooter.atSpeed()) {
@@ -240,15 +255,21 @@ public class MecanumTeleop_Limelight extends OpMode {
                     isShooting = false;
                     shooter.stopShooter();
                     shooter.putHingeDown();
+                    collector.setPower(collectorSpeed);
+                    collectorOn = true;
                 }
             }
         } else {
-            if (gamepad2.y) {
-                shooter.setTargetVelocity(35);
-                shooter.overridePower();
-            } else {
-                shooter.stopShooter();
-            }
+//            if (gamepad1.y) {
+//                shooter.setTargetVelocity(35);
+//                shooter.overridePower();
+//            } else {
+//                shooter.stopShooter();
+//            }
         }
+    }
+
+    public boolean isWithinLeniencyRange() {
+        return limelight.hasResults() && Math.abs(limelight.getTx()) <= aimLeniencyDegrees;
     }
 }
