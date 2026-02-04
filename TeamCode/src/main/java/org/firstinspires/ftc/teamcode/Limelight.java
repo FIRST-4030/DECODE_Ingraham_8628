@@ -136,11 +136,11 @@ public class Limelight {
                 isDataCurrent = false;
             }
 
-            telemetry.addData("pipeline", result.getPipelineIndex());
-            telemetry.addData("limelight Range", goalRange);
+//            telemetry.addData("pipeline", result.getPipelineIndex());
+//            telemetry.addData("limelight Range", goalRange);
         } else {
             isDataCurrent = false;
-            telemetry.addData("Limelight", "No Targets");
+//            telemetry.addData("Limelight", "No Targets");
         }
         return isDataCurrent;
     }

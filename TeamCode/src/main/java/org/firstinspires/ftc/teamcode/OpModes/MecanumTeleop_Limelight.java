@@ -26,7 +26,7 @@ public class MecanumTeleop_Limelight extends OpMode {
     public static int polyVeloBaseFar = 19;
     public static int polyVeloBaseNear = 29;
     public static double polyVeloBaseRangeFactor = 0.125;
-    public static double aimLeniencyDegrees = 5;
+    public static double aimLeniencyDegrees = 3;
 
     Chassis chassis;
     DcMotorEx collector;
@@ -84,26 +84,16 @@ public class MecanumTeleop_Limelight extends OpMode {
     public void init_loop() {
         limelight.readObelisk();
 
-        if (gamepad1.xWasPressed() && gamepad1.right_bumper) {
-            Blackboard.alliance = Blackboard.Alliance.BLUE;
-        } else if (gamepad1.bWasPressed() && gamepad1.right_bumper) {
-            Blackboard.alliance = Blackboard.Alliance.RED;
-        }
+//        if (gamepad1.xWasPressed() && gamepad1.right_bumper) {
+//            Blackboard.alliance = Blackboard.Alliance.BLUE;
+//        } else if (gamepad1.bWasPressed() && gamepad1.right_bumper) {
+//            Blackboard.alliance = Blackboard.Alliance.RED;
+//        }
 
-        telemetry.addData("Pad 1, Left Bumper", "Very Slow Drive");
-        telemetry.addData("Pad 1, Right Bumper", "Slow Drive");
-        telemetry.addData("Pad 1, A", "Raise Robot");
-        telemetry.addData("Pad 1, Y", "Lower Robot");
-        telemetry.addData("--", "--");
-        telemetry.addData("Pad 2, Left Bumper", "Shoot 1");
-        telemetry.addData("Pad 2, Right Bumper", "Shoot 3");
-        telemetry.addData("Pad 2, B", "Collector On/Off");
-        telemetry.addData("Pad 2, X", "Collector Reverse");
-
-        telemetry.addData("Obelisk", limelight.getObelisk());
-        telemetry.addData("Alliance", Blackboard.getAllianceAsString());
-        telemetry.addLine("Hold RB and Press X to override alliance to BLUE");
-        telemetry.addLine("Hold RB and Press B to override alliance to RED");
+//        telemetry.addData("Obelisk", limelight.getObelisk());
+//        telemetry.addData("Alliance", Blackboard.getAllianceAsString());
+//        telemetry.addLine("Hold RB and Press X to override alliance to BLUE");
+//        telemetry.addLine("Hold RB and Press B to override alliance to RED");
 
         telemetry.update();
     }
@@ -124,10 +114,30 @@ public class MecanumTeleop_Limelight extends OpMode {
         targetInView = limelight.process();
         shooter.overridePower();
 
-        telemetry.addData("Target is in view:", targetInView);
-        telemetry.addData("Shooter Current Velocity", shooter.getVelocity());
-        telemetry.addData("Shooter Target Velocity", shooter.targetVelocity);
-        telemetry.addData("Distance to Target", limelight.getRange());
+        telemetry.addLine();
+        telemetry.addLine("--- CONTROLS ---");
+        telemetry.addLine();
+
+//        telemetry.addData("Target is in view:", targetInView);
+//        telemetry.addData("Shooter Current Velocity", shooter.getVelocity());
+//        telemetry.addData("Shooter Target Velocity", shooter.targetVelocity);
+//        telemetry.addData("Distance to Target", limelight.getRange());
+
+        telemetry.addData("Left Joystick", "Drive");
+        telemetry.addData("Right Joystick", "Rotate");
+        telemetry.addLine();
+        telemetry.addData("Left Bumper", "Very Slow Drive");
+        telemetry.addData("Right Bumper", "Slow Drive");
+//        telemetry.addData("Pad 1, A", "Raise Robot");
+//        telemetry.addData("Pad 1, Y", "Lower Robot");
+//        telemetry.addData("--", "--");
+        telemetry.addData("Left Trigger", "Shoot 1!");
+        telemetry.addData("Right Trigger", "Shoot 3!x");
+        telemetry.addData("Hold X", "Eject!");
+
+        telemetry.addLine();
+        telemetry.addLine("------------------------");
+        telemetry.addLine();
 
         //Gamepad 1
         if (gamepad1.start) {
@@ -197,16 +207,16 @@ public class MecanumTeleop_Limelight extends OpMode {
             chassis.drive(0, 0, 0);
         }
 
-        double limelightGetTx = limelight.getTx();
-        telemetry.addData("TX", limelightGetTx);
-        telemetry.addData("Within leniency range", isWithinLeniencyRange());
+//        double limelightGetTx = limelight.getTx();
+//        telemetry.addData("Shooting error", Math.abs(limelight.getTx()));
+        telemetry.addData("Allowed to shoot", isWithinLeniencyRange());
 
-        telemetry.addData("Current Shoot Count", currentShootCount);
-        telemetry.addData("Collector Current Power:", collector.getVelocity());
-        telemetry.addData("Collector Target Power", collectorSpeed);
-        telemetry.addData("Shooter Current Velocity:", shooter.getVelocity());
-        telemetry.addData("Shooter Target Velocity: ", shooter.targetVelocity);
-        telemetry.addData("Get Shooter Velocity", shooter.getShooterVelo(limelight));
+//        telemetry.addData("Current Shoot Count", currentShootCount);
+//        telemetry.addData("Collector Current Power:", collector.getVelocity());
+//        telemetry.addData("Collector Target Power", collectorSpeed);
+//        telemetry.addData("Shooter Current Velocity:", shooter.getVelocity());
+//        telemetry.addData("Shooter Target Velocity: ", shooter.targetVelocity);
+//        telemetry.addData("Get Shooter Velocity", shooter.getShooterVelo(limelight));
         telemetry.update();
     }
 
