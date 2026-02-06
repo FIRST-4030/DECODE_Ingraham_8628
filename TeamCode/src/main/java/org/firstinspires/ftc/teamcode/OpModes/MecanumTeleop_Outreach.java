@@ -139,6 +139,8 @@ public class MecanumTeleop_Outreach extends OpMode {
         telemetry.addLine("------------------------");
         telemetry.addLine();
 
+        telemetry.addData("Goal Tag Visible", limelight.isDataCurrent);
+
         //Gamepad 1
         if (gamepad1.start) {
             imu.resetYaw();
