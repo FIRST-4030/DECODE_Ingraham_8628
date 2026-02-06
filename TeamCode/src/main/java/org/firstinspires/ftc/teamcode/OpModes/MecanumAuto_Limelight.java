@@ -80,6 +80,8 @@ public class MecanumAuto_Limelight extends LinearOpMode {
     boolean limitedAutoEnabled = false;
     boolean nearAutoEnabled = false;
 
+    boolean targetInView;
+
     Follower follower;
     PathChain inFrontOfBalls1, behindBalls1, inFrontOfBalls2, behindBalls2, inFrontOfBalls3, behindBalls3, moveToFreeSpace, moveToFarShoot, moveToNearShoot;
     IterativeAutoStepChain farAutoStepChain, nearAutoStepChain;
@@ -233,7 +235,7 @@ public class MecanumAuto_Limelight extends LinearOpMode {
             telemetry.addLine("----------");
 
             if (!activeIterativeAutoStepChain.done) {
-                activeIterativeAutoStepChain.update(follower, collector, shooter, limelight, telemetry);
+                activeIterativeAutoStepChain.update(follower, collector, shooter, limelight, telemetry, chassis);
             }
 
             telemetry.update();

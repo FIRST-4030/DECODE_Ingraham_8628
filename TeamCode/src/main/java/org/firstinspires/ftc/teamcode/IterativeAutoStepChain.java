@@ -32,7 +32,7 @@ public class IterativeAutoStepChain {
         iterativeAutoSteps = iterativeAutoStepsValue;
     }
 
-    public void update(Follower follower, DcMotorEx collector, Shooter shooter, Limelight limelight, Telemetry telemetry) {
+    public void update(Follower follower, DcMotorEx collector, Shooter shooter, Limelight limelight, Telemetry telemetry, Chassis chassis) {
         if (done) {
             telemetry.addLine("Done");
             return;
@@ -76,6 +76,9 @@ public class IterativeAutoStepChain {
                 }
                 break;
             case SHOOT:
+                if (limelight.isDataCurrent) {
+                    chassis.turnTo(limelight.getTx(), 0);
+                }
                 telemetry.addData("Shooter target velocity", shooter.targetVelocity);
                 int targetShootCount = activeIterativeAutoStep.getTargetShootCount();
 

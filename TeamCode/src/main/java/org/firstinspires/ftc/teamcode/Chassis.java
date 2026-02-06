@@ -10,6 +10,7 @@ public class Chassis {
 
     //    private double maxPower = 1.0;
     private double maxSpeed = 1.0;  // make this slower for outreaches
+    private double kPTurn = 0.10;
 
     public DcMotor frontLeftDrive, frontRightDrive, backLeftDrive, backRightDrive;
 
@@ -103,6 +104,13 @@ public class Chassis {
         }
 
         stopMotors();
+    }
+
+    public void turnTo(double currentAngle, double setPoint) {
+        double error = setPoint - currentAngle;
+
+        double power = kPTurn*error;
+        moveAllMotors(-power,power,-power,power);
     }
 
     public void moveForward(double power, double mseconds) {

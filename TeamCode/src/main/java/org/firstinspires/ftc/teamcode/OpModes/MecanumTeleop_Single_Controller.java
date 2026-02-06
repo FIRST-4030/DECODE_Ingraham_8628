@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -15,6 +16,7 @@ import org.firstinspires.ftc.teamcode.Chassis;
 import org.firstinspires.ftc.teamcode.Limelight;
 import org.firstinspires.ftc.teamcode.Shooter;
 
+@Disabled
 @Configurable
 @TeleOp(name = "Mecanum Teleop - One Controller", group = "Robot")
 public class MecanumTeleop_Single_Controller extends OpMode {

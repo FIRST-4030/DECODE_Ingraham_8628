@@ -1,9 +1,7 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.bylazar.configurables.annotations.Configurable;
-import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -12,16 +10,14 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Chassis;
 import org.firstinspires.ftc.teamcode.Limelight;
 import org.firstinspires.ftc.teamcode.Shooter;
 
-@Disabled
 @Configurable
-@TeleOp(name = "Mecanum Teleop Limelight", group = "Robot")
-public class MecanumTeleop_Limelight extends OpMode {
+@TeleOp(name = "Mecanum Teleop Outreach", group = "Robot")
+public class MecanumTeleop_Outreach extends OpMode {
     public static double collectorSpeed = 0.45;
 
     public static int polyRangeCrossover = 80;
@@ -45,9 +41,11 @@ public class MecanumTeleop_Limelight extends OpMode {
     boolean isShooting = false;
     boolean reachedSpeed = false;
     ElapsedTime shotTimer = new ElapsedTime();
+    ElapsedTime shotStuckTimer = new ElapsedTime();
 
     public static double SHOOTER_HINGE_LIFT_DURATION_MS = 400;
     public static double SHOT_DURATION_MS = 800;
+    public static double SHOT_STUCK_ESCAPE_MS = 800;
 
     @Override
     public void init() {
@@ -181,37 +179,44 @@ public class MecanumTeleop_Limelight extends OpMode {
 //            imu.resetYaw();
 //        }
 
-        //Collector Controls
-        if (gamepad1.bWasReleased()) {
-            if (!collectorOn) {
-                collector.setPower(collectorSpeed);
-                collectorOn = true;
-            }
+          //Collector Controls
+//        if (gamepad1.bWasReleased()) {
+//            if (!collectorOn) {
+//                collector.setPower(collectorSpeed);
+//                collectorOn = true;
+//            }
 //            else {
 //                collector.setPower(0.0);
 //                collectorOn = false;
 //            }
-        }
+//        }
 
-        if (gamepad1.xWasPressed()) {
-            collector.setPower(-collectorSpeed);
-        }
-        if (gamepad1.xWasReleased()) {
-            collector.setPower(collectorSpeed);
-            collectorOn = false;
-        }
+//        if (gamepad1.xWasPressed()) {
+//            collector.setPower(-collectorSpeed);
+//        }
+//        if (gamepad1.xWasReleased()) {
+//            collector.setPower(collectorSpeed);
+//            collectorOn = false;
+//        }
 
         handleShooting();
 
         if (!isShooting) {
             chassis.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+
+            if (gamepad1.x) {
+                collector.setPower(-collectorSpeed);
+                collectorOn = false;
+            } else {
+                collector.setPower(collectorSpeed);
+                collectorOn = true;
+            }
         } else {
             chassis.drive(0, 0, 0);
         }
 
 //        double limelightGetTx = limelight.getTx();
 //        telemetry.addData("Shooting error", Math.abs(limelight.getTx()));
-        telemetry.addData("Allowed to shoot", isWithinLeniencyRange());
 
 //        telemetry.addData("Current Shoot Count", currentShootCount);
 //        telemetry.addData("Collector Current Power:", collector.getVelocity());
@@ -223,7 +228,8 @@ public class MecanumTeleop_Limelight extends OpMode {
     }
 
     public void handleShooting() {
-        if (gamepad1.left_trigger > 0.5 && !isShooting && isWithinLeniencyRange()) {
+        // if (gamepad1.left_trigger > 0.5 && !isShooting && isWithinLeniencyRange()) {
+        if (gamepad1.left_trigger > 0.5 && !isShooting && limelight.isDataCurrent) {
             isShooting = true;
             currentShootCount = 0;
             targetShootCount = 1;
@@ -231,7 +237,8 @@ public class MecanumTeleop_Limelight extends OpMode {
             shotTimer.reset();
         }
 
-        if (gamepad1.right_trigger > 0.5 && !isShooting && isWithinLeniencyRange()) {
+        // if (gamepad1.right_trigger > 0.5 && !isShooting && isWithinLeniencyRange()) {
+        if (gamepad1.right_trigger > 0.5 && !isShooting && limelight.isDataCurrent) {
             isShooting = true;
             currentShootCount = 0;
             targetShootCount = 3;
@@ -246,7 +253,22 @@ public class MecanumTeleop_Limelight extends OpMode {
             collector.setPower(-collectorSpeed);
             collectorOn = false;
 
-            if (shooter.atSpeed()) {
+            // Auto aim
+            chassis.turnTo(limelight.getTx(), 0);
+
+            if (limelight.isDataCurrent) {
+                shotStuckTimer.reset();
+            }
+
+            if (shotStuckTimer.milliseconds() > SHOT_STUCK_ESCAPE_MS) {
+                isShooting = false;
+                shooter.stopShooter();
+                shooter.putHingeDown();
+                collector.setPower(collectorSpeed);
+                collectorOn = true;
+            }
+
+            if (shooter.atSpeed() && isWithinLeniencyRange()) {
                 reachedSpeed = true;
             }
 
