@@ -66,6 +66,18 @@ public class Shooter {
         return poly;
     }
 
+    public double convertDistanceToShooterVelocity(double distance) {
+        // compute velocity from range using function based on shooting experiments
+        double poly;
+        range = distance;
+        if (range < polyRangeCrossover) {
+            poly = polyVeloBaseNear;
+        } else {
+            poly = polyVeloBaseFar + polyVeloBaseRangeFactor * range;
+        }
+        return poly;
+    }
+
     public void putHingeDown() {
         shooterHinge.setPosition(0.25);
     }

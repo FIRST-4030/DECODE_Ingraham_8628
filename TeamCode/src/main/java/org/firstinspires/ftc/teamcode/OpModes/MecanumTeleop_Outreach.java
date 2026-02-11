@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -10,6 +11,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Chassis;
 import org.firstinspires.ftc.teamcode.Limelight;
@@ -36,6 +38,7 @@ public class MecanumTeleop_Outreach extends OpMode {
     boolean targetInView;
     boolean collectorOn = false;
 
+    double distance = 0;
     int currentShootCount = 0;
     int targetShootCount = 1;
     boolean isShooting = false;
@@ -46,6 +49,10 @@ public class MecanumTeleop_Outreach extends OpMode {
     public static double SHOOTER_HINGE_LIFT_DURATION_MS = 400;
     public static double SHOT_DURATION_MS = 800;
     public static double SHOT_STUCK_ESCAPE_MS = 800;
+
+    double GoalX = -58.3727;
+    double BlueGoalY = -55.6425;
+    double RedGoalY = 55.6425;
 
     @Override
     public void init() {
@@ -112,6 +119,9 @@ public class MecanumTeleop_Outreach extends OpMode {
     @Override
     public void loop() {
         targetInView = limelight.process();
+        limelight.processRobotPoseMt1();
+        updateShootingDistance();
+
         shooter.overridePower();
 
         telemetry.addLine();
@@ -141,10 +151,13 @@ public class MecanumTeleop_Outreach extends OpMode {
 
         telemetry.addData("Goal Tag Visible", limelight.isDataCurrent);
 
+        telemetry.addData("Distance", distance);
+        telemetry.addData("Old Range", limelight.getRange());
+
         //Gamepad 1
-        if (gamepad1.start) {
-            imu.resetYaw();
-        }
+//        if (gamepad1.start) {
+//            imu.resetYaw();
+//        }
 
         //Slow Drive
         if (gamepad1.rightBumperWasPressed()) {
@@ -249,7 +262,7 @@ public class MecanumTeleop_Outreach extends OpMode {
         }
 
         if (isShooting) {
-            shooter.setTargetVelocity(shooter.getShooterVelo(limelight));
+            shooter.setTargetVelocity(shooter.convertDistanceToShooterVelocity(distance));
             shooter.overridePower();
 
             collector.setPower(-collectorSpeed);
@@ -307,5 +320,35 @@ public class MecanumTeleop_Outreach extends OpMode {
 
     public boolean isWithinLeniencyRange() {
         return limelight.hasResults() && Math.abs(limelight.getTx()) <= aimLeniencyDegrees;
+    }
+
+    public static double calculateDistance(double x1, double y1, double x2, double y2) {
+        double deltaX = x2 - x1;
+        double deltaY = y2 - y1;
+
+        double squaredDeltaX = deltaX * deltaX;
+        double squaredDeltaY = deltaY * deltaY;
+
+        double sumOfSquares = squaredDeltaX + squaredDeltaY;
+
+        double dist = Math.sqrt(sumOfSquares);
+
+        return dist;
+    }
+
+    public void updateShootingDistance() {
+        if (Blackboard.alliance == Blackboard.Alliance.BLUE) distance = calculateDistance(
+                limelight.getX(),
+                limelight.getY(),
+                GoalX,
+                BlueGoalY
+        );
+
+        if (Blackboard.alliance == Blackboard.Alliance.RED) distance = calculateDistance(
+                limelight.getX(),
+                limelight.getY(),
+                GoalX,
+                RedGoalY
+        );
     }
 }
