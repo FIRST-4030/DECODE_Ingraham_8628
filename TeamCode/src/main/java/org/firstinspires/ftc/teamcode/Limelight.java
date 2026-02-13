@@ -28,7 +28,7 @@ public class Limelight {
     private int teamID;
     private static final double METERS_TO_INCHES = 39.3701;
 
-    private double tx, ty, x, y;
+    private double tx, ty, x, y, yaw;
 
     private boolean PPG,PGP,GPP;
     public boolean seeObelisk = false;
@@ -150,7 +150,22 @@ public class Limelight {
         return (result != null && result.isValid());
     }
 
-    public void processRobotPose() {
+    public void processRobotPoseMt1() {
+//        limelight.pipelineSwitch(6); // obelisk
+//        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+//        limelight.updateRobotOrientation(orientation.getYaw());
+        LLResult result = limelight.getLatestResult();
+        if (result != null && result.isValid()) {
+            Pose3D botPose = result.getBotpose();
+            if (botPose != null) {
+                x = botPose.getPosition().x * METERS_TO_INCHES;
+                y = botPose.getPosition().y * METERS_TO_INCHES;
+                yaw = botPose.getOrientation().getYaw();
+            }
+        }
+    }
+
+    public void processRobotPoseMt2() {
         limelight.pipelineSwitch(6); // obelisk
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         limelight.updateRobotOrientation(orientation.getYaw());
