@@ -20,6 +20,10 @@ public class Constants {
     public static final String PRIMARY_BOT = ControlHub.getBotAddress(0);
     public static final String SECONDARY_BOT = ControlHub.getBotAddress(1);
 
+
+    public static final String PRIMARY_BOT_NETWORK_NAME = "8628-RC";
+    public static final String PINPOINT_BOT_NETWORK_NAME = "FTC-Pinpoint";
+
     protected FollowerConstants followerConstants = new FollowerConstants();
 
     protected PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);

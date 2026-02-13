@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Chassis;
+import org.firstinspires.ftc.teamcode.ControlHub;
 import org.firstinspires.ftc.teamcode.Limelight;
 import org.firstinspires.ftc.teamcode.Shooter;
 
@@ -54,10 +55,12 @@ public class MecanumTeleop_Outreach extends OpMode {
     double BlueGoalY = -55.6425;
     double RedGoalY = 55.6425;
 
+
+
+    public static ControlHub controlHub = new ControlHub();
+
     @Override
     public void init() {
-        Blackboard.alliance = Blackboard.Alliance.BLUE;
-
         chassis = new Chassis(hardwareMap);
 
         shooter=new Shooter(hardwareMap,"shooter",true);
@@ -91,16 +94,18 @@ public class MecanumTeleop_Outreach extends OpMode {
     public void init_loop() {
         limelight.readObelisk();
 
-//        if (gamepad1.xWasPressed() && gamepad1.right_bumper) {
-//            Blackboard.alliance = Blackboard.Alliance.BLUE;
-//        } else if (gamepad1.bWasPressed() && gamepad1.right_bumper) {
-//            Blackboard.alliance = Blackboard.Alliance.RED;
-//        }
+        if (gamepad1.xWasPressed() && gamepad1.right_bumper) {
+            Blackboard.alliance = Blackboard.Alliance.BLUE;
+        } else if (gamepad1.bWasPressed() && gamepad1.right_bumper) {
+            Blackboard.alliance = Blackboard.Alliance.RED;
+        }
 
-//        telemetry.addData("Obelisk", limelight.getObelisk());
-//        telemetry.addData("Alliance", Blackboard.getAllianceAsString());
-//        telemetry.addLine("Hold RB and Press X to override alliance to BLUE");
-//        telemetry.addLine("Hold RB and Press B to override alliance to RED");
+        telemetry.addData("Alliance", Blackboard.getAllianceAsString());
+        telemetry.addLine("Hold RB and Press X to override alliance to BLUE");
+        telemetry.addLine("Hold RB and Press B to override alliance to RED");
+
+        telemetry.addData("Network Name", controlHub.getNetworkName());
+
 
         telemetry.update();
     }
@@ -262,52 +267,7 @@ public class MecanumTeleop_Outreach extends OpMode {
         }
 
         if (isShooting) {
-            shooter.setTargetVelocity(shooter.convertDistanceToShooterVelocity(distance));
-            shooter.overridePower();
-
-            collector.setPower(-collectorSpeed);
-            collectorOn = false;
-
-            // Auto aim
-            chassis.turnTo(limelight.getTx(), 0);
-
-            if (limelight.isDataCurrent) {
-                shotStuckTimer.reset();
-            }
-
-            if (shotStuckTimer.milliseconds() > SHOT_STUCK_ESCAPE_MS) {
-                isShooting = false;
-                shooter.stopShooter();
-                shooter.putHingeDown();
-                collector.setPower(collectorSpeed);
-                collectorOn = true;
-            }
-
-            if (shooter.atSpeed() && isWithinLeniencyRange()) {
-                reachedSpeed = true;
-            }
-
-            if (!reachedSpeed) {
-                shotTimer.reset();
-                return;
-            }
-
-            if (shotTimer.milliseconds() < SHOOTER_HINGE_LIFT_DURATION_MS) {
-                shooter.putHingeDown();
-            } else if (shotTimer.milliseconds() < SHOT_DURATION_MS) {
-                shooter.putHingeUp();
-            } else {
-                currentShootCount ++;
-                reachedSpeed = false;
-                shotTimer.reset();
-                if (currentShootCount == targetShootCount) {
-                    isShooting = false;
-                    shooter.stopShooter();
-                    shooter.putHingeDown();
-                    collector.setPower(collectorSpeed);
-                    collectorOn = true;
-                }
-            }
+            handleIsShootingCase();
         } else {
 //            if (gamepad1.y) {
 //                shooter.setTargetVelocity(35);
@@ -316,6 +276,60 @@ public class MecanumTeleop_Outreach extends OpMode {
 //                shooter.stopShooter();
 //            }
         }
+    }
+
+    public void handleIsShootingCase() {
+        if (gamepad1.dpadDownWasPressed()) {
+            escapeShooting();
+            return;
+        }
+
+        shooter.setTargetVelocity(shooter.convertDistanceToShooterVelocity(distance));
+        shooter.overridePower();
+
+        collector.setPower(-collectorSpeed);
+        collectorOn = false;
+
+        // Auto aim
+        chassis.turnTo(limelight.getTx(), 0);
+
+        if (limelight.isDataCurrent) {
+            shotStuckTimer.reset();
+        }
+
+        if (shotStuckTimer.milliseconds() > SHOT_STUCK_ESCAPE_MS) {
+            escapeShooting();
+        }
+
+        if (shooter.atSpeed() && isWithinLeniencyRange()) {
+            reachedSpeed = true;
+        }
+
+        if (!reachedSpeed) {
+            shotTimer.reset();
+            return;
+        }
+
+        if (shotTimer.milliseconds() < SHOOTER_HINGE_LIFT_DURATION_MS) {
+            shooter.putHingeDown();
+        } else if (shotTimer.milliseconds() < SHOT_DURATION_MS) {
+            shooter.putHingeUp();
+        } else {
+            currentShootCount ++;
+            reachedSpeed = false;
+            shotTimer.reset();
+            if (currentShootCount == targetShootCount) {
+                escapeShooting();
+            }
+        }
+    }
+
+    public void escapeShooting() {
+        isShooting = false;
+        shooter.stopShooter();
+        shooter.putHingeDown();
+        collector.setPower(collectorSpeed);
+        collectorOn = true;
     }
 
     public boolean isWithinLeniencyRange() {

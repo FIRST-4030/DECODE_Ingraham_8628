@@ -95,16 +95,10 @@ public class MecanumAuto_Limelight extends LinearOpMode {
         chassis = new Chassis(hardwareMap);
 
         // Pedro pathing init
-        if (controlHub.getMacAddress().equals(Constants.PRIMARY_BOT)) {
+        if (controlHub.getNetworkName().equals(Constants.PRIMARY_BOT_NETWORK_NAME)) {
             constants = new ConstantsCompetition();
-        } else if (controlHub.getMacAddress().equals(Constants.SECONDARY_BOT)) {
+        } else if (controlHub.getNetworkName().equals(Constants.PRIMARY_BOT_NETWORK_NAME)) {
             constants = new ConstantsDemo();
-        } else {
-            constants = new ConstantsCompetition();
-            telemetry.addLine("MAC address did not match any registered address");
-            telemetry.addLine("Resorting to using the one for PRIMARY_BOT");
-            telemetry.update();
-            sleep(5000);
         }
 
         follower = constants.createFollower(hardwareMap);
