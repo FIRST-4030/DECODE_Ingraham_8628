@@ -2,6 +2,11 @@ package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.bylazar.configurables.annotations.Configurable;
 
+import com.bylazar.field.FieldManager;
+import com.bylazar.field.PanelsField;
+import com.bylazar.field.Style;
+import com.bylazar.gamepad.GamepadManager;
+import com.bylazar.gamepad.PanelsGamepad;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -66,6 +71,7 @@ public class MecanumAuto_Limelight extends LinearOpMode {
     Shooter shooter;
     Servo shooterHinge;
     IMU imu;
+    FieldManager panelsFieldManager = PanelsField.INSTANCE.getField();
 
     ElapsedTime runtime = new ElapsedTime();
 
@@ -99,6 +105,8 @@ public class MecanumAuto_Limelight extends LinearOpMode {
             constants = new ConstantsCompetition();
         } else if (controlHub.getNetworkName().equals(Constants.PRIMARY_BOT_NETWORK_NAME)) {
             constants = new ConstantsDemo();
+        } else {
+            constants = new ConstantsCompetition();
         }
 
         follower = constants.createFollower(hardwareMap);
@@ -232,7 +240,55 @@ public class MecanumAuto_Limelight extends LinearOpMode {
                 activeIterativeAutoStepChain.update(follower, collector, shooter, limelight, telemetry, chassis);
             }
 
+            drawPanelsField();
             telemetry.update();
+        }
+    }
+
+    void drawPanelsField() {
+        drawBotPoseToPanelsField();
+        panelsFieldManager.update();
+    }
+
+    void drawBotPoseToPanelsField() {
+        panelsFieldManager.setStyle(new Style("none", "white", 1.5));
+
+        double forwardPodY = 0.5;
+        double strafePodX = 3.5;
+
+        double robotWidth = 17;
+        double robotHeight = 17;
+
+        double robotHeadingRadians = follower.getHeading();
+
+        Pose topLeft = new Pose(-robotWidth / 2, robotHeight / 2);
+        Pose topRight = new Pose(robotWidth / 2, robotHeight / 2);
+        Pose bottomLeft = new Pose(-robotWidth / 2, -robotHeight / 2);
+        Pose bottomRight = new Pose(robotWidth / 2, -robotHeight / 2);
+        Pose middleRight = new Pose(robotWidth / 2, 0);
+        Pose aheadRight = new Pose(robotWidth / 2 + 8, 0);
+
+        Pose[] squarePoses = {topLeft, topRight, middleRight, aheadRight, middleRight, bottomRight, bottomLeft};
+
+        for (int i = 0; i < squarePoses.length; i ++) {
+            Pose currentPoseInSquare = squarePoses[i];
+            Pose nextPoseInSquare = squarePoses[(i + 1) % squarePoses.length]; // Loop around in the list of points, in a "circle"
+
+            double x = currentPoseInSquare.getX();
+            double y = currentPoseInSquare.getY();
+
+            double nextX = nextPoseInSquare.getX();
+            double nextY = nextPoseInSquare.getY();
+
+            panelsFieldManager.moveCursor(
+                    x * Math.cos(robotHeadingRadians) - y * Math.sin(robotHeadingRadians) + follower.getPose().getX(),
+                    x * Math.sin(robotHeadingRadians) + y * Math.cos(robotHeadingRadians) + follower.getPose().getY()
+            );
+
+            panelsFieldManager.line(
+                    nextX * Math.cos(robotHeadingRadians) - nextY * Math.sin(robotHeadingRadians) + follower.getPose().getX(),
+                    nextX * Math.sin(robotHeadingRadians) + nextY * Math.cos(robotHeadingRadians) + follower.getPose().getY()
+            );
         }
     }
 

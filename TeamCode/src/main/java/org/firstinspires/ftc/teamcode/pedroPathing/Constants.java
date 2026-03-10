@@ -22,7 +22,7 @@ public class Constants {
 
 
     public static final String PRIMARY_BOT_NETWORK_NAME = "8628-RC";
-    public static final String PINPOINT_BOT_NETWORK_NAME = "FTC-Pinpoint";
+    public static final String PINPOINT_BOT_NETWORK_NAME = "FTC-QQYR";
 
     protected FollowerConstants followerConstants = new FollowerConstants();
 
