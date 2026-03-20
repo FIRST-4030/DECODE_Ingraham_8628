@@ -76,9 +76,6 @@ public class IterativeAutoStepChain {
                 }
                 break;
             case SHOOT:
-                if (limelight.isDataCurrent) {
-                    chassis.turnTo(limelight.getTx(), 0);
-                }
                 telemetry.addData("Shooter target velocity", shooter.targetVelocity);
                 int targetShootCount = activeIterativeAutoStep.getTargetShootCount();
 
