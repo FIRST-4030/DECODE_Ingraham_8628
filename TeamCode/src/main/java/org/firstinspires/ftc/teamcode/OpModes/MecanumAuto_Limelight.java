@@ -52,6 +52,8 @@ public class MecanumAuto_Limelight extends LinearOpMode {
     public static double behindBalls1_x = 23, behindBalls1_y = 35, behindBalls1_angle = 0;
     public static double behindBalls2_x = 23, behindBalls2_y = 59, behindBalls2_angle = 0;
     public static double behindBalls3_x = 23, behindBalls3_y = 83, behindBalls3_angle = 0;
+    public static double inFrontOfGateX = 50, inFrontOfGateY = 72, inFrontOfGateAngle = 180;
+    public static double behindGateX = 12.25, behindGateY = 72, behindGateAngle = 180;
 
     public static long moveToInFrontOfBallsDelayMS = 250;
     public static long moveToBehindBallsDelayMS = 0;
@@ -89,8 +91,8 @@ public class MecanumAuto_Limelight extends LinearOpMode {
     boolean targetInView;
 
     Follower follower;
-    PathChain inFrontOfBalls1, behindBalls1, inFrontOfBalls2, behindBalls2, inFrontOfBalls3, behindBalls3, moveToFreeSpace, moveToFarShoot, moveToNearShoot;
-    IterativeAutoStepChain farAutoStepChain, nearAutoStepChain;
+    PathChain inFrontOfBalls1, behindBalls1, inFrontOfBalls2, behindBalls2, inFrontOfBalls3, behindBalls3, moveToFreeSpace, moveToFarShoot, moveToNearShoot, gate;
+    IterativeAutoStepChain farAutoStepChain, nearAutoStepChain, testAutoStepChain;
 
     Datalog datalog = new Datalog("MecanumAutoLog");
     boolean logData = true;
@@ -229,7 +231,10 @@ public class MecanumAuto_Limelight extends LinearOpMode {
             activeIterativeAutoStepChain = nearAutoStepChain;
         }
 
+        activeIterativeAutoStepChain = testAutoStepChain; // TEST
+
         activeIterativeAutoStepChain.init();
+        activeIterativeAutoStepChain.done = true;
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -238,6 +243,23 @@ public class MecanumAuto_Limelight extends LinearOpMode {
 
             if (!activeIterativeAutoStepChain.done) {
                 activeIterativeAutoStepChain.update(follower, collector, shooter, limelight, telemetry, chassis);
+            } else {
+                chassis.resetZeroPowerBehavior();
+                chassis.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+                if (gamepad1.x) {
+                    collector.setPower(-collectorSpeed);
+                } else {
+                    collector.setPower(collectorSpeed);
+                }
+
+                if (gamepad1.aWasReleased()) {
+                    follower.resumePathFollowing();
+                    activeIterativeAutoStepChain.init();
+                }
+                if (gamepad1.bWasReleased()) {
+                    follower.pausePathFollowing();
+                    follower.update();
+                }
             }
 
             drawPanelsField();
@@ -253,8 +275,8 @@ public class MecanumAuto_Limelight extends LinearOpMode {
     void drawBotPoseToPanelsField() {
         panelsFieldManager.setStyle(new Style("none", "white", 1.5));
 
-        double forwardPodY = 0.5;
-        double strafePodX = 3.5;
+        double forwardPodY = 0.125;
+        double strafePodX = 2.875;
 
         double robotWidth = 17;
         double robotHeight = 17;
@@ -288,6 +310,48 @@ public class MecanumAuto_Limelight extends LinearOpMode {
             panelsFieldManager.line(
                     nextX * Math.cos(robotHeadingRadians) - nextY * Math.sin(robotHeadingRadians) + follower.getPose().getX(),
                     nextX * Math.sin(robotHeadingRadians) + nextY * Math.cos(robotHeadingRadians) + follower.getPose().getY()
+            );
+        }
+    }
+
+    void drawBotPoseToPanelsFieldMt1() {
+        panelsFieldManager.setStyle(new Style("none", "white", 1.5));
+
+        double forwardPodY = 0.125;
+        double strafePodX = 2.875;
+
+        double robotWidth = 17;
+        double robotHeight = 17;
+
+        double robotHeadingRadians = limelight.getYaw();
+
+        Pose topLeft = new Pose(-robotWidth / 2, robotHeight / 2);
+        Pose topRight = new Pose(robotWidth / 2, robotHeight / 2);
+        Pose bottomLeft = new Pose(-robotWidth / 2, -robotHeight / 2);
+        Pose bottomRight = new Pose(robotWidth / 2, -robotHeight / 2);
+        Pose middleRight = new Pose(robotWidth / 2, 0);
+        Pose aheadRight = new Pose(robotWidth / 2 + 8, 0);
+
+        Pose[] squarePoses = {topLeft, topRight, middleRight, aheadRight, middleRight, bottomRight, bottomLeft};
+
+        for (int i = 0; i < squarePoses.length; i ++) {
+            Pose currentPoseInSquare = squarePoses[i];
+            Pose nextPoseInSquare = squarePoses[(i + 1) % squarePoses.length]; // Loop around in the list of points, in a "circle"
+
+            double x = currentPoseInSquare.getX();
+            double y = currentPoseInSquare.getY();
+
+            double nextX = nextPoseInSquare.getX();
+            double nextY = nextPoseInSquare.getY();
+
+            panelsFieldManager.moveCursor(
+                    x * Math.cos(robotHeadingRadians) - y * Math.sin(robotHeadingRadians) + limelight.getX(),
+                    x * Math.sin(robotHeadingRadians) + y * Math.cos(robotHeadingRadians) + limelight.getY()
+            );
+
+            panelsFieldManager.line(
+                    nextX * Math.cos(robotHeadingRadians) - nextY * Math.sin(robotHeadingRadians) + limelight.getX(),
+                    nextX * Math.sin(robotHeadingRadians) + nextY * Math.cos(robotHeadingRadians) + limelight.getY()
             );
         }
     }
@@ -347,6 +411,14 @@ public class MecanumAuto_Limelight extends LinearOpMode {
                         new Pose((behindBalls3_x - 72) * sign + 72, behindBalls3_y)
                 ))
                 .setLinearHeadingInterpolation(Math.toRadians((inFrontOfBalls2_angle - 90) * sign + 90), Math.toRadians((behindBalls3_angle - 90) * sign + 90))
+                .build();
+
+        gate = follower.pathBuilder()
+                .addPath(new BezierLine (
+                        new Pose((inFrontOfGateX - 72) * sign + 72, inFrontOfGateY),
+                        new Pose((behindGateX - 72) * sign + 72, behindGateY)
+                ))
+                .setLinearHeadingInterpolation(Math.toRadians((inFrontOfGateAngle - 90) * sign + 90), Math.toRadians((behindGateAngle - 90) * sign + 90))
                 .build();
 
         moveToFreeSpace = follower.pathBuilder()
@@ -447,6 +519,13 @@ public class MecanumAuto_Limelight extends LinearOpMode {
                 .setMaxPower(collectingMaxPower)
                 .build();
 
+        IterativeAutoStep moveToGateAutoStep = new IterativeAutoStep.Builder()
+                .setStepType(IterativeAutoStep.StepType.MOVE)
+                .setPathChain(gate)
+                .setCollectorOn(false)
+                .setStartDelayMS(0)
+                .build();
+
         IterativeAutoStep shootThreeBallsAutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.SHOOT)
                 .setTargetShootCount(3)
@@ -455,6 +534,13 @@ public class MecanumAuto_Limelight extends LinearOpMode {
 
 
         // This is where you define the sequence of steps to be executed for each given auto
+
+        testAutoStepChain = new IterativeAutoStepChain(
+                collectorSpeed,
+                new IterativeAutoStep[] {
+                        moveToGateAutoStep,
+                }
+        );
 
         farAutoStepChain = new IterativeAutoStepChain(
                 collectorSpeed,
