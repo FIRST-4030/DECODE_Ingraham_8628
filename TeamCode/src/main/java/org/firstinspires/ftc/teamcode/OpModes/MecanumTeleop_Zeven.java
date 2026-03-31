@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Chassis;
 import org.firstinspires.ftc.teamcode.Limelight;
 import org.firstinspires.ftc.teamcode.Shooter;
-
+@Disabled
 @Configurable
 @TeleOp(name = "Zeven's Learning OP Mode", group = "Robot")
 public class MecanumTeleop_Zeven extends OpMode {
