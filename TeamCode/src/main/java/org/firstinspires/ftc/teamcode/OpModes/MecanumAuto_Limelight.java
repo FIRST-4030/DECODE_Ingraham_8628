@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.bylazar.configurables.annotations.Configurable;
-
 import com.bylazar.field.FieldManager;
 import com.bylazar.field.PanelsField;
 import com.bylazar.field.Style;
@@ -11,9 +10,9 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
-
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -34,7 +33,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 
 @Configurable
-@Autonomous(name="Mecanum Auto Limelight", group="Linear OpMode")
+@Autonomous(name="Mecanum Auto Limelight Copy Test", group="Linear OpMode")
 public class MecanumAuto_Limelight extends LinearOpMode {
 
     public static int polyRangeCrossover = 80;
@@ -42,73 +41,79 @@ public class MecanumAuto_Limelight extends LinearOpMode {
     public static int polyVeloBaseNear = 29;
     public static double polyVeloBaseRangeFactor = 0.125;
 
-    // Pedro pathing constants (editable in panels)
-    public static double farStartX = 56, farStartY = 8, farStartAngle = 90;
-    public static double nearStartX = 26, nearStartY = 122, nearStartAngle = 315;
-
-    public static double inFrontOfBalls1_x = 50, inFrontOfBalls1_y = 35,inFrontOfBalls1_angle = 0;
-    public static double inFrontOfBalls2_x = 50, inFrontOfBalls2_y = 59 ,inFrontOfBalls2_angle = 0;
-    public static double inFrontOfBalls3_x = 50, inFrontOfBalls3_y = 83 ,inFrontOfBalls3_angle = 0;
-    public static double behindBalls1_x = 23, behindBalls1_y = 35, behindBalls1_angle = 0;
-    public static double behindBalls2_x = 23, behindBalls2_y = 59, behindBalls2_angle = 0;
-    public static double behindBalls3_x = 23, behindBalls3_y = 83, behindBalls3_angle = 0;
-    public static double inFrontOfGateX = 50, inFrontOfGateY = 72, inFrontOfGateAngle = 180;
-    public static double behindGateX = 12.25, behindGateY = 72, behindGateAngle = 180;
-
-    public static long moveToInFrontOfBallsDelayMS = 250;
-    public static long moveToBehindBallsDelayMS = 0;
+    public static long moveToInsideRowsMS = 250;
+    public static long moveToOutsideRowsMS = 0;
     public static long moveToFarShootDelayMS = 0;
     public static long moveToNearShootDelayMS = 0;
     public static long shootThreeBallsDelayMS = 0;
+
     public static double collectorSpeed = 0.45;
     public static float collectingMaxPower = 0.3f;
 
-    public static double moveToFreeSpace_x = 20, moveToFreeSpace_y = 8, moveToFreeSpace_angle = 90;
-    public static double moveToFarShoot_x = 55, moveToFarShoot_y = 16, moveToFarShoot_angle = 110;
-    public static double moveToNearShoot_x = 48, moveToNearShoot_y = 96, moveToNearShoot_angle = 135;
+    // PedroPathing poses
+    public static Pose farStartPose = new Pose(56, 8, 90);
+    public static Pose nearStartPose = new Pose(26, 122, 315);
+
+    public static Pose insideRow1Pose = new Pose(50, 35, 0);
+    public static Pose insideRow2Pose = new Pose(50, 59, 0);
+    public static Pose insideRow3Pose = new Pose(50, 83, 0);
+
+    public static Pose outsideRow1Pose = new Pose(23, 35, 0);
+    public static Pose outsideRow2Pose = new Pose(23, 59, 0);
+    public static Pose outsideRow3Pose = new Pose(23, 83, 0);
+
+    public static Pose farShootPose = new Pose(555, 16, 110);
+    public static Pose nearShootPose = new Pose(48, 96, 135);
+    public static Pose freeSpacePose = new Pose(20, 8, 90);
+
+    Follower follower;
+    PathChain
+            goInsideRow1,
+            goInsideRow2,
+            goInsideRow3,
+
+            goOutsideRow1,
+            goOutsideRow2,
+            goOutsideRow3,
+
+            goFarShoot,
+            goNearShoot,
+            goFreeSpace;
+    IterativeAutoStepChain farAutoStepChain, nearAutoStepChain;
 
     Chassis chassis;
     Constants constants;
     DcMotorEx collector;
     Shooter shooter;
     Servo shooterHinge;
+    Servo liftServo;
     IMU imu;
-    FieldManager panelsFieldManager = PanelsField.INSTANCE.getField();
+    Limelight limelight;
 
     ElapsedTime runtime = new ElapsedTime();
 
-    Limelight limelight;
-
-    Servo liftServo;
-
-    ElapsedTime collectorTime = new ElapsedTime();
-
-    double obeliskBearing, obeliskDistance;
+    // double obeliskBearing, obeliskDistance;
 
     boolean limitedAutoEnabled = false;
     boolean nearAutoEnabled = false;
 
-    boolean targetInView;
+    // Datalog datalog = new Datalog("MecanumAutoLog");
+    // boolean logData = true;
 
-    Follower follower;
-    PathChain inFrontOfBalls1, behindBalls1, inFrontOfBalls2, behindBalls2, inFrontOfBalls3, behindBalls3, moveToFreeSpace, moveToFarShoot, moveToNearShoot, gate;
-    IterativeAutoStepChain farAutoStepChain, nearAutoStepChain, testAutoStepChain;
-
-    Datalog datalog = new Datalog("MecanumAutoLog");
-    boolean logData = true;
     public static ControlHub controlHub = new ControlHub();
+
+    FieldManager panelsFieldManager = PanelsField.INSTANCE.getField();
+    GamepadManager panelsGamepad = PanelsGamepad.INSTANCE.getFirstManager();
 
     @Override
     public void runOpMode() {
         chassis = new Chassis(hardwareMap);
 
-        // Pedro pathing init
+        // PedroPathing constants init (TEMPORARY, unstable because of Mac Address unpredictability)
         if (controlHub.getNetworkName().equals(Constants.PRIMARY_BOT_NETWORK_NAME)) {
             constants = new ConstantsCompetition();
         } else if (controlHub.getNetworkName().equals(Constants.PRIMARY_BOT_NETWORK_NAME)) {
             constants = new ConstantsDemo();
-        } else {
-            constants = new ConstantsCompetition();
         }
 
         follower = constants.createFollower(hardwareMap);
@@ -137,8 +142,6 @@ public class MecanumAuto_Limelight extends LinearOpMode {
                 RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
-        long delaySeconds = 0;
-
         limelight = new Limelight();
         limelight.init(hardwareMap, imu, telemetry);
 
@@ -148,30 +151,24 @@ public class MecanumAuto_Limelight extends LinearOpMode {
             limelight.getTagLocations("Blue", imu);
             limelight.readObelisk();
 
-            telemetry.addData("Obelisk Bearing ", obeliskBearing);
-            telemetry.addData("Obelisk Range ", obeliskDistance);
+            // telemetry.addData("Obelisk Bearing ", obeliskBearing);
+            // telemetry.addData("Obelisk Range ", obeliskDistance);
 
             telemetry.addLine();
             telemetry.addLine("--------------");
             telemetry.addLine();
 
-            telemetry.addData("Press Up/Down dpad to adjust delay | Delay", delaySeconds);
-            if (gamepad1.dpadUpWasReleased()) {
-                delaySeconds++;
-            }
-            if (gamepad1.dpadDownWasReleased()) {
-                delaySeconds--;
-            }
+            // Limited auto hasn't been implemented for this robot yet
+            // telemetry.addData("Press Right/Left dpad to toggle limited auto | Limited Auto", limitedAutoEnabled);
 
-            telemetry.addData("Press Right/Left dpad to toggle limited auto | Limited Auto", limitedAutoEnabled);
+            // if (gamepad1.dpadRightWasReleased() && !limitedAutoEnabled) {
+            //     limitedAutoEnabled = true;
+            // }
+            // if (gamepad1.dpadLeftWasReleased() && limitedAutoEnabled) {
+            //     limitedAutoEnabled = false;
+            // }
+
             telemetry.addData("Near auto enabled", nearAutoEnabled);
-
-            if (gamepad1.dpadRightWasReleased() && !limitedAutoEnabled) {
-                limitedAutoEnabled = true;
-            }
-            if (gamepad1.dpadLeftWasReleased() && limitedAutoEnabled) {
-                limitedAutoEnabled = false;
-            }
 
             if (gamepad1.xWasPressed() && gamepad1.right_bumper) {
                 Blackboard.alliance = Blackboard.Alliance.BLUE;
@@ -208,21 +205,10 @@ public class MecanumAuto_Limelight extends LinearOpMode {
         buildPaths(Blackboard.alliance); // Only build the paths once we press play(?)
         buildAutoStepChains();
 
-        Pose correctedStartPose;
-        if (Blackboard.alliance == Blackboard.Alliance.RED) {
-            if (nearAutoEnabled) {
-                correctedStartPose = new Pose(144 - nearStartX, nearStartY, Math.toRadians((nearStartAngle - 90) * -1 + 90));
-            } else {
-                correctedStartPose = new Pose(144 - farStartX, farStartY, Math.toRadians((farStartAngle - 90) * -1 + 90));
-            }
-        } else {
-            if (nearAutoEnabled) {
-                correctedStartPose = new Pose(nearStartX, nearStartY, Math.toRadians(nearStartAngle));
-            } else {
-                correctedStartPose = new Pose(farStartX, farStartY, Math.toRadians(farStartAngle));
-            }
+        follower.setStartingPose(poseAutoFlip(farStartPose));
+        if (nearAutoEnabled) {
+            follower.setStartingPose(poseAutoFlip(nearStartPose));
         }
-        follower.setStartingPose(correctedStartPose);
 
         runtime.reset();
 
@@ -231,10 +217,7 @@ public class MecanumAuto_Limelight extends LinearOpMode {
             activeIterativeAutoStepChain = nearAutoStepChain;
         }
 
-        activeIterativeAutoStepChain = testAutoStepChain; // TEST
-
         activeIterativeAutoStepChain.init();
-        activeIterativeAutoStepChain.done = true;
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -243,23 +226,6 @@ public class MecanumAuto_Limelight extends LinearOpMode {
 
             if (!activeIterativeAutoStepChain.done) {
                 activeIterativeAutoStepChain.update(follower, collector, shooter, limelight, telemetry, chassis);
-            } else {
-                chassis.resetZeroPowerBehavior();
-                chassis.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-                if (gamepad1.x) {
-                    collector.setPower(-collectorSpeed);
-                } else {
-                    collector.setPower(collectorSpeed);
-                }
-
-                if (gamepad1.aWasReleased()) {
-                    follower.resumePathFollowing();
-                    activeIterativeAutoStepChain.init();
-                }
-                if (gamepad1.bWasReleased()) {
-                    follower.pausePathFollowing();
-                    follower.update();
-                }
             }
 
             drawPanelsField();
@@ -274,256 +240,151 @@ public class MecanumAuto_Limelight extends LinearOpMode {
 
     void drawBotPoseToPanelsField() {
         panelsFieldManager.setStyle(new Style("none", "white", 1.5));
-
-        double forwardPodY = 0.125;
-        double strafePodX = 2.875;
-
-        double robotWidth = 17;
-        double robotHeight = 17;
-
-        double robotHeadingRadians = follower.getHeading();
-
-        Pose topLeft = new Pose(-robotWidth / 2, robotHeight / 2);
-        Pose topRight = new Pose(robotWidth / 2, robotHeight / 2);
-        Pose bottomLeft = new Pose(-robotWidth / 2, -robotHeight / 2);
-        Pose bottomRight = new Pose(robotWidth / 2, -robotHeight / 2);
-        Pose middleRight = new Pose(robotWidth / 2, 0);
-        Pose aheadRight = new Pose(robotWidth / 2 + 8, 0);
-
-        Pose[] squarePoses = {topLeft, topRight, middleRight, aheadRight, middleRight, bottomRight, bottomLeft};
-
-        for (int i = 0; i < squarePoses.length; i ++) {
-            Pose currentPoseInSquare = squarePoses[i];
-            Pose nextPoseInSquare = squarePoses[(i + 1) % squarePoses.length]; // Loop around in the list of points, in a "circle"
-
-            double x = currentPoseInSquare.getX();
-            double y = currentPoseInSquare.getY();
-
-            double nextX = nextPoseInSquare.getX();
-            double nextY = nextPoseInSquare.getY();
-
-            panelsFieldManager.moveCursor(
-                    x * Math.cos(robotHeadingRadians) - y * Math.sin(robotHeadingRadians) + follower.getPose().getX(),
-                    x * Math.sin(robotHeadingRadians) + y * Math.cos(robotHeadingRadians) + follower.getPose().getY()
-            );
-
-            panelsFieldManager.line(
-                    nextX * Math.cos(robotHeadingRadians) - nextY * Math.sin(robotHeadingRadians) + follower.getPose().getX(),
-                    nextX * Math.sin(robotHeadingRadians) + nextY * Math.cos(robotHeadingRadians) + follower.getPose().getY()
-            );
-        }
-    }
-
-    void drawBotPoseToPanelsFieldMt1() {
-        panelsFieldManager.setStyle(new Style("none", "white", 1.5));
-
-        double forwardPodY = 0.125;
-        double strafePodX = 2.875;
-
-        double robotWidth = 17;
-        double robotHeight = 17;
-
-        double robotHeadingRadians = limelight.getYaw();
-
-        Pose topLeft = new Pose(-robotWidth / 2, robotHeight / 2);
-        Pose topRight = new Pose(robotWidth / 2, robotHeight / 2);
-        Pose bottomLeft = new Pose(-robotWidth / 2, -robotHeight / 2);
-        Pose bottomRight = new Pose(robotWidth / 2, -robotHeight / 2);
-        Pose middleRight = new Pose(robotWidth / 2, 0);
-        Pose aheadRight = new Pose(robotWidth / 2 + 8, 0);
-
-        Pose[] squarePoses = {topLeft, topRight, middleRight, aheadRight, middleRight, bottomRight, bottomLeft};
-
-        for (int i = 0; i < squarePoses.length; i ++) {
-            Pose currentPoseInSquare = squarePoses[i];
-            Pose nextPoseInSquare = squarePoses[(i + 1) % squarePoses.length]; // Loop around in the list of points, in a "circle"
-
-            double x = currentPoseInSquare.getX();
-            double y = currentPoseInSquare.getY();
-
-            double nextX = nextPoseInSquare.getX();
-            double nextY = nextPoseInSquare.getY();
-
-            panelsFieldManager.moveCursor(
-                    x * Math.cos(robotHeadingRadians) - y * Math.sin(robotHeadingRadians) + limelight.getX(),
-                    x * Math.sin(robotHeadingRadians) + y * Math.cos(robotHeadingRadians) + limelight.getY()
-            );
-
-            panelsFieldManager.line(
-                    nextX * Math.cos(robotHeadingRadians) - nextY * Math.sin(robotHeadingRadians) + limelight.getX(),
-                    nextX * Math.sin(robotHeadingRadians) + nextY * Math.cos(robotHeadingRadians) + limelight.getY()
-            );
-        }
+        panelsFieldManager.moveCursor(follower.getPose().getX(), follower.getPose().getY());
+        panelsFieldManager.setCursorHeading(follower.getHeading());
+        panelsFieldManager.rect(10, 10);
     }
 
     void buildPaths(Blackboard.Alliance alliance) {
         // Blue alliance by default, unless it's proved that the alliance is red
-        int sign = 1;
-        if (alliance == Blackboard.Alliance.RED) {
-            sign = -1;
-        }
+        boolean doMirror = Blackboard.alliance == Blackboard.Alliance.RED;
 
         // All poses are initially written as if we are on BLUE alliance; necessary values
         // are multiplied by horizontalSign to account for field symmetry
-        inFrontOfBalls1 = follower.pathBuilder()
+        goInsideRow1 = follower.pathBuilder()
                 .addPath(new BezierLine(
-                        new Pose((farStartX - 72) * sign + 72, farStartY),
-                        new Pose((inFrontOfBalls1_x - 72) * sign + 72, inFrontOfBalls1_y)
+                        poseAutoFlip(farStartPose),
+                        poseAutoFlip(insideRow1Pose)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians((farStartAngle - 90) * sign + 90), Math.toRadians((inFrontOfBalls1_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(poseAutoFlip(farStartPose).getHeading(), poseAutoFlip(insideRow1Pose).getHeading())
                 .build();
 
-        behindBalls1 = follower.pathBuilder()
+        goInsideRow2 = follower.pathBuilder()
                 .addPath(new BezierLine(
-                        new Pose((inFrontOfBalls1_x - 72) * sign + 72, inFrontOfBalls1_y),
-                        new Pose((behindBalls1_x - 72) * sign + 72, behindBalls1_y)
+                        poseAutoFlip(farStartPose),
+                        poseAutoFlip(insideRow2Pose)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians((inFrontOfBalls1_angle - 90) * sign + 90), Math.toRadians((behindBalls1_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(poseAutoFlip(farStartPose).getHeading(), poseAutoFlip(insideRow2Pose).getHeading())
                 .build();
 
-        inFrontOfBalls2 = follower.pathBuilder()
+        goInsideRow3 = follower.pathBuilder()
                 .addPath(new BezierLine(
-                        new Pose((farStartX - 72) * sign + 72, farStartY),
-                        new Pose((inFrontOfBalls2_x - 72) * sign + 72, inFrontOfBalls2_y)
+                        poseAutoFlip(farStartPose),
+                        poseAutoFlip(insideRow3Pose)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians((farStartAngle - 90) * sign + 90), Math.toRadians((inFrontOfBalls2_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(poseAutoFlip(farStartPose).getHeading(), poseAutoFlip(insideRow3Pose).getHeading())
                 .build();
 
-        behindBalls2 = follower.pathBuilder()
+        goOutsideRow1 = follower.pathBuilder()
                 .addPath(new BezierLine(
-                        new Pose((inFrontOfBalls2_x - 72) * sign + 72, inFrontOfBalls2_y),
-                        new Pose((behindBalls2_x - 72) * sign + 72, behindBalls2_y)
+                        poseAutoFlip(insideRow1Pose),
+                        poseAutoFlip(outsideRow1Pose)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians((inFrontOfBalls2_angle - 90) * sign + 90), Math.toRadians((behindBalls2_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(poseAutoFlip(insideRow1Pose).getHeading(), poseAutoFlip(outsideRow1Pose).getHeading())
                 .build();
 
-        inFrontOfBalls3 = follower.pathBuilder()
+        goOutsideRow2 = follower.pathBuilder()
                 .addPath(new BezierLine(
-                        new Pose((farStartX - 72) * sign + 72, farStartY),
-                        new Pose((inFrontOfBalls3_x - 72) * sign + 72, inFrontOfBalls3_y)
+                        poseAutoFlip(insideRow2Pose),
+                        poseAutoFlip(outsideRow2Pose)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians((farStartAngle - 90) * sign + 90), Math.toRadians((inFrontOfBalls3_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(poseAutoFlip(insideRow2Pose).getHeading(), poseAutoFlip(outsideRow2Pose).getHeading())
                 .build();
 
-        behindBalls3 = follower.pathBuilder()
+        goOutsideRow3 = follower.pathBuilder()
                 .addPath(new BezierLine(
-                        new Pose((inFrontOfBalls3_x - 72) * sign + 72, inFrontOfBalls3_y),
-                        new Pose((behindBalls3_x - 72) * sign + 72, behindBalls3_y)
+                        poseAutoFlip(insideRow3Pose),
+                        poseAutoFlip(outsideRow3Pose)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians((inFrontOfBalls2_angle - 90) * sign + 90), Math.toRadians((behindBalls3_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(poseAutoFlip(insideRow3Pose).getHeading(), poseAutoFlip(outsideRow3Pose).getHeading())
                 .build();
 
-        gate = follower.pathBuilder()
-                .addPath(new BezierLine (
-                        new Pose((inFrontOfGateX - 72) * sign + 72, inFrontOfGateY),
-                        new Pose((behindGateX - 72) * sign + 72, behindGateY)
+        goFreeSpace = follower.pathBuilder()
+                .addPath(new BezierLine(
+                        poseAutoFlip(farShootPose),
+                        poseAutoFlip(freeSpacePose)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians((inFrontOfGateAngle - 90) * sign + 90), Math.toRadians((behindGateAngle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(poseAutoFlip(farShootPose).getHeading(), poseAutoFlip(freeSpacePose).getHeading())
                 .build();
 
-        moveToFreeSpace = follower.pathBuilder()
+        goFarShoot = follower.pathBuilder()
                 .addPath(new BezierLine(
-                        new Pose((moveToFarShoot_x - 72) * sign + 72, moveToFarShoot_y),
-                        new Pose((moveToFreeSpace_x - 72) * sign + 72, moveToFreeSpace_y)
+                        poseAutoFlip(insideRow1Pose),
+                        poseAutoFlip(farShootPose)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians((moveToFarShoot_angle - 90) * sign + 90), Math.toRadians((moveToFreeSpace_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(poseAutoFlip(insideRow1Pose).getHeading(), poseAutoFlip(farShootPose).getHeading())
                 .build();
 
-        if (Blackboard.alliance == Blackboard.Alliance.RED) {
-            moveToFarShoot = follower.pathBuilder()
-                    .addPath(new BezierLine(
-                            new Pose((inFrontOfBalls1_x - 72) * sign + 72, inFrontOfBalls1_y),
-                            new Pose((moveToFarShoot_x - 72) * sign + 72, moveToFarShoot_y)
-                    ))
-                    .setLinearHeadingInterpolation(Math.toRadians(((inFrontOfBalls1_angle) - 90) * sign + 90), Math.toRadians(((moveToFarShoot_angle + 2) - 90) * sign + 90))
-                    .build();
-        } else {
-            moveToFarShoot = follower.pathBuilder()
-                    .addPath(new BezierLine(
-                            new Pose((inFrontOfBalls1_x - 72) * sign + 72, inFrontOfBalls1_y),
-                            new Pose((moveToFarShoot_x - 72) * sign + 72, moveToFarShoot_y)
-                    ))
-                    .setLinearHeadingInterpolation(Math.toRadians((inFrontOfBalls1_angle - 90) * sign + 90), Math.toRadians((moveToFarShoot_angle - 90) * sign + 90))
-                    .build();
-        }
-
-        moveToNearShoot = follower.pathBuilder()
+        goNearShoot = follower.pathBuilder()
                 .addPath(new BezierLine(
-                        new Pose((moveToFreeSpace_x - 72) * sign + 72, moveToFreeSpace_y),
-                        new Pose((moveToNearShoot_x - 72) * sign + 72, moveToNearShoot_y)
+                        poseAutoFlip(insideRow1Pose),
+                        poseAutoFlip(nearShootPose)
                 ))
-                .setLinearHeadingInterpolation(Math.toRadians((moveToFreeSpace_angle - 90) * sign + 90), Math.toRadians((moveToNearShoot_angle - 90) * sign + 90))
+                .setLinearHeadingInterpolation(poseAutoFlip(insideRow1Pose).getHeading(), poseAutoFlip(nearShootPose).getHeading())
                 .build();
     }
 
     void buildAutoStepChains() {
         IterativeAutoStep moveToFarShootAutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.MOVE)
-                .setPathChain(moveToFarShoot)
+                .setPathChain(goFarShoot)
                 .setStartDelayMS(moveToFarShootDelayMS)
                 .build();
 
         IterativeAutoStep moveToNearShootAutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.MOVE)
-                .setPathChain(moveToNearShoot)
+                .setPathChain(goNearShoot)
                 .setStartDelayMS(moveToNearShootDelayMS)
                 .build();
 
         IterativeAutoStep moveToFreeSpaceAutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.MOVE)
-                .setPathChain(moveToFreeSpace)
+                .setPathChain(goFreeSpace)
                 .build();
 
         IterativeAutoStep moveToInFrontOfBalls1AutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.MOVE)
-                .setPathChain(inFrontOfBalls1)
+                .setPathChain(goInsideRow1)
                 .setCollectorOn(true)
-                .setStartDelayMS(moveToInFrontOfBallsDelayMS)
+                .setStartDelayMS(moveToInsideRowsMS)
                 .build();
 
         IterativeAutoStep moveToBehindBalls1AutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.MOVE)
-                .setPathChain(behindBalls1)
+                .setPathChain(goOutsideRow1)
                 .setCollectorOn(true)
-                .setStartDelayMS(moveToBehindBallsDelayMS)
+                .setStartDelayMS(moveToOutsideRowsMS)
                 .setMaxPower(collectingMaxPower)
                 .build();
 
         IterativeAutoStep moveToInFrontOfBalls2AutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.MOVE)
-                .setPathChain(inFrontOfBalls2)
+                .setPathChain(goInsideRow2)
                 .setCollectorOn(true)
-                .setStartDelayMS(moveToInFrontOfBallsDelayMS)
+                .setStartDelayMS(moveToInsideRowsMS)
                 .build();
 
         IterativeAutoStep moveToBehindBalls2AutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.MOVE)
-                .setPathChain(behindBalls2)
+                .setPathChain(goOutsideRow2)
                 .setCollectorOn(true)
-                .setStartDelayMS(moveToBehindBallsDelayMS)
+                .setStartDelayMS(moveToOutsideRowsMS)
                 .setMaxPower(collectingMaxPower)
                 .build();
 
         IterativeAutoStep moveToInFrontOfBalls3AutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.MOVE)
-                .setPathChain(inFrontOfBalls3)
+                .setPathChain(goInsideRow3)
                 .setCollectorOn(true)
-                .setStartDelayMS(moveToInFrontOfBallsDelayMS)
+                .setStartDelayMS(moveToInsideRowsMS)
                 .build();
 
         IterativeAutoStep moveToBehindBalls3AutoStep = new IterativeAutoStep.Builder()
                 .setStepType(IterativeAutoStep.StepType.MOVE)
-                .setPathChain(behindBalls3)
+                .setPathChain(goOutsideRow3)
                 .setCollectorOn(true)
-                .setStartDelayMS(moveToBehindBallsDelayMS)
+                .setStartDelayMS(moveToOutsideRowsMS)
                 .setMaxPower(collectingMaxPower)
-                .build();
-
-        IterativeAutoStep moveToGateAutoStep = new IterativeAutoStep.Builder()
-                .setStepType(IterativeAutoStep.StepType.MOVE)
-                .setPathChain(gate)
-                .setCollectorOn(false)
-                .setStartDelayMS(0)
                 .build();
 
         IterativeAutoStep shootThreeBallsAutoStep = new IterativeAutoStep.Builder()
@@ -534,13 +395,6 @@ public class MecanumAuto_Limelight extends LinearOpMode {
 
 
         // This is where you define the sequence of steps to be executed for each given auto
-
-        testAutoStepChain = new IterativeAutoStepChain(
-                collectorSpeed,
-                new IterativeAutoStep[] {
-                        moveToGateAutoStep,
-                }
-        );
 
         farAutoStepChain = new IterativeAutoStepChain(
                 collectorSpeed,
@@ -597,6 +451,15 @@ public class MecanumAuto_Limelight extends LinearOpMode {
                         moveToFreeSpaceAutoStep,
                 }
         );
+    }
+
+    Pose poseAutoFlip(Pose pose) {
+        boolean doMirror = (Blackboard.alliance == Blackboard.Alliance.RED);
+
+        if (doMirror) {
+            return pose.mirror();
+        }
+        return pose;
     }
 
     public static class Datalog {
