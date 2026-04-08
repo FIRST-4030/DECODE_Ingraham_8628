@@ -34,7 +34,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 
 @Disabled
 @Configurable
-@Autonomous(name="Mecanum Auto Limelight", group="Linear OpMode")
+@TeleOp(name="Mecanum Auto Teleop Pedro Macros", group="Linear OpMode")
 public class MecanumTeleop_pedro_macros extends LinearOpMode {
 
     public static int polyRangeCrossover = 80;

@@ -33,7 +33,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 
 @Configurable
-@Autonomous(name="Mecanum Auto Limelight Copy Test", group="Linear OpMode")
+@Autonomous(name="Mecanum Auto Limelight", group="Linear OpMode")
 public class MecanumAuto_Limelight extends LinearOpMode {
 
     public static int polyRangeCrossover = 80;
