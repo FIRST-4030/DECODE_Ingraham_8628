@@ -14,6 +14,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -32,7 +33,6 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsCompetition;
 import org.firstinspires.ftc.teamcode.pedroPathing.ConstantsDemo;
 
-@Disabled
 @Configurable
 @TeleOp(name="Mecanum Auto Teleop Pedro Macros", group="Linear OpMode")
 public class MecanumTeleop_pedro_macros extends LinearOpMode {
@@ -97,6 +97,25 @@ public class MecanumTeleop_pedro_macros extends LinearOpMode {
     Datalog datalog = new Datalog("MecanumAutoLog");
     boolean logData = true;
     public static ControlHub controlHub = new ControlHub();
+
+    // Teleop variables
+    public static double SHOOTER_HINGE_LIFT_DURATION_MS = 400;
+    public static double SHOT_DURATION_MS = 800;
+    public static double SHOT_STUCK_ESCAPE_MS = 800;
+
+    boolean collectorOn = false;
+    double distance = 0;
+    int currentShootCount = 0;
+    int targetShootCount = 1;
+    boolean isShooting = false;
+    boolean reachedSpeed = false;
+    ElapsedTime shotTimer = new ElapsedTime();
+    ElapsedTime shotStuckTimer = new ElapsedTime();
+
+    double GoalX = -58.3727;
+    double BlueGoalY = -55.6425;
+    double RedGoalY = 55.6425;
+    public static double aimLeniencyDegrees = 3;
 
     @Override
     public void runOpMode() {
@@ -238,22 +257,129 @@ public class MecanumTeleop_pedro_macros extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            limelight.process();
-            telemetry.addLine("----------");
+//            limelight.process();
+//            telemetry.addLine("----------");
 
             if (!activeIterativeAutoStepChain.done) {
                 activeIterativeAutoStepChain.update(follower, collector, shooter, limelight, telemetry, chassis);
             } else {
                 chassis.resetZeroPowerBehavior();
-                chassis.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-                if (gamepad1.x) {
-                    collector.setPower(-collectorSpeed);
+
+                targetInView = limelight.process();
+                limelight.processRobotPoseMt1();
+                updateShootingDistance();
+
+                shooter.overridePower();
+
+                telemetry.addLine();
+                telemetry.addLine("--- CONTROLS ---");
+                telemetry.addLine();
+
+//        telemetry.addData("Target is in view:", targetInView);
+//        telemetry.addData("Shooter Current Velocity", shooter.getVelocity());
+//        telemetry.addData("Shooter Target Velocity", shooter.targetVelocity);
+//        telemetry.addData("Distance to Target", limelight.getRange());
+
+                telemetry.addData("Left Joystick", "Drive");
+                telemetry.addData("Right Joystick", "Rotate");
+                telemetry.addLine();
+                telemetry.addData("Left Bumper", "Very Slow Drive");
+                telemetry.addData("Right Bumper", "Slow Drive");
+//        telemetry.addData("Pad 1, A", "Raise Robot");
+//        telemetry.addData("Pad 1, Y", "Lower Robot");
+//        telemetry.addData("--", "--");
+                telemetry.addData("Left Trigger", "Shoot 1!");
+                telemetry.addData("Right Trigger", "Shoot 3!x");
+                telemetry.addData("Hold X", "Eject!");
+
+                telemetry.addLine();
+                telemetry.addLine("------------------------");
+                telemetry.addLine();
+
+                telemetry.addData("Goal Tag Visible", limelight.isDataCurrent);
+
+                telemetry.addData("Distance", distance);
+                telemetry.addData("Old Range", limelight.getRange());
+
+                //Gamepad 1
+//        if (gamepad1.start) {
+//            imu.resetYaw();
+//        }
+
+                //Slow Drive
+                if (gamepad1.rightBumperWasPressed()) {
+                    chassis.setMaxSpeed(0.4);
+                }
+                if (gamepad1.leftBumperWasReleased()) {
+                    chassis.setMaxSpeed(1.0);
+                }
+
+                //Precision Drive
+                if (gamepad1.leftBumperWasPressed()) {
+                    chassis.setMaxSpeed(0.2);
+                }
+                if (gamepad1.rightBumperWasReleased()) {
+                    chassis.setMaxSpeed(1.0);
+                }
+
+//        //Lift Servo Controls
+//        if (gamepad1.yWasPressed()) {
+//            shooter.targetVelocity = 0;
+//            collector.setPower(0.0);
+//            collectorOn = false;
+//            liftServo.setPosition(1.0);
+//        }
+//        if (gamepad1.aWasPressed()) {
+//            shooter.targetVelocity = 0;
+//            collector.setPower(0.0);
+//            collectorOn = false;
+//            liftServo.setPosition(0.0);
+//        }
+//
+//        //Gamepad 2
+//        if (gamepad1.start) {
+//            imu.resetYaw();
+//        }
+
+                //Collector Controls
+//        if (gamepad1.bWasReleased()) {
+//            if (!collectorOn) {
+//                collector.setPower(collectorSpeed);
+//                collectorOn = true;
+//            }
+//            else {
+//                collector.setPower(0.0);
+//                collectorOn = false;
+//            }
+//        }
+
+//        if (gamepad1.xWasPressed()) {
+//            collector.setPower(-collectorSpeed);
+//        }
+//        if (gamepad1.xWasReleased()) {
+//            collector.setPower(collectorSpeed);
+//            collectorOn = false;
+//        }
+
+                handleShooting();
+
+                if (!isShooting) {
+                    chassis.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+
+                    if (gamepad1.x) {
+                        collector.setPower(-collectorSpeed);
+                        collectorOn = false;
+                    } else {
+                        collector.setPower(collectorSpeed);
+                        collectorOn = true;
+                    }
                 } else {
-                    collector.setPower(collectorSpeed);
+                    chassis.drive(0, 0, 0);
                 }
 
                 if (gamepad1.aWasReleased()) {
                     follower.resumePathFollowing();
+                    escapeShooting();
                     activeIterativeAutoStepChain.init();
                 }
                 if (gamepad1.bWasReleased()) {
@@ -265,6 +391,130 @@ public class MecanumTeleop_pedro_macros extends LinearOpMode {
             drawPanelsField();
             telemetry.update();
         }
+    }
+
+    public void handleShooting() {
+        // if (gamepad1.left_trigger > 0.5 && !isShooting && isWithinLeniencyRange()) {
+        if (gamepad1.left_trigger > 0.5 && !isShooting && limelight.isDataCurrent) {
+            isShooting = true;
+            currentShootCount = 0;
+            targetShootCount = 1;
+            reachedSpeed = false;
+            shotTimer.reset();
+        }
+
+        // if (gamepad1.right_trigger > 0.5 && !isShooting && isWithinLeniencyRange()) {
+        if (gamepad1.right_trigger > 0.5 && !isShooting && limelight.isDataCurrent) {
+            isShooting = true;
+            currentShootCount = 0;
+            targetShootCount = 3;
+            reachedSpeed = false;
+            shotTimer.reset();
+        }
+
+        if (isShooting) {
+            handleIsShootingCase();
+        } else {
+//            if (gamepad1.y) {
+//                shooter.setTargetVelocity(35);
+//                shooter.overridePower();
+//            } else {
+//                shooter.stopShooter();
+//            }
+        }
+    }
+
+    public void handleIsShootingCase() {
+        if (gamepad1.dpadDownWasPressed()) {
+            escapeShooting();
+            return;
+        }
+
+        if (gamepad1.left_trigger > 0.5 && limelight.isDataCurrent) {
+            currentShootCount = 0;
+            targetShootCount = 1;
+        }
+
+        shooter.setTargetVelocity(shooter.convertDistanceToShooterVelocity(distance));
+        shooter.overridePower();
+
+        collector.setPower(-collectorSpeed);
+        collectorOn = false;
+
+        // Auto aim
+        chassis.turnTo(limelight.getTx(), 0);
+
+        if (limelight.isDataCurrent) {
+            shotStuckTimer.reset();
+        }
+
+        if (shotStuckTimer.milliseconds() > SHOT_STUCK_ESCAPE_MS) {
+            escapeShooting();
+        }
+
+        if (shooter.atSpeed() && isWithinLeniencyRange()) {
+            reachedSpeed = true;
+        }
+
+        if (!reachedSpeed) {
+            shotTimer.reset();
+            return;
+        }
+
+        if (shotTimer.milliseconds() < SHOOTER_HINGE_LIFT_DURATION_MS) {
+            shooter.putHingeDown();
+        } else if (shotTimer.milliseconds() < SHOT_DURATION_MS) {
+            shooter.putHingeUp();
+        } else {
+            currentShootCount ++;
+            reachedSpeed = false;
+            shotTimer.reset();
+            if (currentShootCount == targetShootCount) {
+                escapeShooting();
+            }
+        }
+    }
+
+    public void escapeShooting() {
+        isShooting = false;
+        shooter.stopShooter();
+        shooter.putHingeDown();
+        collector.setPower(collectorSpeed);
+        collectorOn = true;
+    }
+
+    public boolean isWithinLeniencyRange() {
+        return limelight.hasResults() && Math.abs(limelight.getTx()) <= aimLeniencyDegrees;
+    }
+
+    public static double calculateDistance(double x1, double y1, double x2, double y2) {
+        double deltaX = x2 - x1;
+        double deltaY = y2 - y1;
+
+        double squaredDeltaX = deltaX * deltaX;
+        double squaredDeltaY = deltaY * deltaY;
+
+        double sumOfSquares = squaredDeltaX + squaredDeltaY;
+
+        double dist = Math.sqrt(sumOfSquares);
+
+        return dist;
+    }
+
+    public void updateShootingDistance() {
+        if (Blackboard.alliance == Blackboard.Alliance.BLUE) distance = calculateDistance(
+                limelight.getX(),
+                limelight.getY(),
+                GoalX,
+                BlueGoalY
+        );
+
+        if (Blackboard.alliance == Blackboard.Alliance.RED) distance = calculateDistance(
+                limelight.getX(),
+                limelight.getY(),
+                GoalX,
+                RedGoalY
+        );
     }
 
     void drawPanelsField() {
