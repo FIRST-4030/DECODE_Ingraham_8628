@@ -8,8 +8,25 @@ This GitHub repository contains the source code that is used to build an Android
 ## Requirements
 To use this Android Studio project, you will need Android Studio Ladybug (2024.2) or later.
 
-To program your robot in Blocks or OnBot Java, you do not need Android Studio.
 
+```mermaid
+classDiagram
+    class Teleop["Mecanum Teleop Pedro"] {
+      + in the opmodes folder
+      + implements Pedro Pathing in Teleop
+      + examples below
+      + TeleOp (name="MecanumTeleop_Pedro")
+    }
+    class stepChain["Iterative Auto Step Chain"] {
+      + array of Auto Steps
+    }
+    class autoStep["Iterative Auto Step"] {
+      + Uses a builder pattern to create steps
+      + IterativeAutoStep(builder)
+    }
+    Teleop <|-- stepChain
+    stepChain <|-- autoStep
+```
 ## Getting Started
 If you are new to robotics or new to the *FIRST* Tech Challenge, then you should consider reviewing the [FTC Blocks Tutorial](https://ftc-docs.firstinspires.org/programming_resources/blocks/Blocks-Tutorial.html) to get familiar with how to use the control system:
 
